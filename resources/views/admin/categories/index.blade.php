@@ -6,7 +6,10 @@
     <a href="{{ route('admin.categories.create') }}" class="btn btn-success">Thêm danh mục</a>
 </div>
 <table class="table table-bordered">
-<thead><tr><th>ID</th><th>Tên</th></tr></thead>
+<thead><tr><th>ID</th>
+<th>Tên</th>
+</tr>
+</thead>
 <tbody>
 @foreach($categories as $c)
 <tr><td>{{ $c->id }}</td><td>{{ $c->name }}</td></tr>

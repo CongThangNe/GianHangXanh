@@ -14,6 +14,7 @@
       <ul class="navbar-nav ms-auto">
         <li class="nav-item"><a class="nav-link" href="{{ route('cart.index') }}">Giỏ hàng</a></li>
         <li class="nav-item"><a class="nav-link" href="{{ route('admin.products.index') }}">Admin</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ route('admin.categories.index') }}">Danh mục</a></li>
       </ul>
     </div>
   </div>
