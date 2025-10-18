@@ -15,6 +15,7 @@
                 <th>Tên</th>
                 <th>Giá</th>
                 <th>Danh mục</th>
+                <th>Chức năng</th>
             </tr>
         </thead>
         <tbody>

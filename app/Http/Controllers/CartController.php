@@ -9,7 +9,6 @@ class CartController extends Controller
 {
     public function index()
     {
-        // temporary: show empty or demo data until cart implemented
         return view('cart.index');
     }
 }

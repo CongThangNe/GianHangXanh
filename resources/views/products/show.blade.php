@@ -12,6 +12,7 @@
         <h4 class="text-success">{{ number_format($product->price,0,',','.') }}₫</h4>
         <p>{{ $product->description }}</p>
         <p>Danh mục: {{ $product->category->name ?? '' }}</p>
+        <button class="btn btn-success ">Thêm vào giỏ hàng</button>
     </div>
 </div>
 @endsection

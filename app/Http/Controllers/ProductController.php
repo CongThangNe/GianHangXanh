@@ -41,11 +41,28 @@ class ProductController extends Controller
     return view('admin.products.edit', compact('product','categories'));
 }
 
-public function update(Request $request, $id) {
+public function update(Request $request, $id)
+{
+    $request->validate([
+        'name' => 'required',
+        'price' => 'required|numeric',
+        'category_id' => 'required|exists:categories,id'
+    ]);
+
     $product = Product::findOrFail($id);
-    $product->update($request->all());
-    return redirect()->route('admin.products.index')->with('success','Cập nhật thành công');
+
+    $data = $request->only(['name','description','price','stock','category_id']);
+
+    if ($request->hasFile('image')) {
+        $path = $request->file('image')->store('products', 'public');
+        $data['image'] = basename($path);
+    }
+
+    $product->update($data);
+
+    return redirect()->route('admin.products.index')->with('success', 'Cập nhật thành công');
 }
+
 
 public function destroy($id) {
     Product::findOrFail($id)->delete();
