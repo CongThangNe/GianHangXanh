@@ -6,6 +6,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\Admin\ProductVariantController;
 
 Route::get('/', [HomeController::class, 'index']);
 Route::get('/category/{id}', [HomeController::class, 'category']);
@@ -21,4 +22,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     // Quản lý đơn hàng
     Route::resource('orders', OrderController::class)->only(['index', 'show']);
+
+    // Giả sử có group admin
+    Route::get('/product_variants', [ProductVariantController::class, 'index'])->name('product_variants.index');
 });
