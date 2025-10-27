@@ -1,35 +1,51 @@
 @extends('layouts.app')
-@section('title','Thêm Mã Giảm Giá')
+@section('title','Thêm biến thể sản phẩm')
 @section('content')
-    <h1>Create Variant for Product: {{ $product->name }}</h1>
-    <form action="{{ route('admin.products.variants.store', $product) }}" method="POST">
-        @csrf
-        <div class="form-group">
-            <label for="sku">SKU</label>
-            <input type="text" name="sku" class="form-control">
-        </div>
-        <div class="form-group">
-            <label for="price">Price</label>
-            <input type="number" name="price" class="form-control" required>
-        </div>
-        <div class="form-group">
-            <label for="quantity">Quantity</label>
-            <input type="number" name="quantity" class="form-control" required>
-        </div>
-        <div class="form-group">
-            <label>Attribute Values</label>
-            @foreach ($attributes as $attribute)
-                <div>
-                    <strong>{{ $attribute->name }}</strong>
-                    @foreach ($attribute->values as $value)
-                        <div class="form-check">
-                            <input type="checkbox" name="attribute_values[]" value="{{ $value->id }}" class="form-check-input">
-                            <label class="form-check-label">{{ $value->value }}</label>
-                        </div>
-                    @endforeach
-                </div>
+<h3>Thêm biến thể sản phẩm</h3>
+
+<form method="POST" action="{{ route('admin.product_variants.store') }}">
+    @csrf
+
+    <div class="mb-3">
+        <label class="form-label">Sản phẩm</label>
+        <select name="product_id" class="form-select" required>
+            @foreach($products as $p)
+                <option value="{{ $p->id }}">{{ $p->name }}</option>
             @endforeach
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">SKU</label>
+        <input name="sku" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Giá</label>
+        <input name="price" type="number" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Tồn kho</label>
+        <input name="stock" type="number" class="form-control" required>
+    </div>
+
+    <hr>
+    <h5>Chọn thuộc tính cho biến thể</h5>
+
+    @foreach($attributes as $attr)
+        <div class="mb-3">
+            <label class="form-label">{{ $attr->name }}</label>
+            <select name="attribute_values[]" class="form-select" required>
+                <option value="">-- Chọn {{ strtolower($attr->name) }} --</option>
+                @foreach($attr->values as $value)
+                    <option value="{{ $value->id }}">{{ $value->value }}</option>
+                @endforeach
+            </select>
         </div>
-        <button type="submit" class="btn btn-primary">Create</button>
-    </form>
+    @endforeach
+
+    <button class="btn btn-primary">Lưu</button>
+    <a href="{{ route('admin.product_variants.index') }}" class="btn btn-secondary">Hủy</a>
+</form>
 @endsection

@@ -1,36 +1,56 @@
 @extends('layouts.app')
-@section('title','Sửa Mã Giảm Giá')
+@section('title','Sửa biến thể sản phẩm')
 @section('content')
-    <h1>Edit Variant for Product: {{ $product->name }}</h1>
-    <form action="{{ route('admin.products.variants.update', [$product, $variant]) }}" method="POST">
-        @csrf
-        @method('PUT')
-        <div class="form-group">
-            <label for="sku">SKU</label>
-            <input type="text" name="sku" class="form-control" value="{{ $variant->sku }}">
-        </div>
-        <div class="form-group">
-            <label for="price">Price</label>
-            <input type="number" name="price" class="form-control" value="{{ $variant->price }}" required>
-        </div>
-        <div class="form-group">
-            <label for="quantity">Quantity</label>
-            <input type="number" name="quantity" class="form-control" value="{{ $variant->quantity }}" required>
-        </div>
-        <div class="form-group">
-            <label>Attribute Values</label>
-            @foreach ($attributes as $attribute)
-                <div>
-                    <strong>{{ $attribute->name }}</strong>
-                    @foreach ($attribute->values as $value)
-                        <div class="form-check">
-                            <input type="checkbox" name="attribute_values[]" value="{{ $value->id }}" class="form-check-input" {{ in_array($value->id, $selectedValues) ? 'checked' : '' }}>
-                            <label class="form-check-label">{{ $value->value }}</label>
-                        </div>
-                    @endforeach
-                </div>
+<h3>Sửa biến thể sản phẩm</h3>
+
+<form method="POST" action="{{ route('admin.product_variants.update', $variant->id) }}">
+    @csrf
+    @method('PUT')
+
+    <div class="mb-3">
+        <label class="form-label">Sản phẩm</label>
+        <select name="product_id" class="form-select" required>
+            @foreach($products as $p)
+                <option value="{{ $p->id }}" {{ $variant->product_id == $p->id ? 'selected' : '' }}>
+                    {{ $p->name }}
+                </option>
             @endforeach
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">SKU</label>
+        <input name="sku" class="form-control" required value="{{ $variant->sku }}">
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Giá</label>
+        <input name="price" type="number" class="form-control" required value="{{ $variant->price }}">
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Tồn kho</label>
+        <input name="stock" type="number" class="form-control" required value="{{ $variant->stock }}">
+    </div>
+
+    <hr>
+    <h5>Chọn thuộc tính</h5>
+
+    @foreach($attributes as $attr)
+        <div class="mb-3">
+            <label class="form-label">{{ $attr->name }}</label>
+            <select name="attribute_values[]" class="form-select" required>
+                @foreach($attr->values as $value)
+                    <option value="{{ $value->id }}" 
+                        {{ in_array($value->id, $selectedValues) ? 'selected' : '' }}>
+                        {{ $value->value }}
+                    </option>
+                @endforeach
+            </select>
         </div>
-        <button type="submit" class="btn btn-primary">Update</button>
-    </form>
+    @endforeach
+
+    <button class="btn btn-primary">Cập nhật</button>
+    <a href="{{ route('admin.product_variants.index') }}" class="btn btn-secondary">Hủy</a>
+</form>
 @endsection

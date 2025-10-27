@@ -9,7 +9,7 @@ class Attribute extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name']; // Ví dụ: Color, Size
+    protected $fillable = ['name'];
 
     public function values()
     {
