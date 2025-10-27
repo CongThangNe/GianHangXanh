@@ -3,78 +3,61 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Attribute;
 use App\Models\AttributeValue;
-use Illuminate\Http\Request;
 
 class ProductVariantController extends Controller
 {
-    public function index(Product $product)
+    public function index()
     {
-        $variants = $product->variants()->with('attributeValues.attribute')->get();
-        return view('admin.products.variants.index', compact('product', 'variants'));
+        $variants = ProductVariant::with('product')->paginate(20);
+        return view('admin.product_variants.index', compact('variants'));
     }
 
-    public function create(Product $product)
-    {
-        $attributes = Attribute::with('values')->get();
-        return view('admin.products.variants.create', compact('product', 'attributes'));
-    }
+public function create()
+{
+    $products = Product::all();
+    $attributes = Attribute::with('values')->get();
+    return view('admin.product_variants.create', compact('products', 'attributes'));
+}
 
-    public function store(Request $request, Product $product)
+
+    public function store(Request $request)
     {
         $request->validate([
+            'product_id' => 'required',
+            'sku' => 'required|unique:product_variants',
             'price' => 'required|numeric',
-            'quantity' => 'required|integer',
-            'sku' => 'nullable|string|unique:product_variants',
-            'attribute_values' => 'required|array',
-            'attribute_values.*' => 'exists:attribute_values,id',
+            'stock' => 'required|integer'
         ]);
 
-        $variant = $product->variants()->create([
-            'sku' => $request->sku,
-            'price' => $request->price,
-            'quantity' => $request->quantity,
-        ]);
-
-        $variant->attributeValues()->attach($request->attribute_values);
-
-        return redirect()->route('admin.products.variants.index', $product)->with('success', 'Variant created successfully.');
+        ProductVariant::create($request->all());
+        return redirect()->route('admin.product_variants.index')->with('success', 'Thêm biến thể thành công');
     }
 
-    public function edit(Product $product, ProductVariant $variant)
+public function edit($id)
+{
+    $variant = ProductVariant::findOrFail($id);
+    $products = Product::all();
+    $attributes = Attribute::with('values')->get();
+    $selectedValues = $variant->attributeValues->pluck('id')->toArray();
+    return view('admin.product_variants.edit', compact('variant', 'products', 'attributes', 'selectedValues'));
+}
+
+
+    public function update(Request $request, $id)
     {
-        $attributes = Attribute::with('values')->get();
-        $selectedValues = $variant->attributeValues->pluck('id')->toArray();
-        return view('admin.product_variants.edit', compact('product', 'variant', 'attributes', 'selectedValues'));
+        $variant = ProductVariant::findOrFail($id);
+        $variant->update($request->all());
+        return redirect()->route('admin.product_variants.index')->with('success', 'Cập nhật biến thể thành công');
     }
 
-    public function update(Request $request, Product $product, ProductVariant $variant)
+    public function destroy($id)
     {
-        $request->validate([
-            'price' => 'required|numeric',
-            'quantity' => 'required|integer',
-            'sku' => 'nullable|string|unique:product_variants,sku,' . $variant->id,
-            'attribute_values' => 'required|array',
-            'attribute_values.*' => 'exists:attribute_values,id',
-        ]);
-
-        $variant->update([
-            'sku' => $request->sku,
-            'price' => $request->price,
-            'quantity' => $request->quantity,
-        ]);
-
-        $variant->attributeValues()->sync($request->attribute_values);
-
-        return redirect()->route('admin.products.variants.index', $product)->with('success', 'Variant updated successfully.');
-    }
-
-    public function destroy(Product $product, ProductVariant $variant)
-    {
-        $variant->delete();
-        return redirect()->route('admin.products.variants.index', $product)->with('success', 'Variant deleted successfully.');
+        ProductVariant::destroy($id);
+        return redirect()->route('admin.product_variants.index')->with('success', 'Xóa biến thể thành công');
     }
 }

@@ -9,7 +9,7 @@ class AttributeValue extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['attribute_id', 'value']; // Ví dụ: Red, Blue cho Color
+    protected $fillable = ['attribute_id', 'value'];
 
     public function attribute()
     {

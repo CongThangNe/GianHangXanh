@@ -24,5 +24,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('orders', OrderController::class)->only(['index', 'show']);
 
     // Giả sử có group admin
-    Route::get('/product_variants', [ProductVariantController::class, 'index'])->name('product_variants.index');
+    Route::resource('product_variants', App\Http\Controllers\Admin\ProductVariantController::class);
+
 });
