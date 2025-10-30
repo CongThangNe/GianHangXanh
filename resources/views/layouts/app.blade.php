@@ -41,7 +41,6 @@
 <body>
 
   <!-- Navbar -->
-  <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-success shadow-sm">
     <div class="container">
       <a class="navbar-brand" href="{{ url('/') }}">🌱 Gian Hàng Xanh</a>
@@ -58,6 +57,19 @@
           <li class="nav-item"><a class="nav-link" href="{{ route('admin.products.index') }}">Quản lý sản phẩm</a></li>
           <li class="nav-item"><a class="nav-link" href="{{ route('admin.categories.index') }}">Danh mục</a></li>
           <li class="nav-item"><a class="nav-link" href="{{ route('admin.product_variants.index') }}">Quản lý biến thể</a></li>
+
+          <!-- ✅ Dropdown Thuộc tính -->
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="attributeDropdown" role="button"
+               data-bs-toggle="dropdown" aria-expanded="false">
+              Thuộc tính
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="attributeDropdown">
+              <li><a class="dropdown-item" href="{{ route('admin.attributes.index') }}">Danh sách thuộc tính</a></li>
+              <li><a class="dropdown-item" href="{{ route('admin.attribute_values.index') }}">Giá trị thuộc tính</a></li>
+            </ul>
+          </li>
+          <!-- ✅ End Dropdown -->
         </ul>
 
         <!-- Tìm kiếm -->
@@ -109,12 +121,10 @@
         <a href="#" class="me-3"><i class="bi bi-facebook"></i></a>
         <a href="#" class="me-3"><i class="bi bi-instagram"></i></a>
         <a href="#"><i class="bi bi-envelope"></i></a>
-
       </p>
     </div>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>

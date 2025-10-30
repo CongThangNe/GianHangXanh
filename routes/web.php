@@ -25,5 +25,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     // Giả sử có group admin
     Route::resource('product_variants', App\Http\Controllers\Admin\ProductVariantController::class);
+    // Quản lý thuộc tính & giá trị
+    Route::resource('attributes', App\Http\Controllers\Admin\AttributeController::class);
+    Route::resource('attribute_values', App\Http\Controllers\Admin\AttributeValueController::class);
+
 
 });
