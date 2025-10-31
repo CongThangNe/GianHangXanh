@@ -26,8 +26,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     // Giả sử có group admin
     Route::resource('product_variants', App\Http\Controllers\Admin\ProductVariantController::class);
+    // Quản lý thuộc tính & giá trị
+    Route::resource('attributes', App\Http\Controllers\Admin\AttributeController::class);
+    Route::resource('attribute_values', App\Http\Controllers\Admin\AttributeValueController::class);
 
-    //  Bổ sung: Quản lý Mã Giảm Giá (Discount Codes)
-    // Route resource này sẽ tạo ra 7 route CRUD (index, create, store, show, edit, update, destroy)
+    // Quản lý mã giảm giá
     Route::resource('discount-codes', DiscountCodeController::class);
 });
