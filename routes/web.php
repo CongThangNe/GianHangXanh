@@ -7,6 +7,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\Admin\ProductVariantController;
+use App\Http\Controllers\Admin\DiscountCodeController;
 
 Route::get('/', [HomeController::class, 'index']);
 Route::get('/category/{id}', [HomeController::class, 'category']);
@@ -26,4 +27,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // Giả sử có group admin
     Route::resource('product_variants', App\Http\Controllers\Admin\ProductVariantController::class);
 
+    //  Bổ sung: Quản lý Mã Giảm Giá (Discount Codes)
+    // Route resource này sẽ tạo ra 7 route CRUD (index, create, store, show, edit, update, destroy)
+    Route::resource('discount-codes', DiscountCodeController::class);
 });

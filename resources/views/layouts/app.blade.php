@@ -58,6 +58,11 @@
           <li class="nav-item"><a class="nav-link" href="{{ route('admin.products.index') }}">Quản lý sản phẩm</a></li>
           <li class="nav-item"><a class="nav-link" href="{{ route('admin.categories.index') }}">Danh mục</a></li>
           <li class="nav-item"><a class="nav-link" href="{{ route('admin.product_variants.index') }}">Quản lý biến thể</a></li>
+          <li class="nav-item">
+                <a class="nav-link" href="{{ route('admin.discount-codes.index') }}">
+                    Mã giảm giá
+                </a>
+            </li>
         </ul>
 
         <!-- Tìm kiếm -->
