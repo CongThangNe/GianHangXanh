@@ -1,25 +1,31 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+
+// ==================== CLIENT CONTROLLERS ====================
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\CartController;
+
+// ==================== ADMIN CONTROLLERS ====================
+// GIẢ ĐỊNH TẤT CẢ CONTROLLER ADMIN NẰM TRONG NAMESPACE 'Admin\'
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\OrderController;
-use App\Http\Controllers\CartController;
 use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\DiscountCodeController;
 
-Route::get('/', [HomeController::class, 'index']);
-Route::get('/category/{id}', [HomeController::class, 'category']);
-Route::get('/product/{id}', [HomeController::class, 'show']);
-Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 
+// ==================== KHU VỰC QUẢN TRỊ (ADMIN) ====================
 Route::prefix('admin')->name('admin.')->group(function () {
-    // Quản lý sản phẩm
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+    // **[ĐÃ KHẮC PHỤC LỖI RouteNotFoundException]**
+    // Sử dụng Route::resource tự động tạo ra products.index, products.create, products.edit, products.destroy, v.v.
     Route::resource('products', ProductController::class);
 
-    // Quản lý danh mục (CRUD đầy đủ trừ show)
-    Route::resource('categories', CategoryController::class)->except(['show']);
+    // Quản lý danh mục
+    Route::resource('categories', CategoryController::class);
 
     // Quản lý đơn hàng
     Route::resource('orders', OrderController::class)->only(['index', 'show']);
