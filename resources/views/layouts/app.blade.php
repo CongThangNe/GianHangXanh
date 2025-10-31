@@ -65,7 +65,7 @@
               Thuộc tính
             </a>
             <ul class="dropdown-menu" aria-labelledby="attributeDropdown">
-              <li><a class="dropdown-item" href="{{ route('admin.attributes.index') }}">Danh sách thuộc tính</a></li>
+              <li><a class="dropdown-item" href="{{ route('admin.attributes.index') }}">Danh sách thuộc tính sản phẩm </a></li>
               <li><a class="dropdown-item" href="{{ route('admin.attribute_values.index') }}">Giá trị thuộc tính</a></li>
             </ul>
           </li>
