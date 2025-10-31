@@ -39,7 +39,7 @@
     @foreach($attributes as $attr)
         <div class="mb-3">
             <label class="form-label">{{ $attr->name }}</label>
-            <select name="attribute_values[]" class="form-select" required>
+            <select name="attributes[{{ $attr->id }}]" class="form-select" required>
                 @foreach($attr->values as $value)
                     <option value="{{ $value->id }}" 
                         {{ in_array($value->id, $selectedValues) ? 'selected' : '' }}>
