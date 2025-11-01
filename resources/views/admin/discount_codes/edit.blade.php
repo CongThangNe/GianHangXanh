@@ -58,4 +58,5 @@
     <button class="btn btn-primary">Cập nhật</button>
     <a href="{{ route('admin.discount-codes.index') }}" class="btn btn-secondary">Hủy</a>
 </form>
+{{-- test --}}
 @endsection
