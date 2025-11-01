@@ -43,7 +43,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('categories', CategoryController::class);
     Route::resource('orders', OrderController::class)->only(['index', 'show']);
 
-    // product-variants (khoảng cách/hyphen tùy bạn; ở layout dùng route('admin.product_variants.*'))
     Route::resource('product-variants', ProductVariantController::class)->names('product_variants');
 
     Route::resource('attributes', AttributeController::class);
