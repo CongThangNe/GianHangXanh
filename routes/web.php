@@ -20,8 +20,7 @@ use App\Http\Controllers\Admin\DiscountCodeController;
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-    // **[ĐÃ KHẮC PHỤC LỖI RouteNotFoundException]**
-    // Sử dụng Route::resource tự động tạo ra products.index, products.create, products.edit, products.destroy, v.v.
+
     Route::resource('products', ProductController::class);
 
     // Quản lý danh mục
@@ -39,3 +38,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // Quản lý mã giảm giá
     Route::resource('discount-codes', DiscountCodeController::class);
 });
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');

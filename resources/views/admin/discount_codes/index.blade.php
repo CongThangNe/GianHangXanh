@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 @section('title', 'Quản lý mã giảm giá')
 @section('content')
 <div class="d-flex justify-content-between mb-3">
