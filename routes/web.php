@@ -15,6 +15,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\AttributeController;
 use App\Http\Controllers\Admin\AttributeValueController;
+use App\Http\Controllers\Admin\DiscountCodeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -56,4 +57,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('product-variants', ProductVariantController::class)->names('product_variants');
     Route::resource('attributes', AttributeController::class);
     Route::resource('attribute_values', AttributeValueController::class);
+
+    // Quản lý mã giảm giá
+    Route::resource('discount-codes', DiscountCodeController::class);
 });

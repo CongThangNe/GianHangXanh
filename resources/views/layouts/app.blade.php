@@ -57,7 +57,7 @@
           <li class="nav-item"><a class="nav-link" href="{{ route('admin.products.index') }}">Quản lý sản phẩm</a></li>
           <li class="nav-item"><a class="nav-link" href="{{ route('admin.categories.index') }}">Danh mục</a></li>
           <li class="nav-item"><a class="nav-link" href="{{ route('admin.product_variants.index') }}">Quản lý biến thể</a></li>
-
+          <li class="nav-item"><a class="nav-link" href="{{ route('admin.discount-codes.index') }}">Mã Giảm Giá</a></li>
           <!-- ✅ Dropdown Thuộc tính -->
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="attributeDropdown" role="button"
