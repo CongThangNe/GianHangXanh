@@ -39,7 +39,7 @@
                         <form action="{{ route('admin.products.destroy', $p->id) }}" method="POST" class="d-inline"
                               onsubmit="return confirm('Xóa sản phẩm này?')">
                             @csrf
-                            @method('DELETE')
+                                @method('DELETE')
                             <button type="submit" class="btn btn-sm btn-danger">Xóa</button>
                         </form>
                     </td>
