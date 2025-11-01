@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 =======
 @extends('layouts.admin')
 @section('title', 'Thêm mã giảm giá')
