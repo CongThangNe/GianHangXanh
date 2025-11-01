@@ -44,7 +44,7 @@
                         <h6 class="card-title fw-bold">{{ $p->name }}</h6>
                         <p class="text-success fw-bold mb-2">{{ number_format($p->price,0,',','.') }}₫</p>
                         <div class="mt-auto">
-                          <a href="{{ url('product/'.$p->id) }}" class="btn btn-outline-success btn-sm w-100">Xem chi tiết</a>
+                          <a href="{{ route('products.show', $p->id) }}" class="btn btn-outline-success btn-sm w-100">Xem chi tiết</a>
                         </div>
                     </div>
                 </div>
