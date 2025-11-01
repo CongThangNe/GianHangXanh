@@ -70,4 +70,10 @@ public function destroy($id) {
 }
 
 
+public function show($id)
+{
+    $product = Product::findOrFail($id);
+    $categories = Category::all();
+    return view('products.show', compact('product','categories'));
+}
 }
