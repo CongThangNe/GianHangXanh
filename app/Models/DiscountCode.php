@@ -20,12 +20,11 @@ class DiscountCode extends Model
         'used_count',       // Số lần đã sử dụng
         'max_uses',         // Giới hạn số lần sử dụng
         'expires_at',       // Ngày hết hạn
-<<<<<<< HEAD
-=======
+
+
         // Bạn có thể dùng discount_percent và discount_value như sau:
         // - Loại 1: discount_percent có giá trị, discount_value là 0/null
         // - Loại 2: discount_value có giá trị, discount_percent là 0/null
->>>>>>> d7caee36af9b11a8dbb680b3e239f0bb0b9d7733
     ];
 
     // Chuyển đổi kiểu dữ liệu

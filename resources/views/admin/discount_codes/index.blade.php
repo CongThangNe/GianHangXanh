@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-@extends('layouts.app')
-=======
 @extends('layouts.admin')
->>>>>>> d7caee36af9b11a8dbb680b3e239f0bb0b9d7733
 @section('title', 'Quản lý mã giảm giá')
 @section('content')
 <div class="d-flex justify-content-between mb-3">

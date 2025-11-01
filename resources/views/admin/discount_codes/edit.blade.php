@@ -1,8 +1,8 @@
-<<<<<<< HEAD
+
 @extends('layouts.app')
 =======
 @extends('layouts.admin')
->>>>>>> d7caee36af9b11a8dbb680b3e239f0bb0b9d7733
+
 @section('title', 'Sửa mã giảm giá')
 @section('content')
 <h3>Sửa Mã Giảm Giá: {{ $discountCode->code }}</h3>
