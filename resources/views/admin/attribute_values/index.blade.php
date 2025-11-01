@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 @section('title','Quản lý Giá trị thuộc tính')
 
 @section('content')

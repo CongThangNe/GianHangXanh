@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 @section('title','Chi tiết đơn')
 @section('content')
 <h3>Chi tiết đơn #{{ $order->id }}</h3>
