@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 @section('title','Thêm thuộc tính')
 @section('content')
 <h3>Thêm thuộc tính</h3>
