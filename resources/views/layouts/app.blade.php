@@ -54,22 +54,13 @@
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item"><a class="nav-link" href="{{ url('/') }}">Trang chủ</a></li>
           <li class="nav-item"><a class="nav-link" href="{{ route('cart.index') }}">Giỏ hàng</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ route('admin.products.index') }}">Quản lý sản phẩm</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ route('admin.categories.index') }}">Danh mục</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ route('admin.product_variants.index') }}">Quản lý biến thể</a></li>
 
-          <!-- ✅ Dropdown Thuộc tính -->
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="attributeDropdown" role="button"
-               data-bs-toggle="dropdown" aria-expanded="false">
-              Thuộc tính
-            </a>
-            <ul class="dropdown-menu" aria-labelledby="attributeDropdown">
-              <li><a class="dropdown-item" href="{{ route('admin.attributes.index') }}">Danh sách thuộc tính sản phẩm </a></li>
-              <li><a class="dropdown-item" href="{{ route('admin.attribute_values.index') }}">Giá trị thuộc tính</a></li>
-            </ul>
+          <li class="nav-item">
+            <a class="nav-link" href="/discount-events">Mã Giảm Giá</a>
           </li>
-          <!-- ✅ End Dropdown -->
+          <li class="nav-item">
+            <a class="nav-link" href="{{ route('admin.dashboard') }}">Admin</a>
+          </li>
         </ul>
 
         <!-- Tìm kiếm -->
@@ -116,7 +107,7 @@
   <!-- Footer -->
   <footer class="text-center">
     <div class="container">
-      <p class="mb-1">&copy; 2025 Gian Hàng Xanh. All rights reserved.</p>
+      <p class="mb-1">&copy; 2025 Gian Hàng Xanh. All rights reserve.</p>
       <p>
         <a href="#" class="me-3"><i class="bi bi-facebook"></i></a>
         <a href="#" class="me-3"><i class="bi bi-instagram"></i></a>
@@ -127,4 +118,5 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
