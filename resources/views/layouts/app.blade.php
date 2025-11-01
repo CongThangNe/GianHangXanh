@@ -107,7 +107,7 @@
   <!-- Footer -->
   <footer class="text-center">
     <div class="container">
-      <p class="mb-1">&copy; 2025 Gian Hàng Xanh. All rights reserved.</p>
+      <p class="mb-1">&copy; 2025 Gian Hàng Xanh. All rights reserve.</p>
       <p>
         <a href="#" class="me-3"><i class="bi bi-facebook"></i></a>
         <a href="#" class="me-3"><i class="bi bi-instagram"></i></a>
