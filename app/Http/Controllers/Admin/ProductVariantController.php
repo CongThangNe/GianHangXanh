@@ -128,9 +128,11 @@ class ProductVariantController extends Controller
     }
 
     public function destroy($id)
-    {
-        DB::table('product_attribute_values')->where('product_variant_id', $id)->delete();
-        ProductVariant::destroy($id);
-        return redirect()->route('admin.product_variants.index')->with('success', 'Xóa biến thể thành công');
-    }
+{
+    $variant = ProductVariant::findOrFail($id);
+    $variant->values()->detach();
+    $variant->delete();
+
+    return back()->with('success', 'Đã xoá biến thể.');
+}
 }
