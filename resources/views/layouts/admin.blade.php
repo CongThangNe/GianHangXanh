@@ -14,7 +14,17 @@
     body { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial; background: #f9fdf9; }
 
     /* Sidebar */
-    .sidebar { width: var(--sidebar-width); min-height: 100vh; background: linear-gradient(180deg,#fff,#f7fbf7); border-right:1px solid #e6efe6; padding:1rem 0.5rem; position:fixed; top:0; left:0; z-index:1000; }
+    .sidebar { 
+      width: var(--sidebar-width); 
+      min-height: 100vh; 
+      background: linear-gradient(180deg,#fff,#f7fbf7); 
+      border-right:1px solid #e6efe6; 
+      padding:1rem 0.5rem; 
+      position:fixed; 
+      top:0; 
+      left:0; 
+      z-index:1000; 
+    }
     .sidebar .nav-link { color:#233; padding:.65rem 1rem; border-radius:.5rem; transition:.2s; }
     .sidebar .nav-link:hover { background: rgba(47,143,58,.05); color: var(--brand); }
     .sidebar .nav-link.active { background: rgba(47,143,58,.1); color: var(--brand); font-weight:600; }
@@ -44,8 +54,15 @@
       <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}" href="{{ route('admin.categories.index') }}">📁 Danh mục</a></li>
       <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.orders.*') ? 'active' : '' }}" href="{{ route('admin.orders.index') }}">🧾 Đơn hàng</a></li>
       <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.product_variants.*') ? 'active' : '' }}" href="{{ route('admin.product_variants.index') }}">🎛️ Biến thể</a></li>
-      
     </ul>
+
+    <!-- 🔹 Nút chuyển về trang người dùng -->
+    <hr class="my-3">
+    <div class="text-center px-3">
+      <a href="{{ route('home') }}" class="btn btn-outline-success w-100">
+        🏠 Về trang người dùng
+      </a>
+    </div>
   </nav>
 
   <!-- Main content -->
@@ -82,6 +99,7 @@
     });
   });
   </script>
+
   @stack('scripts')
 </body>
 </html>

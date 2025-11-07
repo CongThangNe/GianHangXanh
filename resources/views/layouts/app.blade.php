@@ -52,24 +52,16 @@
       <div class="collapse navbar-collapse" id="mainNavbar">
         <!-- Menu trái -->
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item"><a class="nav-link" href="{{ url('/') }}">Trang chủ</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ route('cart.index') }}">Giỏ hàng</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ route('admin.products.index') }}">Quản lý sản phẩm</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ route('admin.categories.index') }}">Danh mục</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ route('admin.product_variants.index') }}">Quản lý biến thể</a></li>
-
-          <!-- ✅ Dropdown Thuộc tính -->
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="attributeDropdown" role="button"
-               data-bs-toggle="dropdown" aria-expanded="false">
-              Thuộc tính
-            </a>
-            <ul class="dropdown-menu" aria-labelledby="attributeDropdown">
-              <li><a class="dropdown-item" href="{{ route('admin.attributes.index') }}">Danh sách thuộc tính sản phẩm </a></li>
-              <li><a class="dropdown-item" href="{{ route('admin.attribute_values.index') }}">Giá trị thuộc tính</a></li>
-            </ul>
+          <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">Trang chủ</a>
           </li>
-          <!-- ✅ End Dropdown -->
+          <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('cart.*') ? 'active' : '' }}" href="{{ route('cart.index') }}">Giỏ hàng</a>
+          </li>
+          <!-- 🔹 Nút đi đến trang Admin -->
+          <li class="nav-item">
+            <a class="nav-link" href="{{ route('admin.dashboard') }}">⚙️ Quản trị Admin</a>
+          </li>
         </ul>
 
         <!-- Tìm kiếm -->
@@ -91,9 +83,7 @@
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
               <li><a class="dropdown-item" href="#">Hồ sơ cá nhân</a></li>
               <li><a class="dropdown-item" href="#">Đơn hàng</a></li>
-              <li>
-                <hr class="dropdown-divider">
-              </li>
+              <li><hr class="dropdown-divider"></li>
               <li>
                 <form method="POST" action="#">
                   @csrf
