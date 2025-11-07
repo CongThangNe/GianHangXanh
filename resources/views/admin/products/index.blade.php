@@ -21,6 +21,7 @@
             <thead class="table-light">
                 <tr>
                     <th>ID</th>
+                    <th>Ảnh</th>
                     <th>Tên</th>
                     <th>Giá</th>
                     <th>Danh mục</th>
@@ -31,6 +32,17 @@
                 @forelse ($products as $p)
                 <tr>
                     <td>{{ $p->id }}</td>
+
+                    {{-- Cột ảnh --}}
+                    <td class="text-center">
+                        @if ($p->image)
+                            <img src="{{ asset('storage/' . $p->image) }}" alt="Ảnh sản phẩm"
+                                 style="width: 70px; height: 70px; object-fit: cover; border-radius: 6px;">
+                        @else
+                            <span class="text-muted fst-italic">Không có ảnh</span>
+                        @endif
+                    </td>
+
                     <td>{{ $p->name }}</td>
                     <td>{{ number_format($p->price, 0, ',', '.') }}₫</td>
                     <td>{{ $p->category->name ?? 'Chưa gán danh mục' }}</td>
@@ -39,14 +51,14 @@
                         <form action="{{ route('admin.products.destroy', $p->id) }}" method="POST" class="d-inline"
                               onsubmit="return confirm('Xóa sản phẩm này?')">
                             @csrf
-                                @method('DELETE')
+                            @method('DELETE')
                             <button type="submit" class="btn btn-sm btn-danger">Xóa</button>
                         </form>
                     </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" class="text-center text-muted">Chưa có sản phẩm nào</td>
+                    <td colspan="6" class="text-center text-muted">Chưa có sản phẩm nào</td>
                 </tr>
                 @endforelse
             </tbody>
