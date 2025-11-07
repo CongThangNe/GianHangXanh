@@ -52,10 +52,15 @@
       <div class="collapse navbar-collapse" id="mainNavbar">
         <!-- Menu trái -->
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item"><a class="nav-link" href="{{ url('/') }}">Trang chủ</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ route('cart.index') }}">Giỏ hàng</a></li>
           <li class="nav-item">
-            <a class="nav-link" href="{{ route('admin.dashboard') }}">Admin</a>
+            <a class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">Trang chủ</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('cart.*') ? 'active' : '' }}" href="{{ route('cart.index') }}">Giỏ hàng</a>
+          </li>
+          <!-- 🔹 Nút đi đến trang Admin -->
+          <li class="nav-item">
+            <a class="nav-link" href="{{ route('admin.dashboard') }}">⚙️ Quản trị Admin</a>
           </li>
         </ul>
 
@@ -78,9 +83,7 @@
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
               <li><a class="dropdown-item" href="#">Hồ sơ cá nhân</a></li>
               <li><a class="dropdown-item" href="#">Đơn hàng</a></li>
-              <li>
-                <hr class="dropdown-divider">
-              </li>
+              <li><hr class="dropdown-divider"></li>
               <li>
                 <form method="POST" action="#">
                   @csrf
@@ -103,7 +106,7 @@
   <!-- Footer -->
   <footer class="text-center">
     <div class="container">
-      <p class="mb-1">&copy; 2025 Gian Hàng Xanh. All rights reserve.</p>
+      <p class="mb-1">&copy; 2025 Gian Hàng Xanh. All rights reserved.</p>
       <p>
         <a href="#" class="me-3"><i class="bi bi-facebook"></i></a>
         <a href="#" class="me-3"><i class="bi bi-instagram"></i></a>
@@ -114,5 +117,4 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>
