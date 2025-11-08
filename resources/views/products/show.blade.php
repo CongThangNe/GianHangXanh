@@ -17,8 +17,6 @@
                      alt="No image available">
             @endif
         </div>
-
-        <!-- Thông tin sản phẩm -->
         <div class="col-md-6">
             <h2 class="fw-bold mb-3">{{ $product->name }}</h2>
             
