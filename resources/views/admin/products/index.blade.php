@@ -20,20 +20,16 @@
         <table class="table table-bordered table-striped table-hover align-middle">
             <thead class="table-light">
                 <tr>
-                    <th width="50">ID</th>
-                    <th width="80">Ảnh</th>
+                    <th>ID</th>
+                    <th>Ảnh</th>
                     <th>Tên</th>
-                    <th width="120">Giá</th>
-                    <th width="120">Tồn kho</th>
-                    <th width="160">Danh mục</th>
-                    <th width="160">Chức năng</th>
+                    <th>Giá</th>
+                    <th>Danh mục</th>
+                    <th>Chức năng</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse ($products as $p)
-                @php
-                    $totalStock = $p->variants->sum('stock') ?? 0;
-                @endphp
                 <tr>
                     <td>{{ $p->id }}</td>
 
@@ -49,11 +45,6 @@
 
                     <td>{{ $p->name }}</td>
                     <td>{{ number_format($p->price, 0, ',', '.') }}₫</td>
-                    <td>
-                        <span class="{{ $totalStock > 0 ? 'text-success' : 'text-danger' }}">
-                            {{ $totalStock }}
-                        </span>
-                    </td>
                     <td>{{ $p->category->name ?? 'Chưa gán danh mục' }}</td>
                     <td>
                         <a href="{{ route('admin.products.edit', $p->id) }}" class="btn btn-sm btn-primary">Sửa</a>
@@ -67,7 +58,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="text-center text-muted">Chưa có sản phẩm nào</td>
+                    <td colspan="6" class="text-center text-muted">Chưa có sản phẩm nào</td>
                 </tr>
                 @endforelse
             </tbody>
@@ -80,4 +71,3 @@
 
 </div>
 @endsection
-    

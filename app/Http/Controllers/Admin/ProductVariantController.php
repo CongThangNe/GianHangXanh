@@ -19,11 +19,9 @@ class ProductVariantController extends Controller
 
     public function edit($id)
     {
-        $variant = ProductVariant::with('attributeValues.attribute')->findOrFail($id);
-        $products = Product::all();
+        $variant = ProductVariant::with('attributeValues')->findOrFail($id);
+        $products = Product::orderBy('name')->get();
         $attributes = Attribute::with('values')->get();
-
-        // Lấy danh sách giá trị đã chọn của biến thể này
         $selectedValues = $variant->attributeValues->pluck('id')->toArray();
 
         return view('admin.product_variants.edit', compact(
@@ -45,7 +43,8 @@ class ProductVariantController extends Controller
 
         $variant = ProductVariant::findOrFail($id);
 
-        DB::transaction(function () use ($request, $variant) {
+        DB::beginTransaction();
+        try {
             // Cập nhật thông tin chính
             $variant->update([
                 'product_id' => $request->product_id,
@@ -54,26 +53,31 @@ class ProductVariantController extends Controller
                 'stock' => $request->stock,
             ]);
 
-            // Cập nhật lại giá trị thuộc tính
+            // Lấy danh sách giá trị thuộc tính
             $attributeValueIds = collect($request->input('attributes', []))
                 ->flatten()
                 ->filter()
                 ->unique()
+                ->values()
                 ->toArray();
 
+            // Cập nhật bảng trung gian
             $variant->attributeValues()->sync($attributeValueIds);
-        });
 
-        return redirect()
-            ->route('admin.product_variants.index')
-            ->with('success', 'Cập nhật biến thể sản phẩm thành công!');
+            DB::commit();
+            return redirect()
+                ->route('admin.product_variants.index')
+                ->with('success', 'Cập nhật biến thể sản phẩm thành công!');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => $e->getMessage()]);
+        }
     }
 
     public function destroy($id)
     {
         $variant = ProductVariant::findOrFail($id);
         $variant->delete();
-
         return back()->with('success', 'Đã xóa biến thể sản phẩm');
     }
 }
