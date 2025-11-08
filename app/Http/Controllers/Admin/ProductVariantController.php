@@ -128,11 +128,20 @@ class ProductVariantController extends Controller
     }
 
     public function destroy($id)
-{
-    $variant = ProductVariant::findOrFail($id);
-    $variant->values()->detach();
-    $variant->delete();
+    {
+        $variant = ProductVariant::findOrFail($id);
+        $variant->values()->detach();
+        $variant->delete();
 
-    return back()->with('success', 'Đã xoá biến thể.');
-}
+        return back()->with('success', 'Đã xoá biến thể.');
+    }
+    public function show($id)
+    {
+        $product = Product::with([
+            'category',
+            'variants.attributeValues.attribute'
+        ])->findOrFail($id);
+
+        return view('products.show', compact('product'));
+    }
 }
