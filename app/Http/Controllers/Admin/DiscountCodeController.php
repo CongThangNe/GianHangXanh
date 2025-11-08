@@ -4,96 +4,163 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\DiscountCode; // Sử dụng Model mới
+use App\Models\DiscountCode;
+use Illuminate\Support\Facades\DB;
 
 class DiscountCodeController extends Controller
 {
+    /**
+     * Hiển thị danh sách mã giảm giá
+     */
     public function index()
     {
-        $discountCodes = DiscountCode::latest()->paginate(10);
+        // Lấy danh sách mã giảm giá, sắp xếp mới nhất
+        $discountCodes = DiscountCode::orderByDesc('id')->paginate(10);
+
+        // Trả biến về view
         return view('admin.discount_codes.index', compact('discountCodes'));
     }
 
+    /**
+     * Form tạo mới
+     */
     public function create()
     {
         return view('admin.discount_codes.create');
     }
 
+    /**
+     * Lưu mã giảm giá mới
+     */
     public function store(Request $request)
     {
-        // 1. Validate: Không trùng code & Giá trị hợp lệ
         $request->validate([
-            'code' => 'required|unique:discount_codes,code|max:255',
-            'type' => 'required|in:percent,value', // Giả định có thêm trường type
-            'value' => 'required|numeric|min:1',
-            'expires_at' => 'nullable|date|after:today', // Hết hạn phải sau ngày hôm nay
-            'max_uses' => 'nullable|integer|min:1',
-        ]);
-
-        $data = $request->only('code', 'expires_at', 'max_uses');
-
-        // Xử lý giá trị giảm giá theo loại
-        if ($request->type === 'percent') {
-            $request->validate(['value' => 'max:99.99']); // Giảm theo % (0 < value < 100)
-            $data['discount_percent'] = $request->value;
-            // Giả định discount_value = 0 nếu là %
-            $data['discount_value'] = 0; 
-        } else { // type === 'value' (Giảm trực tiếp)
-            $data['discount_percent'] = 0;
-            // Giả định bạn có cột discount_value trong DB
-            $data['discount_value'] = $request->value;
-        }
-        
-        // Thêm trường 'max_uses' vào DB nếu bạn muốn lưu giới hạn sử dụng
-        $data['max_uses'] = $request->max_uses ?? 0; // 0: không giới hạn
-
-        DiscountCode::create($data);
-
-        return redirect()->route('admin.discount-codes.index')->with('success', 'Thêm mã giảm giá thành công! 🎟️');
-    }
-
-    public function edit(DiscountCode $discountCode)
-    {
-        // Lấy type và value hiện tại để đổ vào form
-        $discountCode->type = $discountCode->discount_percent > 0 ? 'percent' : 'value';
-        $discountCode->value = $discountCode->discount_percent > 0 ? $discountCode->discount_percent : $discountCode->discount_value;
-        
-        return view('admin.discount_codes.edit', compact('discountCode'));
-    }
-
-    public function update(Request $request, DiscountCode $discountCode)
-    {
-        // 1. Validate: Code không trùng (ngoại trừ chính nó) & Giá trị hợp lệ
-        $request->validate([
-            'code' => 'required|unique:discount_codes,code,' . $discountCode->id . '|max:255',
+            'code' => 'required|string|max:50|unique:discount_codes,code',
             'type' => 'required|in:percent,value',
-            'value' => 'required|numeric|min:1',
-            'expires_at' => 'nullable|date|after:today',
-            'max_uses' => 'nullable|integer|min:1',
+            'value' => [
+                'required', 'numeric',
+                function($attr, $val, $fail) use ($request) {
+                    if ($request->type === 'percent' && ($val <= 0 || $val > 100)) {
+                        $fail('Giá trị giảm % phải trong khoảng 1–100.');
+                    }
+                    if ($request->type === 'value' && $val <= 0) {
+                        $fail('Giá trị giảm tiền phải lớn hơn 0.');
+                    }
+                }
+            ],
+            'starts_at' => 'required|date',
+            'expires_at' => 'nullable|date|after_or_equal:starts_at',
+            'max_uses' => 'nullable|integer|min:0',
+            'max_discount_value' => 'nullable|numeric|min:0',
         ]);
-        
-        $data = $request->only('code', 'expires_at', 'max_uses');
 
-        // Xử lý giá trị giảm giá theo loại
-        if ($request->type === 'percent') {
-            $request->validate(['value' => 'max:99.99']); // Giảm theo % (0 < value < 100)
-            $data['discount_percent'] = $request->value;
-            $data['discount_value'] = 0; 
-        } else { // type === 'value' (Giảm trực tiếp)
-            $data['discount_percent'] = 0;
-            $data['discount_value'] = $request->value;
+        DB::beginTransaction();
+        try {
+            $discount = new DiscountCode();
+            $discount->code = $request->input('code');
+            $discount->discount_percent = 0;
+            $discount->discount_value = 0;
+
+            // Xử lý loại mã
+            if ($request->type === 'percent') {
+                $discount->discount_percent = $request->input('value');
+            } else {
+                $discount->discount_value = $request->input('value');
+            }
+
+            $discount->max_uses = $request->input('max_uses') ?? 0;
+            $discount->used_count = 0;
+            $discount->starts_at = $request->input('starts_at');
+            $discount->expires_at = $request->input('expires_at');
+            $discount->max_discount_value = $request->input('max_discount_value') ?? 0;
+
+            $discount->save();
+
+            DB::commit();
+            return redirect()
+                ->route('admin.discount-codes.index')
+                ->with('success', 'Tạo mã giảm giá thành công!');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => $e->getMessage()]);
         }
-
-        $data['max_uses'] = $request->max_uses ?? 0;
-
-        $discountCode->update($data);
-
-        return redirect()->route('admin.discount-codes.index')->with('success', 'Cập nhật mã giảm giá thành công! ✅');
     }
 
-    public function destroy(DiscountCode $discountCode)
+    /**
+     * Form sửa mã giảm giá
+     */
+    public function edit($id)
+{
+    $discountCode = \App\Models\DiscountCode::findOrFail($id);
+    return view('admin.discount_codes.edit', compact('discountCode'));
+}
+
+    /**
+     * Cập nhật mã giảm giá
+     */
+    public function update(Request $request, $id)
     {
-        $discountCode->delete();
-        return back()->with('success', 'Đã xóa mã giảm giá. 🗑️');
+        $discount = DiscountCode::findOrFail($id);
+
+        $request->validate([
+            'code' => 'required|string|max:50|unique:discount_codes,code,' . $discount->id,
+            'type' => 'required|in:percent,value',
+            'value' => [
+                'required', 'numeric',
+                function($attr, $val, $fail) use ($request) {
+                    if ($request->type === 'percent' && ($val <= 0 || $val > 100)) {
+                        $fail('Giá trị giảm % phải trong khoảng 1–100.');
+                    }
+                    if ($request->type === 'value' && $val <= 0) {
+                        $fail('Giá trị giảm tiền phải lớn hơn 0.');
+                    }
+                }
+            ],
+            'starts_at' => 'required|date',
+            'expires_at' => 'nullable|date|after_or_equal:starts_at',
+            'max_uses' => 'nullable|integer|min:0',
+            'max_discount_value' => 'nullable|numeric|min:0',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $discount->code = $request->input('code');
+            $discount->discount_percent = 0;
+            $discount->discount_value = 0;
+
+            if ($request->type === 'percent') {
+                $discount->discount_percent = $request->input('value');
+            } else {
+                $discount->discount_value = $request->input('value');
+            }
+
+            $discount->max_uses = $request->input('max_uses') ?? 0;
+            $discount->starts_at = $request->input('starts_at');
+            $discount->expires_at = $request->input('expires_at');
+            $discount->max_discount_value = $request->input('max_discount_value') ?? 0;
+
+            $discount->save();
+
+            DB::commit();
+            return redirect()
+                ->route('admin.discount-codes.index')
+                ->with('success', 'Cập nhật mã giảm giá thành công!');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Xóa mã giảm giá
+     */
+    public function destroy($id)
+    {
+        $discount = DiscountCode::findOrFail($id);
+        $discount->delete();
+
+        return redirect()
+            ->route('admin.discount-codes.index')
+            ->with('success', 'Xóa mã giảm giá thành công!');
     }
 }
