@@ -1,67 +1,62 @@
+
 @extends('layouts.admin')
-@section('title', 'Chỉnh sửa mã giảm giá')
+=======
+@extends('layouts.admin')
 
+@section('title', 'Sửa mã giảm giá')
 @section('content')
-<div class="container py-4">
-    <h3 class="mb-4">Chỉnh sửa mã giảm giá</h3>
+<h3>Sửa Mã Giảm Giá: {{ $discountCode->code }}</h3>
+<form method="POST" action="{{ route('admin.discount-codes.update', $discountCode->id) }}">
+    @csrf
+    @method('PUT')
+    
+    <div class="mb-3">
+        <label class="form-label">Mã Code *</label>
+        <input name="code" class="form-control" required value="{{ old('code', $discountCode->code) }}">
+        @error('code') <div class="text-danger mt-1">{{ $message }}</div> @enderror
+    </div>
 
-    <form method="POST" action="{{ route('admin.discount-codes.update', $discountCode->id) }}">
-        @csrf
-        @method('PUT')
-
-        <div class="mb-3">
-            <label class="form-label">Mã Code *</label>
-            <input name="code" class="form-control" required value="{{ old('code', $discountCode->code) }}">
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Loại Giảm Giá *</label><br>
+    <div class="mb-3">
+        <label class="form-label">Loại Giảm Giá *</label>
+        <div>
             <div class="form-check form-check-inline">
-                <input type="radio" id="typePercent" name="type" value="percent"
-                       class="form-check-input"
-                       {{ $discountCode->discount_percent > 0 ? 'checked' : '' }}>
-                <label for="typePercent" class="form-check-label">Theo %</label>
+                <input class="form-check-input" type="radio" name="type" id="typePercentEdit" value="percent" 
+                    {{ old('type', $discountCode->type) == 'percent' ? 'checked' : '' }}>
+                <label class="form-check-label" for="typePercentEdit">Giảm theo % (0 < value < 100)</label>
             </div>
             <div class="form-check form-check-inline">
-                <input type="radio" id="typeValue" name="type" value="value"
-                       class="form-check-input"
-                       {{ $discountCode->discount_value > 0 ? 'checked' : '' }}>
-                <label for="typeValue" class="form-check-label">Theo VNĐ</label>
+                <input class="form-check-input" type="radio" name="type" id="typeValueEdit" value="value" 
+                    {{ old('type', $discountCode->type) == 'value' ? 'checked' : '' }}>
+                <label class="form-check-label" for="typeValueEdit">Giảm trực tiếp (value > 0)</label>
             </div>
+            @error('type') <div class="text-danger mt-1">{{ $message }}</div> @enderror
         </div>
+    </div>
+    
+    <div class="mb-3">
+        <label class="form-label">Giá trị Giảm *</label>
+        <input name="value" type="number" step="0.01" min="1" class="form-control" required 
+               value="{{ old('value', $discountCode->value) }}">
+        @error('value') <div class="text-danger mt-1">{{ $message }}</div> @enderror
+    </div>
 
-        <div class="mb-3">
-            <label class="form-label">Giá trị giảm *</label>
-            <input type="number" name="value" class="form-control"
-                   value="{{ old('value', $discountCode->discount_percent ?: $discountCode->discount_value) }}">
-        </div>
+    <div class="mb-3">
+        <label class="form-label">Ngày Hết Hạn</label>
+        <input name="expires_at" type="date" class="form-control" 
+               value="{{ old('expires_at', $discountCode->expires_at ? $discountCode->expires_at->format('Y-m-d') : '') }}">
+        @error('expires_at') <div class="text-danger mt-1">{{ $message }}</div> @enderror
+        <small class="text-muted">Để trống nếu không có thời hạn.</small>
+    </div>
+    
+    <div class="mb-3">
+        <label class="form-label">Số lần sử dụng tối đa</label>
+        <input name="max_uses" type="number" min="1" class="form-control" value="{{ old('max_uses', $discountCode->max_uses) }}">
+        @error('max_uses') <div class="text-danger mt-1">{{ $message }}</div> @enderror
+        <small class="text-muted">Để trống hoặc 0 nếu không giới hạn. Đã sử dụng: **{{ $discountCode->used_count }}** lần.</small>
+    </div>
 
-        <div class="mb-3">
-            <label class="form-label">Ngày bắt đầu</label>
-            <input type="date" name="starts_at" class="form-control"
-                   value="{{ old('starts_at', $discountCode->starts_at ? $discountCode->starts_at->format('Y-m-d') : '') }}">
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Ngày hết hạn</label>
-            <input type="date" name="expires_at" class="form-control"
-                   value="{{ old('expires_at', $discountCode->expires_at ? $discountCode->expires_at->format('Y-m-d') : '') }}">
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Số lần sử dụng tối đa</label>
-            <input type="number" name="max_uses" class="form-control"
-                   value="{{ old('max_uses', $discountCode->max_uses) }}">
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Giá trị giảm tối đa (nếu theo %)</label>
-            <input type="number" name="max_discount_value" class="form-control"
-                   value="{{ old('max_discount_value', $discountCode->max_discount_value) }}">
-        </div>
-
-        <button class="btn btn-primary">Cập nhật</button>
-        <a href="{{ route('admin.discount-codes.index') }}" class="btn btn-secondary">Quay lại</a>
-    </form>
-</div>
+    <button class="btn btn-primary">Cập nhật</button>
+    <a href="{{ route('admin.discount-codes.index') }}" class="btn btn-secondary">Hủy</a>
+</form>
+{{-- test --}}
 @endsection

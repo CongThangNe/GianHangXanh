@@ -3,77 +3,145 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Attribute;
-use Illuminate\Http\Request;
+use App\Models\AttributeValue;
 use Illuminate\Support\Facades\DB;
 
 class ProductVariantController extends Controller
 {
     public function index()
     {
-        $variants = ProductVariant::with('product')->latest()->paginate(10);
+        $variants = ProductVariant::with(['product', 'attributeValues.attribute'])->paginate(20);
         return view('admin.product_variants.index', compact('variants'));
+    }
+
+    public function create()
+    {
+        $products = Product::orderBy('name')->get();
+        $attributes = Attribute::with('values')->get();
+        return view('admin.product_variants.create', compact('products', 'attributes'));
+    }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'sku' => 'required|string|max:100|unique:product_variants,sku',
+            'price' => 'required|numeric|min:0',
+            'stock' => 'required|integer|min:0',
+            'attributes' => 'required|array|min:1',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            // 🔹 Kiểm tra tổ hợp attribute values có bị trùng không
+            $existingVariant = DB::table('product_attribute_values')
+                ->join('product_variants', 'product_attribute_values.product_variant_id', '=', 'product_variants.id')
+                ->where('product_variants.product_id', $data['product_id'])
+                ->whereIn('product_attribute_values.attribute_value_id', array_values($data['attributes']))
+                ->groupBy('product_variants.id')
+                ->havingRaw('COUNT(*) = ?', [count($data['attributes'])])
+                ->first();
+
+            if ($existingVariant) {
+                return back()->withErrors(['attributes' => 'Biến thể này đã tồn tại cho sản phẩm này.'])->withInput();
+            }
+
+            // 🔹 Tạo biến thể
+            $variant = ProductVariant::create([
+                'product_id' => $data['product_id'],
+                'sku' => $data['sku'],
+                'price' => $data['price'],
+                'stock' => $data['stock'],
+            ]);
+
+            // 🔹 Lưu vào bảng trung gian product_attribute_values
+            foreach ($data['attributes'] as $attrId => $valueId) {
+                DB::table('product_attribute_values')->insert([
+                    'product_variant_id' => $variant->id,
+                    'attribute_value_id' => $valueId,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->route('admin.product_variants.index')->with('success', 'Thêm biến thể thành công');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Lỗi khi lưu: ' . $e->getMessage()]);
+        }
     }
 
     public function edit($id)
     {
-        $variant = ProductVariant::with('attributeValues.attribute')->findOrFail($id);
-        $products = Product::all();
+        $variant = ProductVariant::with('attributeValues')->findOrFail($id);
+        $products = Product::orderBy('name')->get();
         $attributes = Attribute::with('values')->get();
-
-        // Lấy danh sách giá trị đã chọn của biến thể này
         $selectedValues = $variant->attributeValues->pluck('id')->toArray();
 
-        return view('admin.product_variants.edit', compact(
-            'variant',
-            'products',
-            'attributes',
-            'selectedValues'
-        ));
+        return view('admin.product_variants.edit', compact('variant', 'products', 'attributes', 'selectedValues'));
     }
 
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'sku' => 'required|string|max:255',
-            'price' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
-        ]);
-
         $variant = ProductVariant::findOrFail($id);
 
-        DB::transaction(function () use ($request, $variant) {
-            // Cập nhật thông tin chính
+        $data = $request->validate([
+            'sku' => 'required|string|max:100|unique:product_variants,sku,' . $id,
+            'price' => 'required|numeric|min:0',
+            'stock' => 'required|integer|min:0',
+            'attributes' => 'required|array|min:1',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
             $variant->update([
-                'product_id' => $request->product_id,
-                'sku' => $request->sku,
-                'price' => $request->price,
-                'stock' => $request->stock,
+                'sku' => $data['sku'],
+                'price' => $data['price'],
+                'stock' => $data['stock'],
             ]);
 
-            // Cập nhật lại giá trị thuộc tính
-            $attributeValueIds = collect($request->input('attributes', []))
-                ->flatten()
-                ->filter()
-                ->unique()
-                ->toArray();
+            // Cập nhật lại attribute values
+            DB::table('product_attribute_values')->where('product_variant_id', $variant->id)->delete();
 
-            $variant->attributeValues()->sync($attributeValueIds);
-        });
+            foreach ($data['attributes'] as $attrId => $valueId) {
+                DB::table('product_attribute_values')->insert([
+                    'product_variant_id' => $variant->id,
+                    'attribute_value_id' => $valueId,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
 
-        return redirect()
-            ->route('admin.product_variants.index')
-            ->with('success', 'Cập nhật biến thể sản phẩm thành công!');
+            DB::commit();
+            return redirect()->route('admin.product_variants.index')->with('success', 'Cập nhật biến thể thành công');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Lỗi khi cập nhật: ' . $e->getMessage()]);
+        }
     }
 
     public function destroy($id)
     {
         $variant = ProductVariant::findOrFail($id);
+        $variant->values()->detach();
         $variant->delete();
 
-        return back()->with('success', 'Đã xóa biến thể sản phẩm');
+        return back()->with('success', 'Đã xoá biến thể.');
+    }
+    public function show($id)
+    {
+        $product = Product::with([
+            'category',
+            'variants.attributeValues.attribute'
+        ])->findOrFail($id);
+
+        return view('products.show', compact('product'));
     }
 }
