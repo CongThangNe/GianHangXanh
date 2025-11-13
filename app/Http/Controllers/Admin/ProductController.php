@@ -189,4 +189,105 @@ class ProductController extends Controller
 
         return implode('-', $parts);
     }
+     // Lấy danh sách sản phẩm
+    public function apiIndex()
+    {
+        $products = Product::withCount('variants')->get();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Lấy danh sách sản phẩm thành công',
+            'data' => $products
+        ]);
+    }
+
+    // Lấy chi tiết sản phẩm + biến thể
+    public function apiShow($id)
+    {
+        $product = Product::with('variants')->find($id);
+
+        if (!$product) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Không tìm thấy sản phẩm',
+                'data' => null
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Lấy chi tiết sản phẩm thành công',
+            'data' => $product
+        ]);
+    }
+
+    // Thêm sản phẩm mới
+    public function apiStore(Request $request)
+    {
+        $product = Product::create([
+            'category_id' => $request->category_id,
+            'name' => $request->name,
+            'description' => $request->description,
+            'price' => $request->price,
+            'image' => $request->image,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Thêm sản phẩm thành công',
+            'data' => $product
+        ]);
+    }
+
+    // Cập nhật sản phẩm
+    public function apiUpdate(Request $request, $id)
+    {
+        $product = Product::find($id);
+
+        if (!$product) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Không tìm thấy sản phẩm',
+                'data' => null
+            ], 404);
+        }
+
+        $product->update([
+            'category_id' => $request->category_id ?? $product->category_id,
+            'name' => $request->name ?? $product->name,
+            'description' => $request->description ?? $product->description,
+            'price' => $request->price ?? $product->price,
+            'image' => $request->image ?? $product->image,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Cập nhật sản phẩm thành công',
+            'data' => $product
+        ]);
+    }
+
+    // Xóa sản phẩm (và biến thể liên quan)
+    public function apiDelete($id)
+    {
+        $product = Product::find($id);
+
+        if (!$product) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Không tìm thấy sản phẩm',
+                'data' => null
+            ], 404);
+        }
+
+        // Xóa biến thể trước
+        ProductVariant::where('product_id', $product->id)->delete();
+        $product->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Xóa sản phẩm thành công',
+            'data' => null
+        ]);
+    }
 }
