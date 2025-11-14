@@ -137,4 +137,16 @@ class ProductController extends Controller
 
         return $sku;
     }
+    public function search(Request $request)
+    {
+        $keyword = $request->keyword;
+
+        $products = Product::where('name', 'LIKE', '%' . $keyword . '%')
+            ->orWhere('description', 'LIKE', '%' . $keyword . '%')
+            ->paginate(12);
+
+        $categories = Category::all();
+
+        return view('search.search', compact('products', 'categories', 'keyword'));
+    }
 }
