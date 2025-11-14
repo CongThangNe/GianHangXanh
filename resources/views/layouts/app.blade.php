@@ -35,6 +35,23 @@
       color: #fff176;
       /* màu vàng khi hover */
     }
+
+    .product-link {
+      color: black !important;
+      text-decoration: none;
+    }
+
+    .product-link:hover {
+      color: green !important;
+    }
+
+    footer img {
+      transition: transform 0.3s ease;
+    }
+
+    footer img:hover {
+      transform: scale(1.05);
+    }
   </style>
 </head>
 
@@ -60,8 +77,12 @@
         </ul>
 
         <!-- Tìm kiếm -->
-        <form class="d-flex me-3" role="search">
-          <input class="form-control me-2" type="search" placeholder="Tìm kiếm sản phẩm..." aria-label="Search">
+        <form class="d-flex me-3" role="search" action="{{ route('search') }}" method="GET">
+          <input class="form-control me-2"
+            type="search"
+            name="keyword"
+            placeholder="Tìm kiếm sản phẩm..."
+            value="{{ request('keyword') }}">
           <button class="btn btn-light" type="submit">Tìm</button>
         </form>
 
@@ -101,14 +122,31 @@
   </div>
 
   <!-- Footer -->
-  <footer class="text-center">
-    <div class="container">
-      <p class="mb-1">&copy; 2025 Gian Hàng Xanh. All rights reserve.</p>
-      <p>
-        <a href="#" class="me-3"><i class="bi bi-facebook"></i></a>
-        <a href="#" class="me-3"><i class="bi bi-instagram"></i></a>
-        <a href="#"><i class="bi bi-envelope"></i></a>
-      </p>
+  <footer class="text-center text-md-start">
+    <div class="container py-3">
+      <div class="row align-items-center">
+
+        <!-- Logo dự án -->
+        <div class="col-md-4 text-center text-md-start mb-3 mb-md-0">
+          <img src="https://via.placeholder.com/120x60?text=LOGO"
+            alt="Logo dự án"
+            class="img-fluid"
+            style="max-height: 60px;">
+        </div>
+
+        <!-- Nội dung -->
+        <div class="col-md-4 text-center mb-3 mb-md-0">
+          <p class="mb-1">&copy; 2025 Gian Hàng Xanh. All rights reserve.</p>
+        </div>
+
+        <!-- Mạng xã hội -->
+        <div class="col-md-4 text-center text-md-end">
+          <a href="#" class="me-3"><i class="bi bi-facebook" style="font-size: 1.4rem;"></i></a>
+          <a href="#" class="me-3"><i class="bi bi-instagram" style="font-size: 1.4rem;"></i></a>
+          <a href="#"><i class="bi bi-envelope" style="font-size: 1.4rem;"></i></a>
+        </div>
+
+      </div>
     </div>
   </footer>
 

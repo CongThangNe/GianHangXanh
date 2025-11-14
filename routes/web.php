@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\DiscountCodeController;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/category/{id}', [HomeController::class, 'category'])->name('category.show');
 Route::get('/product/{id}', [HomeController::class, 'show'])->name('product.show');
+Route::get('/search', [ProductController::class, 'search'])->name('search');
 
 // CART
 Route::group(['prefix' => 'cart', 'as' => 'cart.'], function () {
