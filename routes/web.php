@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\AttributeController;
 use App\Http\Controllers\Admin\AttributeValueController;
 use App\Http\Controllers\Admin\DiscountCodeController;
+use App\Http\Controllers\CheckoutController;
 
 /*
 |--------------------------------------------------------------------------
@@ -49,4 +50,9 @@ Route::resource('products', ProductController::class);
     Route::resource('attribute_values', AttributeValueController::class);
 
     Route::resource('discount-codes', DiscountCodeController::class);
+
+
+    Route::post('/checkout', [CheckoutController::class, 'process'])
+    ->middleware('cart.notempty');
+
 });
