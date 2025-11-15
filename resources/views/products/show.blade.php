@@ -73,8 +73,9 @@
             </div>
 
             <!-- Form thêm giỏ hàng -->
-            <form action="#" method="POST" class="d-flex align-items-center">
+            <form action="{{ route('cart.add') }}" method="POST" class="d-flex align-items-center">
                 @csrf
+                <input type="hidden" name="variant_id" id="selected-variant-id" value="">
                 <div class="input-group me-3" style="width: 140px;">
                     <button type="button" class="btn btn-outline-success" onclick="changeQty(-1)">−</button>
                     <input type="number" id="quantity" name="quantity" value="1" min="1" max="1" class="form-control text-center">
@@ -113,12 +114,17 @@ function changeQty(change) {
 
 document.querySelectorAll('.variant-radio').forEach(radio => {
     radio.addEventListener('change', function() {
-        const stock = parseInt(this.dataset.stock);
-        const price = this.dataset.price;
-
+        const stock = parseInt(this.getAttribute('data-stock'));
+        const price = this.getAttribute('data-price');
         const stockInfo = document.getElementById('stock-info');
         const qtyInput = document.getElementById('quantity');
         const addToCartBtn = document.getElementById('add-to-cart-btn');
+        const selectedVariantInput = document.getElementById('selected-variant-id');
+
+        // Gán biến thể đã chọn vào hidden input để submit về server
+        if (selectedVariantInput) {
+            selectedVariantInput.value = this.value;
+        }
 
         // Hiển thị tồn kho
         if (stock > 0) {
@@ -131,8 +137,11 @@ document.querySelectorAll('.variant-radio').forEach(radio => {
             addToCartBtn.disabled = true;
         }
 
-        // Cập nhật giá
-        document.getElementById('product-price').textContent = price;
+        // Cập nhật giá hiển thị
+        const priceElement = document.getElementById('product-price');
+        if (priceElement) {
+            priceElement.textContent = price;
+        }
 
         // Cập nhật giới hạn số lượng
         qtyInput.max = stock;
