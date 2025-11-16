@@ -105,12 +105,31 @@
         </div>
 
         <!-- Nút thanh toán -->
-        <div class="d-flex justify-content-end">
-            <form action="{{ url('/checkout') }}" method="POST">
+        <div class="mt-4">
+            <form action="{{ route('checkout.process') }}" method="POST">
                 @csrf
-                <button type="submit" class="btn btn-success px-4">
-                    Tiến hành thanh toán
-                </button>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Phương thức thanh toán</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="payment_method" id="payment_cod" value="cod" checked>
+                        <label class="form-check-label" for="payment_cod">
+                            Thanh toán khi nhận hàng (COD)
+                        </label>
+                    </div>
+                    <div class="form-check mt-1">
+                        <input class="form-check-input" type="radio" name="payment_method" id="payment_online" value="online">
+                        <label class="form-check-label" for="payment_online">
+                            Thanh toán online
+                        </label>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn btn-success px-4">
+                        Tiến hành thanh toán
+                    </button>
+                </div>
             </form>
         </div>
     @endif

@@ -12,7 +12,8 @@ class Order extends Model
         'user_id',
         'discount_code_id',
         'total_price',
-        'status'
+        'status',
+        'payment_method'
     ];
 
     public function user()
@@ -23,6 +24,12 @@ class Order extends Model
     public function discountCode()
     {
         return $this->belongsTo(DiscountCode::class);
+    }
+
+    public function items()
+    {
+        // Alias cho details() để tương thích với chỗ gọi with('items')
+        return $this->hasMany(OrderDetail::class);
     }
 
     public function details()

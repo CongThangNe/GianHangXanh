@@ -11,7 +11,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Đăng ký alias middleware cho toàn ứng dụng
+        $middleware->alias([
+            // Kiểm tra giỏ hàng không rỗng trước khi thanh toán
+            'cart.notempty' => \App\Http\Middleware\CheckCartNotEmpty::class,
+
+            // Bắt buộc người dùng đăng nhập khi checkout
+            'checkout.auth' => \App\Http\Middleware\EnsureUserIsAuthenticated::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
