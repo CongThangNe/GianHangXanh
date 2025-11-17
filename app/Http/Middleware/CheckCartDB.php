@@ -6,7 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use App\Models\Cart;
 
-class CheckCartNotEmpty
+class CheckCartDB
 {
     public function handle(Request $request, Closure $next)
     {
