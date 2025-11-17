@@ -8,24 +8,34 @@ use Illuminate\Support\Facades\Auth; // ✔ Dùng Auth facade
 
 class CheckoutController extends Controller
 {
+    public function index()
+    {
+        $sessionId = session()->getId();
+        $cart = Cart::with(['items.variant.product'])
+            ->where('session_id', $sessionId)
+            ->first();
+
+        $cartItems = $cart ? $cart->items : collect([]);
+        $total = $cartItems->sum(function ($item) {
+            return $item->price * $item->quantity;
+        });
+
+        return view('checkout.index', compact('cartItems', 'total'));
+    }
+
     public function process(Request $request)
     {
-        // Validate phương thức thanh toán
-        $data = $request->validate([
-            'payment_method' => 'required|in:cod,online',
+        $request->validate([
+            'payment_method' => 'required|in:cod,online'
         ]);
 
-        $paymentMethod = $data['payment_method'];
-
-        // Lấy giỏ hàng hiện tại theo session
         $sessionId = session()->getId();
-        $cart = Cart::where('session_id', $sessionId)
-                    ->with('items.variant.product')
-                    ->first();
+        $cart = Cart::with('items')
+            ->where('session_id', $sessionId)
+            ->first();
 
-        if (!$cart || $cart->items->count() === 0) {
-            return redirect()->route('cart.index')
-                ->withErrors(['cart' => 'Không có sản phẩm trong giỏ hàng để thanh toán.']);
+        if (!$cart || $cart->items->isEmpty()) {
+            return back()->with('error', 'Giỏ hàng trống!');
         }
 
         // Tính tổng tiền
@@ -33,29 +43,20 @@ class CheckoutController extends Controller
             return $item->price * $item->quantity;
         });
 
-        // Tạo đơn hàng
-        $order = \App\Models\Order::create([
-            'user_id'        => Auth::id(), // ✔ Dùng Auth::id()
-            'total_price'    => $total,
-            'status'         => $paymentMethod === 'online' ? 'paid' : 'pending',
-            'payment_method' => $paymentMethod,
-        ]);
+        if ($request->payment_method === 'cod') {
+            // Xử lý COD: Xóa giỏ hàng
+            $cart->items()->delete();
+            $cart->delete();
 
-        // Tạo chi tiết đơn hàng
-        foreach ($cart->items as $item) {
-            \App\Models\OrderDetail::create([
-                'order_id'   => $order->id,
-                'product_id' => $item->variant->product->id ?? null,
-                'quantity'   => $item->quantity,
-                'price'      => $item->price,
-            ]);
+            return redirect()->route('home')->with('success', 'Đơn hàng COD đã được tạo thành công! Tổng: ' . number_format($total) . '₫');
         }
 
-        // Xóa giỏ hàng
-        $cart->items()->delete();
-        $cart->delete();
+        if ($request->payment_method === 'online') {
+            // Lưu tạm để thanh toán ZaloPay
+            session(['pending_cart' => $cart->toArray()]);
+            return redirect()->route('payment.zalopay');
+        }
 
-        // Chuyển đến trang xác nhận đơn hàng
-        return redirect()->route('order.confirmation', ['id' => $order->id]);
+        return back()->with('error', 'Phương thức không hợp lệ.');
     }
 }
