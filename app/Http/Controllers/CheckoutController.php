@@ -7,41 +7,55 @@ use App\Models\Cart;
 
 class CheckoutController extends Controller
 {
+    public function index()
+    {
+        $sessionId = session()->getId();
+        $cart = Cart::with(['items.variant.product'])
+            ->where('session_id', $sessionId)
+            ->first();
+
+        $cartItems = $cart ? $cart->items : collect([]);
+        $total = $cartItems->sum(function ($item) {
+            return $item->price * $item->quantity;
+        });
+
+        return view('checkout.index', compact('cartItems', 'total'));
+    }
+
     public function process(Request $request)
     {
-        // Lấy giỏ hàng theo session hiện tại
+        $request->validate([
+            'payment_method' => 'required|in:cod,online'
+        ]);
+
         $sessionId = session()->getId();
+        $cart = Cart::with('items')
+            ->where('session_id', $sessionId)
+            ->first();
 
-        $cart = Cart::where('session_id', $sessionId)
-                    ->with('items')
-                    ->first();
-
-        // Middleware đã check giỏ hàng, nhưng kiểm tra lại để an toàn
-        if (!$cart || $cart->items->count() === 0) {
-            return response()->json([
-                'status'  => false,
-                'message' => 'Không có sản phẩm trong giỏ hàng để thanh toán.',
-            ], 400);
+        if (!$cart || $cart->items->isEmpty()) {
+            return back()->with('error', 'Giỏ hàng trống!');
         }
 
-        // --- TÍNH TỔNG TIỀN ---
+        // Tính tổng tiền
         $total = $cart->items->sum(function ($item) {
             return $item->price * $item->quantity;
         });
 
-        // --- TẠO ĐƠN HÀNG (tùy bạn có muốn tạo model orders không) ---
-        // Ví dụ đơn giản:
-        // $order = Order::create([...]);
+        if ($request->payment_method === 'cod') {
+            // Xử lý COD: Xóa giỏ hàng
+            $cart->items()->delete();
+            $cart->delete();
 
-        // --- SAU KHI THANH TOÁN XONG có thể xoá giỏ ---
-        // $cart->items()->delete();
-        // $cart->delete();
+            return redirect()->route('home')->with('success', 'Đơn hàng COD đã được tạo thành công! Tổng: ' . number_format($total) . '₫');
+        }
 
-        return response()->json([
-            'status'      => true,
-            'message'     => 'Thanh toán thành công.',
-            'total_price' => $total,
-            'cart_items'  => $cart->items,
-        ]);
+        if ($request->payment_method === 'online') {
+            // Lưu tạm để thanh toán ZaloPay
+            session(['pending_cart' => $cart->toArray()]);
+            return redirect()->route('payment.zalopay');
+        }
+
+        return back()->with('error', 'Phương thức không hợp lệ.');
     }
 }
