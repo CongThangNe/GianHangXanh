@@ -5,6 +5,9 @@ use Illuminate\Support\Facades\Route;
 // CLIENT CONTROLLERS
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\PaymentController;
+
 
 // ADMIN CONTROLLERS
 use App\Http\Controllers\DashboardController;
@@ -35,6 +38,24 @@ Route::group(['prefix' => 'cart', 'as' => 'cart.'], function () {
     Route::post('/update', [CartController::class, 'update'])->name('update');
     Route::post('/remove', [CartController::class, 'remove'])->name('remove');
 });
+
+// TRANG CHECKOUT (GET)
+Route::get('/checkout', [CheckoutController::class, 'index'])
+    ->name('checkout.index')
+    ->middleware('cart_notempty');
+
+// XỬ LÝ CHECKOUT (POST)
+Route::post('/checkout', [CheckoutController::class, 'process'])
+    ->name('checkout.process')
+    ->middleware('cart_notempty');
+
+// PAYMENT (ZALOPAY)
+Route::get('/payment/zalopay', [PaymentController::class, 'zaloPayApp'])
+    ->name('payment.zalopay');
+
+Route::get('/payment/zalopay/return', [PaymentController::class, 'zaloReturn'])
+    ->name('payment.zalopay.return');
+
 
 // ADMIN
 Route::prefix('admin')->name('admin.')->group(function () {
