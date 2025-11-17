@@ -38,6 +38,11 @@ Route::group(['prefix' => 'cart', 'as' => 'cart.'], function () {
     Route::post('/remove', [CartController::class, 'remove'])->name('remove');
 });
 
+
+Route::post('/checkout', [CheckoutController::class, 'process'])
+    ->middleware(['checkout.auth', 'cart.notempty'])
+    ->name('checkout.process');
+
 // ADMIN
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
