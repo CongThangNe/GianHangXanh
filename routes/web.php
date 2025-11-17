@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 // CLIENT CONTROLLERS
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\PaymentController;
 
 // ADMIN CONTROLLERS
 use App\Http\Controllers\DashboardController;
@@ -15,7 +17,7 @@ use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\AttributeController;
 use App\Http\Controllers\Admin\AttributeValueController;
 use App\Http\Controllers\Admin\DiscountCodeController;
-use App\Http\Controllers\CheckoutController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -40,7 +42,7 @@ Route::group(['prefix' => 'cart', 'as' => 'cart.'], function () {
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-Route::resource('products', ProductController::class);
+    Route::resource('products', ProductController::class);
     Route::resource('categories', CategoryController::class);
     Route::resource('orders', OrderController::class)->only(['index', 'show']);
 
@@ -50,9 +52,17 @@ Route::resource('products', ProductController::class);
     Route::resource('attribute_values', AttributeValueController::class);
 
     Route::resource('discount-codes', DiscountCodeController::class);
-
-
-    Route::post('/checkout', [CheckoutController::class, 'process'])
-    ->middleware('cart.notempty');
-
 });
+// TRANG HIỂN THỊ CHECKOUT (GET)
+Route::get('/checkout', [CheckoutController::class, 'index'])
+    ->name('checkout.index')
+    ->middleware('cart_notempty');
+
+// XỬ LÝ THANH TOÁN (POST)
+Route::post('/checkout', [CheckoutController::class, 'process'])
+    ->name('checkout.process')
+    ->middleware('cart_notempty');
+
+// Trang thanh toán online
+Route::get('/payment/zalopay', [PaymentController::class, 'zaloPayApp'])->name('payment.zalopay');
+Route::get('/payment/zalopay/return', [PaymentController::class, 'zaloReturn'])->name('payment.zalopay.return');

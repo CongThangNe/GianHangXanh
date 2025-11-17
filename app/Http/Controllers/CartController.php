@@ -13,15 +13,21 @@ class CartController extends Controller
      * Hiển thị giỏ hàng hiện tại.
      */
     public function index()
-    {
-        $sessionId = session()->getId();
+{
+    $sessionId = session()->getId();
 
-        $cart = Cart::with(['items.variant.product'])
-            ->where('session_id', $sessionId)
-            ->first();
+    $cart = Cart::with(['items.variant.product'])
+        ->where('session_id', $sessionId)
+        ->first();
 
-        return view('cart.index', compact('cart'));
+    // FIX: Nếu không có cart, tạo object giả để tránh null (nhưng items rỗng)
+    if (!$cart) {
+        $cart = new \stdClass();
+        $cart->items = collect([]);
     }
+
+    return view('cart.index', compact('cart'));
+}
 
     /**
      * Thêm sản phẩm (biến thể) vào giỏ.
