@@ -62,24 +62,21 @@
             <div class="mb-3">
                 <span class="fw-semibold">Tồn kho: </span>
                 <span id="stock-info" class="badge bg-secondary">
-                    {{ $product->variants->count() > 0 ? 'Chưa chọn biến thể' : $product->stock ?? 'Không có' }}
+                    {{ $product->variants->count() > 0 ? 'Chưa chọn biến thể' : ($product->stock ?? 'Không có') }}
                 </span>
             </div>
 
             <!-- Mô tả -->
             <p class="text-muted mt-3">{{ $product->description }}</p>
 
-            <!-- Đánh giá -->
-            <div class="mb-4">
-                <span class="fw-semibold">Đánh giá: </span>
-                <span class="text-warning">★★★★☆</span>
-                <small class="text-muted">(128 đánh giá)</small>
-            </div>
-
             <!-- Form thêm giỏ hàng -->
-            <form id="addToCartForm" action="{{ route('cart.index') }}" method="GET" class="d-flex align-items-center">
+            <form id="addToCartForm" action="{{ route('cart.add') }}" method="POST" class="d-flex align-items-center">
                 @csrf
 
+                <!-- Hidden variant -->
+                <input type="hidden" id="variant_id" name="variant_id">
+
+                <!-- Số lượng -->
                 <div class="input-group me-3" style="width: 140px;">
                     <button type="button" class="btn btn-outline-success" onclick="changeQty(-1)">−</button>
                     <input type="number" id="quantity" name="quantity"
@@ -105,7 +102,6 @@
     </div>
 </div>
 
-
 <!-- SCRIPT -->
 <script>
     /* ----------------- Tăng / giảm số lượng ----------------- */
@@ -124,17 +120,18 @@
     /* ----------------- Chọn biến thể ----------------- */
     document.querySelectorAll('.variant-radio').forEach(radio => {
         radio.addEventListener('change', function() {
+
             const price = this.dataset.price;
             const stock = parseInt(this.dataset.stock);
-
-            const stockInfo = document.getElementById('stock-info');
-            const qty = document.getElementById('quantity');
-            const btn = document.getElementById('add-to-cart-btn');
 
             // Cập nhật giá
             document.getElementById('product-price').textContent = price;
 
             // Cập nhật tồn kho
+            const stockInfo = document.getElementById('stock-info');
+            const qty = document.getElementById('quantity');
+            const btn = document.getElementById('add-to-cart-btn');
+
             if (stock > 0) {
                 stockInfo.className = "badge bg-success";
                 stockInfo.textContent = stock + " sản phẩm";
@@ -145,13 +142,16 @@
                 btn.disabled = true;
             }
 
-            // Cập nhật giới hạn số lượng
+            // Giới hạn số lượng
             qty.max = stock;
             qty.value = stock > 0 ? 1 : 0;
+
+            // Gán variant id
+            document.getElementById('variant_id').value = this.value;
         });
     });
 
-    /* ----------------- Kiểm tra khi nhấn Thêm vào giỏ hàng ----------------- */
+    /* ----------------- Check trước khi submit ----------------- */
     document.getElementById("addToCartForm").addEventListener("submit", function(e) {
         const hasVariant = document.querySelectorAll('.variant-radio').length > 0;
 
