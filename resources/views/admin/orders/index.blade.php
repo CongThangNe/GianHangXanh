@@ -35,9 +35,8 @@
         </table>
     </div>
 
-    <div class="mt-3">
-        {{ $orders->links() }}
-    </div>
-
+    <nav class="mt-4 w-100 d-flex justify-content-center" aria-label="Product pagination">
+        {{ $orders->onEachSide(1)->links('pagination::bootstrap-5') }}
+    </nav>
 </div>
 @endsection

@@ -36,13 +36,11 @@
             <div class="col-md-4">
                 <div class="card h-100 shadow-sm border-0">
                     @if ($p->image)
-                    @if ($p->image)
                     <img src="{{ asset('storage/' . $p->image) }}" class="card-img-top"
                         alt="{{ $p->name }}" style="height:200px; object-fit:cover;">
                     @else
                     <img src="https://via.placeholder.com/300x200?text=No+Image" class="card-img-top"
                         alt="Không có ảnh" style="height:200px; object-fit:cover;">
-                    @endif
                     @endif
                     <div class="card-body d-flex flex-column">
                         <a href="{{ route('product.show', $p->id) }}" class="product-link">
@@ -61,9 +59,7 @@
             @endforelse
         </div>
 
-        <div class="mt-4">
-            {{ $products->links() }}
-        </div>
+        {{ $products->onEachSide(1)->links('pagination.custom-bootstrap-5') }}
     </div>
 </div>
 
