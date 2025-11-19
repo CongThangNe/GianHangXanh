@@ -30,7 +30,7 @@
 
           <div class="col-md-6">
             <label class="form-label">Danh mục</label>
-            <select name="category_id" class="form-select" required>
+            <select name="category_id" class="form-select">
               <option value="">-- Chọn danh mục --</option>
               @foreach($categories as $cat)
                 <option value="{{ $cat->id }}">{{ $cat->name }}</option>
@@ -40,41 +40,33 @@
 
           <div class="col-md-6">
             <label class="form-label">Giá mặc định</label>
-            <input type="number" name="price" class="form-control" min="0" step="0.01" required>
+            <input type="number" name="price" class="form-control" required min="0" step="0.01">
           </div>
-
           <div class="col-md-6">
             <label class="form-label">Hình ảnh</label>
             <input type="file" name="image" class="form-control">
           </div>
-
           <div class="col-12">
             <label class="form-label">Mô tả</label>
             <textarea name="description" class="form-control" rows="3"></textarea>
           </div>
         </div>
 
-        {{-- Khu vực chọn thuộc tính và sinh biến thể --}}
         <div class="card mt-4">
           <div class="card-header">Biến thể sản phẩm</div>
           <div class="card-body">
-
-            {{-- Danh sách tick chọn thuộc tính --}}
             <div class="mb-3">
-              <label class="form-label d-block">Chọn thuộc tính</label>
-              <div id="attrCheckboxes" class="row g-2">
+              <label class="form-label">Chọn thuộc tính</label>
+              <select id="attrSelect" class="form-select" multiple>
                 @foreach($attributes as $attr)
-                  <div class="col-md-3">
-                    <div class="form-check">
-                      <input class="form-check-input js-attr-check" type="checkbox" value="{{ $attr->id }}" id="attr-{{ $attr->id }}">
-                      <label class="form-check-label" for="attr-{{ $attr->id }}">{{ $attr->name }}</label>
-                    </div>
-                  </div>
+                  <option value="{{ $attr->id }}">{{ $attr->name }}</option>
                 @endforeach
-              </div>
+              </select>
             </div>
 
             <div id="attrValuesContainer" class="row g-3"></div>
+
+            <button type="button" id="btnBuildVariants" class="btn btn-outline-primary mt-2">Tạo biến thể</button>
 
             <div class="table-responsive mt-3 d-none" id="variantsTableWrap">
               <table class="table table-bordered align-middle" id="variantsTable">
@@ -90,7 +82,6 @@
                 <tbody></tbody>
               </table>
             </div>
-
             <div id="variantsPayload"></div>
           </div>
         </div>
@@ -104,31 +95,32 @@
 </div>
 
 @php
-$attrs = $attributes->map(fn($a)=>[
-  'id'=>$a->id,
-  'name'=>$a->name,
-  'values'=>$a->values->map(fn($v)=>['id'=>$v->id,'value'=>$v->value])->values()
-]);
+$attrs = $attributes->map(function($a){
+  return [
+    'id' => $a->id,
+    'name' => $a->name,
+    'values' => $a->values->map(function($v){
+      return ['id'=>$v->id,'value'=>$v->value];
+    })->values()
+  ];
+});
 @endphp
 
 <script>
 (function(){
   const attributes = @json($attrs);
 
+  const attrSelect = document.getElementById('attrSelect');
   const container  = document.getElementById('attrValuesContainer');
+  const btnBuild   = document.getElementById('btnBuildVariants');
   const tableWrap  = document.getElementById('variantsTableWrap');
   const tbody      = document.querySelector('#variantsTable tbody');
   const payloadBox = document.getElementById('variantsPayload');
   const byId = Object.fromEntries(attributes.map(a => [a.id, a]));
 
-  // khi tick thuộc tính -> render phần chọn giá trị
-  document.querySelectorAll('.js-attr-check').forEach(cb=>{
-    cb.addEventListener('change', renderValuePickers);
-  });
-
-  function renderValuePickers(){
+  function renderValuePickers() {
     container.innerHTML = '';
-    const selected = Array.from(document.querySelectorAll('.js-attr-check:checked')).map(cb => parseInt(cb.value));
+    const selected = Array.from(attrSelect.selectedOptions).map(o => parseInt(o.value));
     selected.forEach(attrId => {
       const attr = byId[attrId];
       const col = document.createElement('div');
@@ -141,48 +133,27 @@ $attrs = $attributes->map(fn($a)=>[
       `;
       container.appendChild(col);
     });
-    bindPickerEvents();
   }
 
-  function bindPickerEvents(){
-    document.querySelectorAll('.js-attr-values').forEach(sel=>{
-      sel.addEventListener('change', buildVariants);
-    });
+  attrSelect.addEventListener('change', renderValuePickers);
+
+  function cartesian(arrays) {
+    return arrays.reduce((a, b) => a.flatMap(d => b.map(e => d.concat([e]))), [[]]);
   }
 
-  function cartesian(arrays){
-    return arrays.reduce((a,b)=>a.flatMap(d=>b.map(e=>d.concat([e]))), [[]]);
-  }
-
-  function buildVariants(){
+  btnBuild.addEventListener('click', () => {
     const pickers = Array.from(document.querySelectorAll('.js-attr-values'));
     if (!pickers.length) return;
-    const groups = pickers.map(sel=>Array.from(sel.selectedOptions).map(o=>({
-      id:parseInt(o.value), label:o.textContent.trim()
-    }))).filter(g=>g.length);
-    if (!groups.length) { tbody.innerHTML=''; tableWrap.classList.add('d-none'); serializePayload(); return; }
-
+    const groups = pickers.map(sel => Array.from(sel.selectedOptions).map(o => ({
+      id: parseInt(o.value), label: o.textContent.trim()
+    }))).filter(g => g.length);
+    if (!groups.length) return;
     const combos = cartesian(groups);
-    const existingKeys = new Set(Array.from(tbody.children).map(tr=>tr.dataset.key));
-    const newKeys = new Set();
-
-    combos.forEach(values=>{
-      const key = normalizeKey(values.map(v=>v.id));
-      newKeys.add(key);
-      if (!existingKeys.has(key)){
-        addVariantRow(values.map(v=>v.id), values.map(v=>v.label));
-      }
-    });
-
-    Array.from(tbody.children).forEach(tr=>{
-      if (!newKeys.has(tr.dataset.key)) tr.remove();
-    });
-
-    if (tbody.children.length) tableWrap.classList.remove('d-none');
-    else tableWrap.classList.add('d-none');
-
+    tbody.innerHTML = '';
+    tableWrap.classList.remove('d-none');
+    combos.forEach(values => addVariantRow(values.map(v => v.id), values.map(v => v.label)));
     serializePayload();
-  }
+  });
 
   function addVariantRow(valueIds, valueLabels){
     const key = normalizeKey(valueIds);
@@ -228,14 +199,19 @@ $attrs = $attributes->map(fn($a)=>[
     payloadBox.appendChild(input);
   }
 
-  function normalizeKey(arr){ return arr.map(Number).sort((a,b)=>a-b).join('-'); }
+  function normalizeKey(arr){
+    const ids = arr.map(Number).sort((a,b)=>a-b);
+    return ids.join('-');
+  }
+
   function toSku(labels){
-    return labels.map(l=>l.normalize('NFD')
+    const slug = labels.map(l => l.normalize('NFD')
       .replace(/[\u0300-\u036f]/g,'')
       .replace(/[^a-zA-Z0-9]+/g,'-')
       .replace(/^-+|-+$/g,'')
       .toUpperCase()
     ).join('-');
+    return slug;
   }
 })();
 </script>

@@ -59,3 +59,19 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+
+## Cài đặt Laravel Breeze (đã note sẵn cho dự án)
+
+Để có màn hình đăng nhập / đăng ký phục vụ middleware `checkout.auth`, trên máy local bạn chạy:
+
+```bash
+composer require laravel/breeze --dev
+php artisan breeze:install blade
+
+npm install
+npm run build    # hoặc: npm run dev
+php artisan migrate
+```
+
+Sau khi cài xong Breeze sẽ tạo route `login`, `register`... và middleware xác thực sẽ hoạt động đầy đủ cho luồng thanh toán.
