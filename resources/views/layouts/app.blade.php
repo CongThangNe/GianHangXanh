@@ -159,7 +159,7 @@
                         <form action="{{ route('home') }}" method="GET" class="hidden sm:flex flex-col min-w-40 !h-10 max-w-64">
                             <div class="flex w-full flex-1 items-stretch rounded-lg h-full">
                                 <button type="submit" class="text-white flex bg-green-100/50 items-center justify-center pl-3 pr-2 rounded-l-lg border border-r-0 border-border-light dark:border-border-dark">
-                                    <span class="material-symbols-outlined" style="font-size: 20px;">search</span>
+                                    <span class="material-symbols-outlined" style="font-size: 20px;">Search</span>
                                 </button>
                                 <input
                                     type="search"
