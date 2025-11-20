@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\ProductVariant;
+use App\Models\DiscountCode;
 
 class CartController extends Controller
 {
@@ -133,9 +134,24 @@ class CartController extends Controller
 
         if ($request->wantsJson()) {
             $cart->load('items.variant.product');
+
+            // Tính lại line_total cho item vừa cập nhật
+            $line_total = $item->price * $item->quantity;
+
+            // Tính lại tổng tiền của giỏ hàng
+            $subtotal = $cart->items->sum(function ($cartItem) {
+                return $cartItem->price * $cartItem->quantity;
+            });
+
+            $discountAmount = session('discount_amount', 0);
+            $total = $subtotal - $discountAmount;
+
             return response()->json([
-                'status'  => true,
+                'success'  => true,
                 'message' => 'Đã cập nhật số lượng.',
+                'line_total' => $line_total,
+                'subtotal' => $subtotal,
+                'total' => $total,
                 'cart'    => $cart,
             ]);
         }
