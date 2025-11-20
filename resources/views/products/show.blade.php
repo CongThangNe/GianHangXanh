@@ -2,253 +2,204 @@
 @section('title', $product->name)
 
 @section('content')
-<div class="container py-4">
-    <div class="row g-5 align-items-center">
-
-        <!-- Hình ảnh sản phẩm -->
-        <div class="col-md-6 text-center">
-            @if($product->image)
-            <img src="{{ asset('storage/products/' . $product->image) }}"
-                class="img-fluid rounded shadow-sm border border-light"
-                style="max-height: 450px; object-fit: contain;">
-            @else
-            <img src="https://via.placeholder.com/450x450?text=No+Image"
-                class="img-fluid rounded shadow-sm border border-light">
-            @endif
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
+    <!-- Left Column: Image Gallery -->
+    <div class="flex flex-col gap-4">
+        <!-- Main Image: thu nhỏ chiều cao -->
+        <div class="w-full h-72 rounded-xl overflow-hidden">
+            <img id="main-image" src="{{ $product->image ? asset('storage/' . $product->image) : 'https://via.placeholder.com/600x450?text=No+Image' }}" alt="Main Product Image" class="w-full h-full object-cover">
         </div>
-        <div class="col-md-6">
-
-            <h2 class="fw-bold mb-3">{{ $product->name }}</h2>
-<<<<<<< HEAD
-
-            <!-- Giá -->
-=======
-            
-            <!-- Giá sản phẩm (sẽ thay đổi khi chọn biến thể) -->
->>>>>>> card
-            <div class="mb-3">
-                <span id="product-price" class="fs-4 fw-semibold text-success">
-                    {{ number_format($product->price, 0, ',', '.') }}₫
-                </span>
-            </div>
-
-            <!-- Danh mục -->
-            <div class="mb-3">
-                <span class="fw-semibold">Danh mục: </span>
-                <span class="text-secondary">{{ $product->category->name ?? 'Chưa có' }}</span>
-            </div>
-
-            <!-- Chọn biến thể -->
-            @if($product->variants && $product->variants->count() > 0)
-<<<<<<< HEAD
-            <div class="mb-3">
-                <span class="fw-semibold">Chọn biến thể:</span>
-                <div id="variant-selector" class="mt-2">
-                    @foreach ($product->variants as $variant)
-                    <div class="form-check">
-                        <input class="form-check-input variant-radio"
-                            type="radio"
-                            name="variant"
-                            id="variant{{ $variant->id }}"
-                            value="{{ $variant->id }}"
-                            data-price="{{ number_format($variant->price, 0, ',', '.') }}₫"
-                            data-stock="{{ $variant->stock }}">
-                        <label class="form-check-label" for="variant{{ $variant->id }}">
-                            {{ $variant->attributeValues->pluck('value')->join(' / ') }}
-                        </label>
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-            @endif
-
-            <!-- Tồn kho -->
-            <div class="mb-3">
-                <span class="fw-semibold">Tồn kho: </span>
-                <span id="stock-info" class="badge bg-secondary">
-                    {{ $product->variants->count() > 0 ? 'Chưa chọn biến thể' : $product->stock ?? 'Không có' }}
-                </span>
-=======
-                <div class="mb-3">
-                    <span class="fw-semibold">Chọn biến thể:</span>
-                    <div id="variant-selector" class="mt-2">
-                        @foreach ($product->variants as $variant)
-                            <div class="form-check">
-                                <input class="form-check-input variant-radio"
-                                       type="radio"
-                                       name="variant"
-                                       id="variant{{ $variant->id }}"
-                                       value="{{ $variant->id }}"
-                                       data-stock="{{ $variant->stock }}"
-                                       data-price="{{ number_format($variant->price, 0, ',', '.') }}₫">
-                                <label class="form-check-label" for="variant{{ $variant->id }}">
-                                    {{ $variant->attributeValues->pluck('value')->join(' / ') }}
-                                </label>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            @endif
-
-            <!-- Hiển thị tồn kho -->
-            <div class="mb-3">
-                <span class="fw-semibold">Tồn kho:</span> 
-                <span id="stock-info" class="badge bg-secondary">Chưa chọn biến thể</span>
->>>>>>> card
-            </div>
-
-            <!-- Mô tả -->
-            <p class="text-muted mt-3">{{ $product->description }}</p>
-
-            <!-- Đánh giá -->
-            <div class="mb-4">
-                <span class="fw-semibold">Đánh giá: </span>
-                <span class="text-warning">★★★★☆</span>
-                <small class="text-muted">(128 đánh giá)</small>
-            </div>
-
-            <!-- Form thêm giỏ hàng -->
-<<<<<<< HEAD
-            <form id="addToCartForm" action="{{ route('cart.index') }}" method="GET" class="d-flex align-items-center">
-                @csrf
-
-                <div class="input-group me-3" style="width: 140px;">
-                    <button type="button" class="btn btn-outline-success" onclick="changeQty(-1)">−</button>
-                    <input type="number" id="quantity" name="quantity"
-                        value="1" min="1" max="1"
-                        class="form-control text-center">
-                    <button type="button" class="btn btn-outline-success" onclick="changeQty(1)">+</button>
-                </div>
-
-=======
-            <form action="{{ route('cart.add') }}" method="POST" class="d-flex align-items-center">
-                @csrf
-                <input type="hidden" name="variant_id" id="selected-variant-id" value="">
-                <div class="input-group me-3" style="width: 140px;">
-                    <button type="button" class="btn btn-outline-success" onclick="changeQty(-1)">−</button>
-                    <input type="number" id="quantity" name="quantity" value="1" min="1" max="1" class="form-control text-center">
-                    <button type="button" class="btn btn-outline-success" onclick="changeQty(1)">+</button>
-                </div>
->>>>>>> card
-                <button type="submit" id="add-to-cart-btn" class="btn btn-success px-4" disabled>
-                    <i class="bi bi-cart-plus"></i> Thêm vào giỏ hàng
-                </button>
-            </form>
-
+        <!-- Thumbnails -->
+        <div class="grid grid-cols-4 gap-4">
+            @for($i = 1; $i <= 4; $i++)
+                <img class="w-full aspect-square object-cover rounded-lg @if($i!=1) opacity-75 hover:opacity-100 @endif border-2 border-primary cursor-pointer thumbnail"
+                src="{{ $product->image ? asset('storage/' . $product->image) : 'https://via.placeholder.com/150x150?text=Image+' . $i }}"
+                alt="Thumbnail {{ $i }}"
+                data-src="{{ $product->image ? asset('storage/' . $product->image) : 'https://via.placeholder.com/600x450?text=No+Image' }}">
+                @endfor
         </div>
     </div>
 
-    <!-- Mô tả chi tiết -->
-    <div class="mt-5">
-        <h4 class="fw-bold mb-3">Mô tả chi tiết</h4>
-        <div class="p-3 bg-light rounded">
-            <p class="mb-0 text-secondary">{{ $product->description ?? 'Chưa có mô tả chi tiết.' }}</p>
+    <!-- Right Column: Product Information -->
+    <div class="flex flex-col gap-6">
+        <!-- Title, Price, Rating -->
+        <div class="flex flex-col gap-3">
+            <h1 class="text-3xl md:text-4xl font-black tracking-[-0.033em]">{{ $product->name }}</h1>
+            <p class="text-text-muted-light dark:text-text-muted-dark text-lg">Chúc quý khách 1 ngày thật vui vẻ</p>
+            <div class="flex items-center gap-4 pt-2">
+                <p class="text-3xl font-bold text-primary">{{ number_format($product->price, 0, ',', '.') }}₫</p>
+                <div class="flex items-center gap-2">
+                    <div class="flex text-secondary">
+                        <span class="material-symbols-outlined text-xl!" style="font-variation-settings: 'FILL' 1;">star</span>
+                        <span class="material-symbols-outlined text-xl!" style="font-variation-settings: 'FILL' 1;">star</span>
+                        <span class="material-symbols-outlined text-xl!" style="font-variation-settings: 'FILL' 1;">star</span>
+                        <span class="material-symbols-outlined text-xl!" style="font-variation-settings: 'FILL' 1;">star</span>
+                        <span class="material-symbols-outlined text-xl!">star_half</span>
+                    </div>
+                    <a class="text-sm font-medium text-text-muted-light dark:text-text-muted-dark hover:underline" href="#reviews">(128 reviews)</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Variant Selector -->
+        @if($product->variants && $product->variants->count() > 0)
+        <div class="flex flex-col gap-2">
+            <label class="text-sm font-bold">Biến thể</label>
+            <div id="variant-options" class="flex gap-4 flex-wrap">
+                @foreach ($product->variants as $variant)
+                <label class="flex items-center gap-2 cursor-pointer border border-border-light dark:border-border-dark rounded-md px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                    <input type="radio" name="variant" class="variant-radio" value="{{ $variant->id }}"
+                        data-stock="{{ $variant->stock }}" data-price="{{ $variant->price }}" />
+                    <span>{{ $variant->attributeValues->pluck('value')->join(' / ') }}</span>
+                </label>
+                @endforeach
+            </div>
+            <!-- Stock info -->
+            <div id="stock-info" class="mt-2 px-3 py-1 rounded-full text-sm font-medium bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+                Chưa chọn biến thể
+            </div>
+        </div>
+        @endif
+
+        <!-- Quantity & Add to Cart + Hiển thị stock -->
+        <div class="flex flex-col sm:flex-row gap-4 items-center mt-4">
+            <div class="flex items-center gap-2">
+                <div class="flex items-center border border-border-light dark:border-border-dark rounded-md p-1">
+                    <button type="button" id="decrease-qty" class="flex items-center justify-center size-9 rounded hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+                        <span class="material-symbols-outlined text-xl">remove</span>
+                    </button>
+                    <input id="quantity" class="w-12 text-center border-0 bg-transparent focus:ring-0" type="number" value="1" min="1" disabled />
+                    <button type="button" id="increase-qty" class="flex items-center justify-center size-9 rounded hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+                        <span class="material-symbols-outlined text-xl">add</span>
+                    </button>
+                </div>
+            </div>
+            <button id="add-to-cart-btn" class="w-full flex items-center justify-center gap-2 h-12 px-6 bg-primary text-white rounded-md text-base font-bold hover:opacity-90 transition-opacity" disabled>
+                <span class="material-symbols-outlined">add_shopping_cart</span>
+                Add to Cart
+            </button>
         </div>
     </div>
 </div>
 
-<<<<<<< HEAD
+<!-- Details Accordion -->
+<div class="w-full mt-16 border-t border-border-light dark:border-border-dark pt-12">
+    <div class="flex flex-col gap-4 max-w-3xl mx-auto">
+        <details class="group" open="">
+            <summary class="flex justify-between items-center cursor-pointer list-none py-4 border-b border-border-light dark:border-border-dark">
+                <span class="text-xl font-bold">Description</span>
+                <span class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180">expand_more</span>
+            </summary>
+            <div class="text-text-muted-light dark:text-text-muted-dark pt-4 leading-relaxed">
+                <p>{{ $product->description ?? 'Chưa có mô tả chi tiết.' }}</p>
+            </div>
+        </details>
+    </div>
+</div>
 
 <!-- SCRIPT -->
-=======
-<!-- Script xử lý biến thể & tăng giảm số lượng -->
->>>>>>> card
 <script>
-    /* ----------------- Tăng / giảm số lượng ----------------- */
-    function changeQty(change) {
-        const input = document.getElementById('quantity');
-        let value = parseInt(input.value);
-        const max = parseInt(input.max);
-        const min = parseInt(input.min);
+    // --- Lấy các phần tử ---
+    const variantRadios = document.querySelectorAll('.variant-radio');
+    const qtyInput = document.getElementById('quantity');
+    const addBtn = document.getElementById('add-to-cart-btn');
+    const decreaseBtn = document.getElementById('decrease-qty');
+    const increaseBtn = document.getElementById('increase-qty');
+    const stockInfo = document.getElementById('stock-info');
 
-        value += change;
-        if (value < min) value = min;
-        if (value > max) value = max;
-        input.value = value;
+    let currentStock = 0; // Lưu số lượng hiện tại của biến thể đã chọn
+
+    // --- Hàm cập nhật stock khi chọn biến thể ---
+    function updateStock(radio) {
+        if (!radio) {
+            addBtn.disabled = true;
+            qtyInput.value = 0;
+            qtyInput.disabled = true;
+            stockInfo.textContent = "Chưa chọn biến thể";
+            stockInfo.className = "mt-2 px-3 py-1 rounded-full text-sm font-medium bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
+            currentStock = 0;
+            return;
+        }
+
+        currentStock = parseInt(radio.dataset.stock) || 0;
+
+        if (currentStock <= 0) {
+            addBtn.disabled = true;
+            qtyInput.value = 0;
+            qtyInput.disabled = true;
+            stockInfo.textContent = "Hết hàng";
+            stockInfo.className = "mt-2 px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-200";
+        } else {
+            addBtn.disabled = false;
+            qtyInput.value = 1;
+            qtyInput.max = currentStock;
+            qtyInput.disabled = false;
+            stockInfo.textContent = `Còn ${currentStock} sản phẩm`;
+            stockInfo.className = "mt-2 px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-200";
+        }
     }
 
-<<<<<<< HEAD
-    /* ----------------- Chọn biến thể ----------------- */
-    document.querySelectorAll('.variant-radio').forEach(radio => {
+    // --- Lắng nghe thay đổi biến thể ---
+    variantRadios.forEach(radio => {
         radio.addEventListener('change', function() {
-            const price = this.dataset.price;
-            const stock = parseInt(this.dataset.stock);
-
-            const stockInfo = document.getElementById('stock-info');
-            const qty = document.getElementById('quantity');
-            const btn = document.getElementById('add-to-cart-btn');
-
-            // Cập nhật giá
-            document.getElementById('product-price').textContent = price;
-
-            // Cập nhật tồn kho
-            if (stock > 0) {
-                stockInfo.className = "badge bg-success";
-                stockInfo.textContent = stock + " sản phẩm";
-                btn.disabled = false;
-            } else {
-                stockInfo.className = "badge bg-danger";
-                stockInfo.textContent = "Hết hàng";
-                btn.disabled = true;
-            }
-
-            // Cập nhật giới hạn số lượng
-            qty.max = stock;
-            qty.value = stock > 0 ? 1 : 0;
+            updateStock(this);
         });
     });
 
-    /* ----------------- Kiểm tra khi nhấn Thêm vào giỏ hàng ----------------- */
-    document.getElementById("addToCartForm").addEventListener("submit", function(e) {
-        const hasVariant = document.querySelectorAll('.variant-radio').length > 0;
+    // --- Tăng / giảm số lượng ---
+    decreaseBtn.addEventListener('click', () => {
+        let value = parseInt(qtyInput.value);
+        if (value > 1) qtyInput.value = value - 1;
+    });
 
-        if (hasVariant && !document.querySelector('.variant-radio:checked')) {
-            e.preventDefault();
+    increaseBtn.addEventListener('click', () => {
+        let value = parseInt(qtyInput.value);
+        if (value < currentStock) qtyInput.value = value + 1;
+        else alert(`Số lượng không được vượt quá ${currentStock} sản phẩm`);
+    });
+
+    // --- Kiểm tra khi nhập trực tiếp ---
+    qtyInput.addEventListener('input', () => {
+        let value = parseInt(qtyInput.value) || 0;
+        if (value > currentStock) {
+            alert(`Số lượng không được vượt quá ${currentStock} sản phẩm`);
+            qtyInput.value = currentStock;
+        } else if (value < 1) {
+            qtyInput.value = 1;
+        }
+    });
+
+    // --- Add to Cart ---
+    addBtn.addEventListener('click', () => {
+        const selectedRadio = document.querySelector('.variant-radio:checked');
+
+        if (!selectedRadio) {
             alert("Vui lòng chọn biến thể trước khi thêm vào giỏ hàng!");
             return;
         }
+
+        const quantity = parseInt(qtyInput.value);
+        if (quantity > currentStock) {
+            alert(`Số lượng không được vượt quá ${currentStock} sản phẩm`);
+            qtyInput.value = currentStock;
+            return;
+        }
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{{ route("cart.add") }}';
+        form.innerHTML = `
+            @csrf
+            <input type="hidden" name="variant_id" value="${selectedRadio.value}">
+            <input type="hidden" name="quantity" value="${qtyInput.value}">
+        `;
+        document.body.appendChild(form);
+        form.submit();
     });
-=======
-    qtyInput.value = value;
-}
 
-document.querySelectorAll('.variant-radio').forEach(radio => {
-    radio.addEventListener('change', function() {
-        const stock = parseInt(this.getAttribute('data-stock'));
-        const price = this.getAttribute('data-price');
-        const stockInfo = document.getElementById('stock-info');
-        const qtyInput = document.getElementById('quantity');
-        const addToCartBtn = document.getElementById('add-to-cart-btn');
-        const selectedVariantInput = document.getElementById('selected-variant-id');
-
-        // Gán biến thể đã chọn vào hidden input để submit về server
-        if (selectedVariantInput) {
-            selectedVariantInput.value = this.value;
-        }
-
-        // Hiển thị tồn kho
-        if (stock > 0) {
-            stockInfo.className = 'badge bg-success';
-            stockInfo.textContent = stock + ' sản phẩm';
-            addToCartBtn.disabled = false;
-        } else {
-            stockInfo.className = 'badge bg-danger';
-            stockInfo.textContent = 'Hết hàng';
-            addToCartBtn.disabled = true;
-        }
-
-        // Cập nhật giá hiển thị
-        const priceElement = document.getElementById('product-price');
-        if (priceElement) {
-            priceElement.textContent = price;
-        }
-
-        // Cập nhật giới hạn số lượng
-        qtyInput.max = stock;
-        qtyInput.value = stock > 0 ? 1 : 0;
-    });
-});
->>>>>>> card
+    // --- Khởi tạo: chưa chọn biến thể ---
+    updateStock(null);
 </script>
+
 
 @endsection

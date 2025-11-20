@@ -8,6 +8,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\PaymentController;
 
+
 // ADMIN CONTROLLERS
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin\ProductController;
@@ -17,7 +18,6 @@ use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\AttributeController;
 use App\Http\Controllers\Admin\AttributeValueController;
 use App\Http\Controllers\Admin\DiscountCodeController;
-
 
 /*
 |--------------------------------------------------------------------------
@@ -37,18 +37,32 @@ Route::group(['prefix' => 'cart', 'as' => 'cart.'], function () {
     Route::post('/add', [CartController::class, 'add'])->name('add');
     Route::post('/update', [CartController::class, 'update'])->name('update');
     Route::post('/remove', [CartController::class, 'remove'])->name('remove');
+    Route::post('/apply-discount', [CartController::class, 'applyDiscount'])->name('apply.discount');
 });
 
+// TRANG CHECKOUT (GET)
+Route::get('/checkout', [CheckoutController::class, 'index'])
+    ->name('checkout.index')
+    ->middleware('cart_notempty');
 
+// XỬ LÝ CHECKOUT (POST)
 Route::post('/checkout', [CheckoutController::class, 'process'])
-    ->middleware(['checkout.auth', 'cart.notempty'])
-    ->name('checkout.process');
+    ->name('checkout.process')
+    ->middleware('cart_notempty');
+
+// PAYMENT (ZALOPAY)
+Route::get('/payment/zalopay', [PaymentController::class, 'zaloPayApp'])
+    ->name('payment.zalopay');
+
+Route::get('/payment/zalopay/return', [PaymentController::class, 'zaloReturn'])
+    ->name('payment.zalopay.return');
+
 
 // ADMIN
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::resource('products', ProductController::class);
+Route::resource('products', ProductController::class);
     Route::resource('categories', CategoryController::class);
     Route::resource('orders', OrderController::class)->only(['index', 'show']);
 
@@ -59,16 +73,3 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     Route::resource('discount-codes', DiscountCodeController::class);
 });
-// TRANG HIỂN THỊ CHECKOUT (GET)
-Route::get('/checkout', [CheckoutController::class, 'index'])
-    ->name('checkout.index')
-    ->middleware('cart_notempty');
-
-// XỬ LÝ THANH TOÁN (POST)
-Route::post('/checkout', [CheckoutController::class, 'process'])
-    ->name('checkout.process')
-    ->middleware('cart_notempty');
-
-// Trang thanh toán online
-Route::get('/payment/zalopay', [PaymentController::class, 'zaloPayApp'])->name('payment.zalopay');
-Route::get('/payment/zalopay/return', [PaymentController::class, 'zaloReturn'])->name('payment.zalopay.return');
