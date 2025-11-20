@@ -37,6 +37,7 @@ Route::group(['prefix' => 'cart', 'as' => 'cart.'], function () {
     Route::post('/add', [CartController::class, 'add'])->name('add');
     Route::post('/update', [CartController::class, 'update'])->name('update');
     Route::post('/remove', [CartController::class, 'remove'])->name('remove');
+    Route::post('/apply-discount', [CartController::class, 'applyDiscount'])->name('apply.discount');
 });
 
 // TRANG CHECKOUT (GET)
