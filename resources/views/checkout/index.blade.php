@@ -25,70 +25,92 @@
             </li>
         </ul>
 
-        <form id="payment-form" action="{{ route('checkout.process') }}" method="POST">
-            @csrf
+        <form id="checkout-form" method="POST" action="{{ route('checkout.process') }}">
+    @csrf
+    <div class="row">
+        <div class="col-md-7">
+            <h4>Thông tin nhận hàng</h4>
+            <div class="mb-3"><input type="text" name="customer_name" class="form-control" placeholder="Họ và tên" required></div>
+            <div class="mb-3"><input type="text" name="customer_phone" class="form-control" placeholder="Số điện thoại" required></div>
+            <div class="mb-3"><input type="text" name="customer_address" class="form-control" placeholder="Địa chỉ giao hàng" required></div>
+            <div class="mb-3"><textarea name="note" class="form-control" rows="2" placeholder="Ghi chú (không bắt buộc)"></textarea></div>
+
+            <h4 class="mt-4">Phương thức thanh toán</h4>
             <div class="mb-3">
                 <label class="form-check">
-                    <input type="radio" name="payment_method" value="cod" class="form-check-input" required checked>
+                    <input type="radio" name="payment_method" value="cod" class="form-check-input" checked>
                     <span class="form-check-label">Thanh toán khi nhận hàng (COD)</span>
                 </label>
             </div>
             <div class="mb-3">
                 <label class="form-check">
-                    <input type="radio" name="payment_method" value="online" class="form-check-input" id="zalopay-option">
-                    <span class="form-check-label">Thanh toán bằng ZaloPay</span>
+                    <input type="radio" name="payment_method" value="zalopay" class="form-check-input" id="zalopay-option">
+                    <span class="form-check-label">Thanh toán qua ZaloPay</span>
                 </label>
             </div>
+        </div>
 
-            <!-- QR: CHỈ HIỆN KHI ZALOPAY, VỪA PHẢI -->
+        <div class="col-md-5">
+            <!-- QR ZaloPay thật -->
             <div id="qr-container" class="text-center mt-4 d-none">
                 <h5 class="text-success">Quét mã QR để thanh toán</h5>
                 <div class="border rounded p-3 bg-light d-inline-block">
-                    <img id="qr-image" src="" alt="QR ZaloPay" class="img-fluid" style="width: 280px; height: 280px;">
+                    <img id="qr-image" src="" alt="QR ZaloPay" class="img-fluid" style="width:280px;height:280px;">
                 </div>
-                <p class="mt-3 text-muted">
-                    <small>Tổng: <strong id="qr-total" class="text-dark"></strong></small>
-                </p>
+                <p class="mt-3"><strong id="qr-total"></strong></p>
+                <div class="mt-3">
+                    <button type="button" class="btn btn-outline-primary" id="check-payment">Kiểm tra thanh toán</button>
+                </div>
+                <div id="payment-status" class="mt-3"></div>
             </div>
+        </div>
+    </div>
 
-            <button type="submit" class="btn btn-success btn-lg mt-4 w-100">Xác Nhận Thanh Toán</button>
-        </form>
+    <button type="submit" class="btn btn-success btn-lg mt-4 w-100">XÁC NHẬN ĐƠN HÀNG</button>
+</form>
     @endif
 </div>
 
 <script>
-    const zalopayOption = document.getElementById('zalopay-option');
-    const qrContainer = document.getElementById('qr-container');
-    const qrImage = document.getElementById('qr-image');
-    const qrTotal = document.getElementById('qr-total');
+document.getElementById('checkout-form').addEventListener('submit', async function(e) {
+    const method = document.querySelector('input[name="payment_method"]:checked').value;
+    if (method === 'cod') return; // để submit bình thường
 
-    // Khi chọn ZaloPay → hiện QR
-    zalopayOption.addEventListener('change', function() {
-        if (this.checked) {
-            const total = {{ $total }};
-            const orderCode = 'DH' + Math.floor(Math.random() * 100000).toString().padStart(5, '0');
-            const url = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=zalopay://pay?amount=${total}&description=Thanh toan don ${orderCode}`;
+    e.preventDefault(); // chặn submit nếu là zalopay
 
-            qrImage.src = url;
-            qrTotal.textContent = new Intl.NumberFormat('vi-VN').format(total) + '₫';
-            qrContainer.classList.remove('d-none');
-        }
+    const formData = new FormData(this);
+    const response = await fetch(this.action, {
+        method: 'POST',
+        body: formData,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
     });
 
-    // Khi chọn COD → ẩn QR
-    document.querySelector('input[value="cod"]').addEventListener('change', function() {
-        if (this.checked) {
-            qrContainer.classList.add('d-none');
-        }
-    });
+    const data = await response.json();
+    if (!data.success) {
+        alert('Có lỗi xảy ra!');
+        return;
+    }
 
-    // Khi submit → nếu là ZaloPay, tạo đơn & hiện QR (nếu chưa)
-    document.getElementById('payment-form').addEventListener('submit', function(e) {
-        const method = document.querySelector('input[name="payment_method"]:checked').value;
-        if (method === 'online' && qrContainer.classList.contains('d-none')) {
-            e.preventDefault();
-            zalopayOption.dispatchEvent(new Event('change'));
+    // Tạo QR thật từ ZaloPay Deep Link (hoặc dùng API thật nếu bạn đã có app_id, key)
+    const deepLink = `zalopay://pay?amount=${data.total}&description=Thanh%20toan%20don%20${data.order_code}`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(deepLink)}`;
+
+    document.getElementById('qr-image').src = qrUrl;
+    document.getElementById('qr-total').textContent = new Intl.NumberFormat('vi-VN').format(data.total) + '₫';
+    document.getElementById('qr-container').classList.remove('d-none');
+
+    // Polling kiểm tra trạng thái (đơn giản)
+    const checkBtn = document.getElementById('check-payment');
+    checkBtn.onclick = async () => {
+        const res = await fetch(`/check-zalopay-status/${data.order_id}`);
+        const result = await res.json();
+        if (result.paid) {
+            document.getElementById('payment-status').innerHTML = `<div class="alert alert-success">Thanh toán thành công! Đang chuyển về trang chủ...</div>`;
+            setTimeout(() => location.href = '/', 2000);
+        } else {
+            document.getElementById('payment-status').innerHTML = `<div class="alert alert-info">Chưa thấy thanh toán. Vui lòng thử lại.</div>`;
         }
-    });
+    };
+});
 </script>
 @endsection

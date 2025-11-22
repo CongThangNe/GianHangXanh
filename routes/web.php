@@ -7,6 +7,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\PaymentController;
+use App\Models\Order;
 
 
 // ADMIN CONTROLLERS
@@ -50,12 +51,16 @@ Route::post('/checkout', [CheckoutController::class, 'process'])
     ->name('checkout.process')
     ->middleware('cart_notempty');
 
-// PAYMENT (ZALOPAY)
-Route::get('/payment/zalopay', [PaymentController::class, 'zaloPayApp'])
-    ->name('payment.zalopay');
+Route::get('/check-zalopay-status/{order}', function(Order $order) {
+    // Nếu bạn tích hợp callback thật thì kiểm tra ở đây
+    // Hiện tại chỉ demo: giả sử đã thanh toán nếu > 30 giây
+    $paid = $order->updated_at->diffInSeconds(now()) > 30;
+    if ($paid && $order->status === 'pending') {
+        $order->update(['status' => 'paid']);
+    }
+    return response()->json(['paid' => $order->status === 'paid']);
+})->name('check.zalopay.status');
 
-Route::get('/payment/zalopay/return', [PaymentController::class, 'zaloReturn'])
-    ->name('payment.zalopay.return');
 
 
 // ADMIN
