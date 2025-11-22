@@ -31,14 +31,13 @@ class ProductVariant extends Model
         );
     }
 
-   public function attributeValues()
-{
-    return $this->belongsToMany(
-        \App\Models\AttributeValue::class,
-        'product_variant_values', 
-        'product_variant_id',     
-        'attribute_value_id'     
-    );
-}
-
+    public function attributeValues()
+    {
+        return $this->belongsToMany(
+            AttributeValue::class,
+            'product_variant_values',
+            'product_variant_id',
+            'attribute_value_id'
+        );
+    }
 }

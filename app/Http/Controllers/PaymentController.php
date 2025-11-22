@@ -31,7 +31,7 @@ class PaymentController extends Controller
             "app_user"      => "user@example.com", 
             "amount"        => $amount,
             "description"   => "Thanh toán qua ZaloPay App #" . $transID,
-            "bank_code"     => "zalopayapp",   // 🔥 Quan trọng: loại thanh toán ZaloPay App
+            "bank_code"     => "zalopayapp",   //  Quan trọng: loại thanh toán ZaloPay App
             "embed_data"    => $embed_data,
             "item"          => $item,
             "callback_url"  => route('payment.zalopay.return'),
