@@ -173,9 +173,16 @@
                         <!-- Auth Section -->
                         @guest
                         <div class="hidden md:flex items-center gap-3">
-                            <a href="#" class="text-sm font-medium leading-normal hover:text-primary dark:hover:text-primary transition-colors">Đăng nhập</a>
-                            <a href="#" class="text-sm font-medium leading-normal hover:text-primary dark:hover:text-primary transition-colors">Đăng ký</a>
-                        </div>
+    <a class="text-sm font-medium leading-normal hover:text-primary dark:hover:text-primary transition-colors"
+       href="{{ route('login') }}">
+        Đăng nhập
+    </a>
+
+    <a class="text-sm font-medium leading-normal hover:text-primary dark:hover:text-primary transition-colors"
+       href="{{ route('register') }}">
+        Đăng ký
+    </a>
+</div>
                         @else
                         <!-- User Dropdown -->
                         <div class="hidden md:block relative" x-data="{ open: false }">
