@@ -3,9 +3,15 @@
 @section('title', 'Đăng nhập')
 
 @section('content')
-<div class="flex justify-center">
-    <div class="w-full max-w-md bg-white shadow-lg rounded-lg p-6">
+<div class="relative min-h-screen flex items-center justify-center bg-gray-100">
 
+    <!-- Background + Overlay -->
+    <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://img.freepik.com/premium-photo/ecommerce-concept-delivery-service-from-front-store-transportation-delivery-by-vans-truck-motorbike-scooter-product-packages-gift-boxes-tree-low-polygon-green-tone-3d-rendering_1226542-3726.jpg?w=1380');">
+        <div class="absolute inset-0 bg-green-900 bg-opacity-50"></div>
+    </div>
+
+    <!-- Form Container -->
+    <div class="relative w-full max-w-md bg-white bg-opacity-90 shadow-lg rounded-lg p-6 z-10 mx-4">
         <h2 class="text-2xl font-bold text-center text-green-600 mb-6">
             Đăng nhập
         </h2>
