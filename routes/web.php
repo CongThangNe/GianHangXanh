@@ -61,7 +61,9 @@ Route::get('/check-zalopay-status/{order}', function(Order $order) {
     return response()->json(['paid' => $order->status === 'paid']);
 })->name('check.zalopay.status');
 
-
+// AUTH (login / register)
+Route::view('/login', 'auth.login')->name('login');
+Route::view('/register', 'auth.register')->name('register');
 
 // ADMIN
 Route::prefix('admin')->name('admin.')->group(function () {
