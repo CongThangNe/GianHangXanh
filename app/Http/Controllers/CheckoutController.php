@@ -13,9 +13,12 @@ class CheckoutController extends Controller
     public function index()
     {
         $sessionId = session()->getId();
-        $cart = Cart::with(['items.variant.product'])->where('session_id', $sessionId)->first();
+        $cart = Cart::with(['items.variant.product'])
+            ->where('session_id', $sessionId)
+            ->first();
+
         $cartItems = $cart?->items ?? collect([]);
-        $total = $cartItems->sum(fn($i) => $i->price * $i->quantity);
+        $total = $cartItems->sum(fn ($i) => $i->price * $i->quantity);
 
         return view('checkout.index', compact('cartItems', 'total'));
     }
@@ -31,15 +34,20 @@ class CheckoutController extends Controller
         ]);
 
         $sessionId = session()->getId();
-        $cart = Cart::with('items.variant')->where('session_id', $sessionId)->firstOrFail();
 
+        $cart = Cart::with(['items.variant'])
+            ->where('session_id', $sessionId)
+            ->firstOrFail();
+
+        // Nếu giỏ hàng trống
         if ($cart->items->isEmpty()) {
-            return back()->with('error', 'Giỏ hàng trống!');
+            return redirect('/cart')->with('error', 'Giỏ hàng trống!');
         }
 
-        $total = $cart->items->sum(fn($i) => $i->price * $i->quantity);
+        // TÍNH TỔNG TIỀN
+        $total = $cart->items->sum(fn ($i) => $i->price * $i->quantity);
 
-        // Tạo đơn hàng trước (dù COD hay ZaloPay)
+        // TẠO ĐƠN HÀNG
         $order = Order::create([
             'order_code'       => 'DH' . now()->format('Ymd') . Str::upper(Str::random(4)),
             'total'            => $total,
@@ -51,26 +59,28 @@ class CheckoutController extends Controller
             'note'             => $request->note,
         ]);
 
-        // Lưu chi tiết đơn hàng
+        // LƯU CHI TIẾT ĐƠN HÀNG
         foreach ($cart->items as $item) {
             OrderDetail::create([
                 'order_id'           => $order->id,
-                'product_variant_id' => $item->variant_id,
+                // 🔥 ĐÚNG LÀ product_variant_id, KHÔNG PHẢI variant_id
+                'product_variant_id' => $item->product_variant_id,
                 'quantity'           => $item->quantity,
                 'price'              => $item->price,
             ]);
         }
 
-        // XÓA GIỎ HÀNG SAU KHI ĐÃ TẠO ĐƠN
+        // XÓA GIỎ HÀNG SAU KHI ĐẶT
         $cart->items()->delete();
         $cart->delete();
 
+        // COD → redirect về home
         if ($request->payment_method === 'cod') {
             return redirect()->route('home')
                 ->with('success', "Đơn hàng COD #{$order->order_code} đã được tạo thành công!");
         }
 
-        // ZaloPay → trả về JSON để JS tạo QR thật
+        // ZaloPay → trả JSON cho JS xử lý QR
         return response()->json([
             'success'     => true,
             'order_id'    => $order->id,
