@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Cart;
 use App\Models\Order;
+use App\Models\ProductVariant;
 use App\Models\OrderDetail;
 use Illuminate\Support\Str;
 
@@ -18,7 +19,7 @@ class CheckoutController extends Controller
             ->first();
 
         $cartItems = $cart?->items ?? collect([]);
-        $total = $cartItems->sum(fn ($i) => $i->price * $i->quantity);
+        $total = $cartItems->sum(fn($i) => $i->price * $i->quantity);
 
         return view('checkout.index', compact('cartItems', 'total'));
     }
@@ -45,7 +46,7 @@ class CheckoutController extends Controller
         }
 
         // TÍNH TỔNG TIỀN
-        $total = $cart->items->sum(fn ($i) => $i->price * $i->quantity);
+        $total = $cart->items->sum(fn($i) => $i->price * $i->quantity);
 
         // TẠO ĐƠN HÀNG
         $order = Order::create([
@@ -61,14 +62,26 @@ class CheckoutController extends Controller
 
         // LƯU CHI TIẾT ĐƠN HÀNG
         foreach ($cart->items as $item) {
+
             OrderDetail::create([
-                'order_id'           => $order->id,
-                // 🔥 ĐÚNG LÀ product_variant_id, KHÔNG PHẢI variant_id
+                'order_id'          => $order->id,
+                'product_id'        => $item->product_id,
                 'product_variant_id' => $item->product_variant_id,
-                'quantity'           => $item->quantity,
-                'price'              => $item->price,
+                'quantity'          => $item->quantity,
+                'price'             => $item->price,
             ]);
+
+            // GIẢM TỒN KHO
+            $variant = ProductVariant::find($item->product_variant_id);
+
+            if ($variant) {
+                $variant->stock = max(0, $variant->stock - $item->quantity);
+                $variant->save();
+            }
         }
+
+
+
 
         // XÓA GIỎ HÀNG SAU KHI ĐẶT
         $cart->items()->delete();
