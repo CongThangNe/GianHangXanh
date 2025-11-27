@@ -149,6 +149,7 @@
                             <a class="text-sm font-medium leading-normal hover:text-primary dark:hover:text-primary transition-colors" href="{{ url('/') }}">Trang chủ</a>
                             <a class="text-sm font-medium leading-normal hover:text-primary dark:hover:text-primary transition-colors" href="{{ route('cart.index') }}">Giỏ hàng</a>
                             <a class="text-sm font-medium leading-normal hover:text-primary dark:hover:text-primary transition-colors" href="{{ route('admin.dashboard') }}">Admin</a>
+                            <a class="text-sm font-medium leading-normal hover:text-primary dark:hover:text-primary transition-colors" href="{{ route('user.orders.index') }}">User's order list</a>
                         </nav>
                     </div>
 
