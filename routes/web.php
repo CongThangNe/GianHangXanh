@@ -109,6 +109,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
 Route::resource('products', ProductController::class);
     Route::resource('categories', CategoryController::class);
     Route::resource('orders', OrderController::class)->only(['index', 'show']);
+    // Thêm route cập nhật trạng thái
+    Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])
+         ->name('orders.updateStatus');
 
     Route::resource('product-variants', ProductVariantController::class)->names('product_variants');
 
@@ -117,3 +120,4 @@ Route::resource('products', ProductController::class);
 
     Route::resource('discount-codes', DiscountCodeController::class);
 });
+
