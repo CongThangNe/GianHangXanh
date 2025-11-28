@@ -139,39 +139,86 @@
                 </div>
 
                 <!-- Right Column: Order Summary -->
-                <div class="lg:col-span-1">
-                    <div
-                        class="sticky top-24 rounded-xl border border-gray-200/80 dark:border-gray-700/80 bg-white dark:bg-gray-800 p-6 shadow-xl">
-                        <h2 class="text-lg font-bold text-[#0d1b12] dark:text-white mb-4 border-b pb-2">Tóm tắt đơn hàng
-                        </h2>
-                        <div class="mt-6 space-y-4">
-                            <div class="flex justify-between text-sm">
-                                <span class="text-gray-600 dark:text-gray-400">Tổng phụ</span>
-                                <span
-                                    class="font-medium total-amount text-gray-800 dark:text-white">{{ number_format($total, 0, ',', '.') }}₫</span>
-                            </div>
-                            <div class="flex justify-between text-sm">
-                                <span class="text-gray-600 dark:text-gray-400">Phí vận chuyển</span>
-                                <span class="font-medium text-[#4c9a66]">Miễn phí</span>
-                            </div>
+        <div class="lg:col-span-1">
+        <div class="sticky top-24 rounded-xl border border-gray-200/80 dark:border-gray-700/80 bg-white dark:bg-gray-800 p-6 shadow-xl">
+            <h2 class="text-lg font-bold text-[#0d1b12] dark:text-white mb-4 border-b pb-2">Tóm tắt đơn hàng</h2>
+
+        <!-- PHẦN NHẬP MÃ GIẢM GIÁ -->
+        <div class="mb-6 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900/50">
+            <p class="text-sm font-semibold text-[#0d1b12] dark:text-white mb-3 flex items-center gap-2">
+                <span class="material-symbols-outlined text-lg text-[#4c9a66]">discount</span>
+                Mã giảm giá
+            </p>
+
+            @if(session('discount_code') && isset($discountInfo))
+                <div class="p-4 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <span class="font-bold text-green-700 dark:text-green-300">
+                                {{ session('discount_code') }}
+                            </span>
+                            <span class="text-sm text-green-600 dark:text-green-400 ml-2">
+                                (Giảm {{ $discountInfo['value'] }})
+                            </span>
                         </div>
-                        <div class="mt-6 border-t border-gray-200/80 dark:border-gray-700/80 pt-4">
-                            <div class="flex justify-between font-bold text-lg">
-                                <span>Tổng cộng</span>
-                                <span class="total-amount text-[#13612d]">{{ number_format($total, 0, ',', '.') }}₫</span>
-                            </div>
-                        </div>
-                        <form action="{{ route('checkout.index') }}" method="GET">
-                            <button type="submit"
-                                class="mt-8 flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-[#13612d] h-12 text-base font-bold text-white transition-colors hover:bg-[#1f8045] shadow-lg">
-                                <span class="material-symbols-outlined me-2">credit_card</span> Tiến hành thanh toán
+                        <form action="{{ route('cart.removeDiscount') }}" method="POST" class="inline">
+                            @csrf
+                            <button type="submit" class="text-xs text-red-600 hover:text-red-800 underline">
+                                Bỏ áp dụng
                             </button>
                         </form>
                     </div>
                 </div>
+            @else
+                <form action="{{ route('cart.applyDiscount') }}" method="POST" class="flex gap-2">
+                    @csrf
+                    <input type="text" name="code" class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4c9a66] dark:bg-gray-800" placeholder="Nhập mã giảm giá" required>
+                    <button type="submit" class="px-4 py-2 bg-[#13612d] text-white font-medium rounded-lg hover:bg-[#1f8045] transition text-sm whitespace-nowrap">
+                        Áp dụng
+                    </button>
+                </form>
+                @if(session('error'))
+                    <p class="text-red-600 dark:text-red-400 text-xs mt-2">{{ session('error') }}</p>
+                @endif
+            @endif
+        </div>
+
+        <!-- Tóm tắt thanh toán -->
+        <div class="space-y-4">
+            <div class="flex justify-between text-sm">
+                <span class="text-gray-600 dark:text-gray-400">Tạm tính</span>
+                <span class="font-medium">{{ number_format($subtotal, 0, ',', '.') }}₫</span>
+            </div>
+
+            @if(isset($discountAmount) && $discountAmount > 0)
+                <div class="flex justify-between text-sm text-green-600 dark:text-green-400 font-semibold">
+                    <span>Giảm giá ({{ session('discount_code') }}):</span>
+                    <span>-{{ number_format($discountAmount, 0, ',', '.') }}₫</span>
+                </div>
+            @endif
+
+            <div class="flex justify-between text-sm">
+                <span class="text-gray-600 dark:text-gray-400">Phí vận chuyển</span>
+                <span class="font-medium text-[#4c9a66]">Miễn phí</span>
             </div>
         </div>
 
+        <div class="mt-6 border-t border-gray-300 dark:border-gray-600 pt-4">
+            <div class="flex justify-between font-bold text-xl">
+                <span class="text-[#0d1b12] dark:text-white">Thành tiền</span>
+                <span class="text-[#13612d] total-final">
+                    {{ number_format($total, 0, ',', '.') }}₫
+                </span>
+            </div>
+        </div>
+
+        <form action="{{ route('checkout.index') }}" method="GET">
+            <button type="submit" class="mt-6 w-full py-3 bg-[#13612d] text-white font-bold rounded-lg hover:bg-[#1f8045] transition shadow-lg text-lg">
+                Tiến hành thanh toán
+            </button>
+        </form>
+    </div>
+</div>
         <!-- JS để cập nhật quantity mà không reload -->
         <script>
             // Thêm thư viện icon nếu chưa có trong layouts/app
