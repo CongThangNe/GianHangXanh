@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Cart;
+use App\Models\DiscountCode;
 use App\Models\Order;
 use App\Models\ProductVariant;
 use App\Models\OrderDetail;
@@ -14,14 +15,61 @@ class CheckoutController extends Controller
     public function index()
     {
         $sessionId = session()->getId();
-        $cart = Cart::with(['items.variant.product'])
-            ->where('session_id', $sessionId)
-            ->first();
 
-        $cartItems = $cart?->items ?? collect([]);
-        $total = $cartItems->sum(fn($i) => $i->price * $i->quantity);
+        $cart = Cart::with([
+            'items.variant.product',
+            'items.variant.values.attribute'
+        ])->where('session_id', $sessionId)->first();
 
-        return view('checkout.index', compact('cartItems', 'total'));
+        if (!$cart || $cart->items->isEmpty()) {
+            return redirect()->route('cart.index')->with('error', 'Giỏ hàng trống!');
+        }
+
+        $cartItems = $cart->items;
+        $subtotal = $cartItems->sum(fn($i) => $i->price * $i->quantity);
+
+        $discountCode = session('discount_code');
+        $discountAmount = 0;
+        $discountInfo = null;
+
+        if ($discountCode) {
+            $code = DiscountCode::where('code', $discountCode)
+                ->where('starts_at', '<=', now())
+                ->where('expires_at', '>=', now())
+                ->where(function ($q) {
+                    $q->whereNull('max_uses')->orWhereRaw('used_count < max_uses');
+                })
+                ->first();
+
+            if ($code) {
+                if ($code->type === 'percent') {
+                    $discountAmount = $subtotal * ($code->discount_percent / 100);
+                    if ($code->max_discount_value) {
+                        $discountAmount = min($discountAmount, $code->max_discount_value);
+                    }
+                } else {
+                    $discountAmount = $code->discount_value;
+                }
+
+                $discountInfo = [
+                    'code' => $code->code,
+                    'type' => $code->type,
+                    'value' => $code->type === 'percent' ? $code->discount_percent . '%' : number_format($code->discount_value) . 'đ',
+                    'amount' => $discountAmount
+                ];
+            } else {
+                session()->forget('discount_code');
+            }
+        }
+
+        $total = $subtotal - $discountAmount;
+
+        return view('checkout.index', compact(
+            'cartItems',
+            'subtotal',
+            'discountAmount',
+            'total'
+        ));
     }
 
     public function process(Request $request)
