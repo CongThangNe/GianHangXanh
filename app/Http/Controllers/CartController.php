@@ -151,4 +151,74 @@ class CartController extends Controller
         session()->forget('discount_code'); // Xóa luôn mã giảm nếu có
         return back()->with('success', 'Đã làm trống giỏ hàng');
     }
+
+    // THÊM METHOD NÀY: Cập nhật số lượng realtime + tính lại tổng
+    public function update(Request $request)
+    {
+        $request->validate([
+            'item_id' => 'required|exists:cart_items,id',
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        $item = CartItem::findOrFail($request->item_id);
+        $sessionId = session()->getId();
+        $cart = Cart::where('session_id', $sessionId)->first();
+
+        if ($cart && $item->cart_id === $cart->id) {
+            // Kiểm tra stock (nếu có)
+            $variant = $item->variant;
+            $maxStock = $variant ? $variant->stock : 999;
+            if ($request->quantity > $maxStock) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vượt quá tồn kho!',
+                    'current_quantity' => $item->quantity,
+                ], 400);
+            }
+
+            $item->quantity = $request->quantity;
+            $item->save();
+
+            $line_total = $item->price * $item->quantity;
+
+            // Tính lại subtotal toàn giỏ
+            $subtotal = $cart->items->sum(fn($i) => $i->price * $i->quantity);
+
+            // Tính lại discount nếu có (copy logic từ index)
+            $discountAmount = 0;
+            $discountCode = session('discount_code');
+            if ($discountCode) {
+                $code = DiscountCode::where('code', $discountCode)
+                    ->where('starts_at', '<=', now())
+                    ->where('expires_at', '>=', now())
+                    ->where(function ($q) {
+                        $q->whereNull('max_uses')->orWhereRaw('used_count < max_uses');
+                    })
+                    ->first();
+
+                if ($code) {
+                    if ($code->type === 'percent') {
+                        $discountAmount = $subtotal * ($code->discount_percent / 100);
+                        if ($code->max_discount_value) {
+                            $discountAmount = min($discountAmount, $code->max_discount_value);
+                        }
+                    } else {
+                        $discountAmount = $code->discount_value;
+                    }
+                }
+            }
+
+            $total = $subtotal - $discountAmount;
+
+            return response()->json([
+                'success' => true,
+                'line_total' => $line_total,
+                'subtotal' => $subtotal,
+                'discount_amount' => $discountAmount,
+                'total' => $total,
+            ]);
+        }
+
+        return response()->json(['success' => false, 'message' => 'Lỗi cập nhật!'], 400);
+    }
 }
