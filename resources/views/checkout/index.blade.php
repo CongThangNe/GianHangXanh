@@ -1,5 +1,4 @@
 @extends('layouts.app')
-
 @section('title', 'Thanh Toán')
 
 @section('content')
@@ -56,11 +55,17 @@
                                    value="{{ old('customer_address', $user->address ?? '') }}">
                         </div>
 
-                        <div class="mb-0">
-                            <label for="note" class="block text-sm font-semibold text-gray-700 mb-2">Ghi chú (Tùy chọn)</label>
-                            <textarea id="note" name="note" rows="3"
-                                      class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-green-500 focus:border-green-500 transition duration-150"
-                                      placeholder="Yêu cầu về thời gian giao hàng, quà tặng...">{{ old('note') }}</textarea>
+                        <div class="mb-4">
+                            <label for="customer_email" class="block text-sm font-semibold text-gray-700 mb-2">Email (nếu có)</label>
+                            <input type="email" id="customer_email" name="customer_email"
+                                   class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-green-500 focus:border-green-500 transition duration-150"
+                                   value="{{ old('customer_email', $user->email ?? '') }}">
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="notes" class="block text-sm font-semibold text-gray-700 mb-2">Ghi chú đơn hàng</label>
+                            <textarea id="notes" name="notes" rows="3"
+                                      class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-green-500 focus:border-green-500 transition duration-150">{{ old('notes') }}</textarea>
                         </div>
                     </div>
 
@@ -68,71 +73,84 @@
                     <div class="bg-white shadow-xl rounded-xl p-6 md:p-8 border border-gray-100">
                         <h4 class="text-xl font-bold text-green-700 mb-6">2. Phương thức thanh toán</h4>
 
-                        <div class="space-y-4">
-                            <label class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition duration-150">
-                                <input type="radio" name="payment_method" value="cod" checked required
-                                       class="form-radio h-5 w-5 text-green-600">
-                                <span class="ml-3 text-base font-semibold text-gray-800">COD – Thanh toán khi nhận hàng</span>
-                            </label>
+                        <div class="flex flex-col gap-4">
+                            <!-- Thanh toán khi nhận hàng -->
+                            <div class="border border-gray-300 rounded-lg p-4 hover:border-green-500 transition duration-150">
+                                <label class="flex items-center cursor-pointer">
+                                    <input type="radio" name="payment_method" value="cod" checked class="form-radio text-green-500 focus:ring-green-500">
+                                    <span class="ml-3 font-semibold text-gray-800">Thanh toán khi nhận hàng (COD)</span>
+                                </label>
+                                <p class="mt-2 text-sm text-gray-600 ml-7">Khách hàng thanh toán bằng tiền mặt khi nhận hàng. Vui lòng kiểm tra kỹ sản phẩm trước khi thanh toán.</p>
+                            </div>
 
-                            <label class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition duration-150">
-                                <input type="radio" name="payment_method" value="zalopay" required
-                                       class="form-radio h-5 w-5 text-green-600">
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/ZaloPay_logo.svg/1024px-ZaloPay_logo.svg.png"
-                                     class="h-6 ml-3 mr-2" alt="ZaloPay Logo">
-                                <span class="text-base font-semibold text-gray-800">Thanh toán qua ZaloPay</span>
-                            </label>
-                        </div>
-                    </div>
-
-                </div>
-
-                {{-- CỘT 2: TÓM TẮT ĐƠN HÀNG --}}
-                <div class="w-full lg:w-5/12 order-1 lg:order-2">
-                    <div class="bg-white shadow-xl rounded-xl p-6 md:p-8 border border-gray-100 sticky top-4">
-                        <h4 class="flex justify-between items-center text-xl font-bold text-green-700 mb-6 pb-2 border-b border-gray-200">
-                            <span>Tóm tắt đơn hàng</span>
-                            <span class="bg-green-600 text-white text-xs font-semibold px-3 py-1 rounded-full">{{ count($cartItems) }} sản phẩm</span>
-                        </h4>
-
-                        <ul class="divide-y divide-gray-200 mb-6">
-                            @foreach($cartItems as $item)
-                                <li class="flex justify-between items-center py-3">
-                                    <div>
-                                        <p class="text-base font-medium text-gray-900">{{ $item->variant->product->name }}</p>
-                                        <small class="text-sm text-gray-500">SL: {{ $item->quantity }} x {{ number_format($item->price) }}₫</small>
-                                    </div>
-                                    <span class="text-base font-semibold text-gray-700">{{ number_format($item->quantity * $item->price) }}₫</span>
-                                </li>
-                            @endforeach
-
-                            <li class="flex justify-between items-center py-3 text-gray-700">
-                                <span class="font-normal">Tạm tính</span>
-                                <strong class="text-gray-900">{{ number_format($total) }}₫</strong>
-                            </li>
-                            <li class="flex justify-between items-center py-3 text-gray-700">
-                                <span class="font-normal">Phí vận chuyển</span>
-                                <strong class="text-green-600">Miễn phí</strong>
-                            </li>
-                            <li class="flex justify-between items-center pt-4 border-t-2 border-green-200 mt-2">
-                                <span class="font-bold text-xl text-green-700">TỔNG CỘNG:</span>
-                                <strong class="text-xl font-extrabold text-green-700">{{ number_format($total) }}₫</strong>
-                            </li>
-                        </ul>
-
-                        <div id="qr-container" class="border border-yellow-400 bg-yellow-50 text-center p-4 rounded-lg hidden mt-6">
-                            <div class="text-lg font-bold text-yellow-800 mb-3">Quét mã QR để thanh toán</div>
-                            <div class="flex flex-col items-center">
-                                <p class="text-sm text-gray-600 mb-2">Tổng tiền: <span id="qr-total" class="font-bold text-red-600">{{ number_format($total) }}₫</span></p>
-                                <img id="qr-image" class="w-48 h-48 border border-gray-300 p-2 rounded-lg"
-                                     src="https://placehold.co/220x220/E86850/white?text=QR+ZaloPay" alt="ZaloPay QR Code">
-                                <button type="button" id="check-payment" class="bg-green-100 hover:bg-green-200 text-green-800 font-bold py-2 px-4 rounded-lg transition mt-4 w-full md:w-auto">
-                                    Kiểm tra thanh toán
-                                </button>
-                                <div id="payment-status" class="mt-3 text-sm"></div>
+                            <!-- ZaloPay -->
+                            <div class="border border-gray-300 rounded-lg p-4 hover:border-green-500 transition duration-150">
+                                <label class="flex items-center cursor-pointer">
+                                    <input type="radio" name="payment_method" value="zalopay" class="form-radio text-green-500 focus:ring-green-500">
+                                    <span class="ml-3 font-semibold text-gray-800">Thanh toán qua ZaloPay</span>
+                                </label>
+                                <p class="mt-2 text-sm text-gray-600 ml-7">Quét mã QR hoặc chuyển khoản qua ứng dụng ZaloPay. Thanh toán nhanh chóng và an toàn.</p>
+                                <div id="qr-container" class="hidden mt-4 bg-gray-50 p-4 rounded-lg text-center">
+                                    <p class="text-sm text-gray-600 mb-2">Tổng tiền: <span id="qr-total" class="font-bold text-red-600">{{ number_format($total) }}₫</span></p>
+                                    <img id="qr-image" class="w-48 h-48 border border-gray-300 p-2 rounded-lg"
+                                         src="https://placehold.co/220x220/E86850/white?text=QR+ZaloPay" alt="ZaloPay QR Code">
+                                    <button type="button" id="check-payment" class="bg-green-100 hover:bg-green-200 text-green-800 font-bold py-2 px-4 rounded-lg transition mt-4 w-full md:w-auto">
+                                        Kiểm tra thanh toán
+                                    </button>
+                                    <div id="payment-status" class="mt-3 text-sm"></div>
+                                </div>
                             </div>
                         </div>
 
+                    </div>
+                </div>
+
+                {{-- CỘT 2: CHI TIẾT ĐƠN HÀNG --}}
+                <div class="w-full lg:w-5/12 order-1 lg:order-2">
+                    <div class="bg-white shadow-xl rounded-xl p-6 md:p-8 sticky top-24 border border-gray-100">
+                        <h4 class="text-xl font-bold text-green-700 mb-6">Chi tiết đơn hàng</h4>
+
+                        <div class="space-y-4 mb-6">
+                            @foreach($cartItems as $item)
+                                <div class="flex items-start gap-4 pb-4 border-b last:border-b-0">
+                                    <img src="{{ asset('storage/' . $item->variant->product->image ?? 'placeholder.jpg') }}" 
+                                         alt="{{ $item->variant->product->name ?? 'Sản phẩm' }}" 
+                                         class="w-16 h-16 object-cover rounded-lg border border-gray-200 shadow-sm">
+
+                                    <div class="flex-1">
+                                        <h5 class="font-semibold text-gray-800 line-clamp-2">{{ $item->variant->product->name ?? 'Sản phẩm không tồn tại' }}</h5>
+                                        <p class="text-sm text-gray-500 mt-1">
+                                            Phân loại: {{ $item->variant->attribute_value ?? 'Mặc định' }}
+                                        </p>
+                                        <div class="flex justify-between mt-2">
+                                            <span class="text-sm font-medium text-gray-600">SL: {{ $item->quantity }}</span>
+                                            <span class="text-sm font-bold text-green-600">{{ number_format($item->price * $item->quantity) }}₫</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <div class="space-y-3 border-t pt-4">
+                            <div class="flex justify-between text-sm font-medium">
+                                <span class="text-gray-700">Tạm tính</span>
+                                <span class="text-gray-900">{{ number_format($subtotal) }}₫</span>
+                            </div>
+                            <div class="flex justify-between text-sm font-medium">
+                                <span class="text-gray-700">Vận chuyển</span>
+                                <span class="text-green-600">Miễn phí</span>
+                            </div>
+                            @if($discountAmount > 0)
+                            <div class="flex justify-between text-sm font-medium">
+                                <span class="text-gray-700">Giảm giá</span>
+                                <span class="text-red-600">-{{ number_format($discountAmount) }}₫</span>
+                            </div>
+                            @endif
+                            <div class="flex justify-between text-lg font-bold pt-2 border-t">
+                                <span class="text-gray-800">Tổng thanh toán</span>
+                                <span class="text-green-600">{{ number_format($total) }}₫</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

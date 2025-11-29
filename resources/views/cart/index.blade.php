@@ -220,115 +220,84 @@
             </div>
         </div>
         <!-- JS để cập nhật quantity mà không reload -->
-        <script>
-            // Thêm thư viện icon nếu chưa có trong layouts/app
-            if (!document.querySelector('link[href*="material-symbols-outlined"]')) {
-                const link = document.createElement('link');
-                link.href =
-                    'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200';
-                link.rel = 'stylesheet';
-                document.head.appendChild(link);
-            }
+<script>
+    function formatCurrency(number) {
+        return new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND',
+            minimumFractionDigits: 0
+        }).format(number);
+    }
 
-            // Hàm format tiền tệ
-            function formatCurrency(number) {
-                return new Intl.NumberFormat('vi-VN', {
-                    style: 'currency',
-                    currency: 'VND',
-                    minimumFractionDigits: 0
-                }).format(number);
-            }
+    function showToast(message, isError = false) {
+        let toast = document.getElementById('custom-toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'custom-toast';
+            toast.style.cssText = 'position:fixed;top:1rem;right:1rem;padding:1rem;border-radius:0.5rem;z-index:9999;transition:opacity 0.4s;';
+            document.body.appendChild(toast);
+        }
+        toast.className = isError ? 'bg-red-600 text-white' : 'bg-green-600 text-white';
+        toast.textContent = message;
+        toast.style.opacity = '1';
+        setTimeout(() => toast.style.opacity = '0', 3000);
+    }
 
-            // Hàm hiển thị modal thông báo (thay thế alert)
-            function showToast(message, isError = false) {
-                // Tùy chỉnh việc hiển thị thông báo, ví dụ dùng một div cố định ở góc màn hình
-                let toast = document.getElementById('custom-toast');
-                if (!toast) {
-                    toast = document.createElement('div');
-                    toast.id = 'custom-toast';
-                    toast.style.cssText =
-                        'position: fixed; top: 1rem; right: 1rem; padding: 1rem; border-radius: 0.5rem; z-index: 1000; transition: opacity 0.3s ease;';
-                    document.body.appendChild(toast);
-                }
+    document.querySelectorAll('.cart-item').forEach(cartItem => {
+        const qtyInput     = cartItem.querySelector('input[type="number"]');
+        const decreaseBtn  = cartItem.querySelector('.decrease-btn');
+        const increaseBtn  = cartItem.querySelector('.increase-btn');
+        const lineTotalEl  = cartItem.querySelector('.line-total');
+        const itemId       = cartItem.dataset.itemId;
 
-                toast.className = isError ?
-                    'bg-red-500 text-white shadow-lg' :
-                    'bg-[#13612d] text-white shadow-lg';
-                toast.textContent = message;
-                toast.style.opacity = '1';
+        // Lấy giá 1 sản phẩm từ dòng hiện tại
+        const getUnitPrice = () => parseFloat(lineTotalEl.textContent.replace(/[^\d,-]/g, '').replace(',', '.')) / parseInt(qtyInput.value);
 
-                setTimeout(() => {
-                    toast.style.opacity = '0';
-                }, 3000);
-            }
+        const updateQuantity = (newQty) => {
+            newQty = parseInt(newQty) || 1;
+            if (newQty < 1) newQty = 1;
 
+            qtyInput.value = newQty;
+            lineTotalEl.textContent = formatCurrency(getUnitPrice() * newQty); // cập nhật tạm
 
-            document.querySelectorAll('.cart-item').forEach(item => {
-                const qtyInput = item.querySelector('input[type="number"]');
-                const decreaseBtn = item.querySelector('.decrease-btn');
-                const increaseBtn = item.querySelector('.increase-btn');
-                const itemId = item.dataset.itemId;
-                const lineTotalEl = item.querySelector('.line-total');
-                // Đã sửa lại lỗi: Sử dụng parseInt an toàn hơn
-                const maxStock = parseInt(qtyInput.getAttribute('max')) || 999;
-                const unitPrice = parseFloat(item.querySelector('.line-total').textContent.replace(/[.₫]/g, '').replace(
-                    ',', '.')) / parseInt(qtyInput.value);
+            fetch("{{ route('cart.update') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                },
+                body: JSON.stringify({ item_id: itemId, quantity: newQty })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    // Cập nhật chính xác từ server
+                    lineTotalEl.textContent = formatCurrency(data.line_total);
 
-                function updateQuantity(newQty) {
-                    newQty = parseInt(newQty);
-
-                    if (isNaN(newQty) || newQty < 1) {
-                        newQty = 1;
+                    document.getElementById('subtotal').textContent       = formatCurrency(data.subtotal) + '₫';
+                    const discountEl = document.getElementById('discount-amount');
+                    if (discountEl) {
+                        discountEl.textContent = '-' + formatCurrency(data.discount_amount) + '₫';
                     }
+                    document.getElementById('total-final').textContent    = formatCurrency(data.total) + '₫';
 
-                    if (newQty > maxStock) {
-                        showToast(`Không được vượt quá số lượng tồn kho (${maxStock})`, true);
-                        newQty = maxStock;
-                    }
-                    qtyInput.value = newQty;
-
-                    // Cập nhật giá tạm thời trên giao diện (trước khi fetch)
-                    lineTotalEl.textContent = formatCurrency(unitPrice * newQty);
-
-
-                    fetch("{{ route('cart.update') }}", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                            },
-                            body: JSON.stringify({
-                                item_id: itemId,
-                                quantity: newQty
-                            })
-                        })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) {
-                                // Cập nhật giá trị chính xác từ API
-                                lineTotalEl.textContent = formatCurrency(data.line_total);
-                                document.querySelectorAll('.total-amount').forEach(el => {
-                                    el.textContent = formatCurrency(data.total);
-                                });
-                                showToast('Cập nhật giỏ hàng thành công!');
-                            } else {
-                                showToast(data.message || 'Lỗi khi cập nhật giỏ hàng.', true);
-                                // Hoàn lại giá trị cũ nếu thất bại
-                                qtyInput.value = data.current_quantity || 1;
-
-                                // Cần reload lại trang hoặc cập nhật lại tổng tiền từ API nếu có lỗi
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Fetch error:', error);
-                            showToast('Lỗi kết nối khi cập nhật giỏ hàng.', true);
-                        });
+                    showToast('Cập nhật giỏ hàng thành công!');
+                } else {
+                    showToast(data.message || 'Lỗi cập nhật số lượng', true);
+                    qtyInput.value = data.current_quantity || 1;
+                    location.reload(); // an toàn nhất khi có lỗi
                 }
-
-                decreaseBtn.addEventListener('click', () => updateQuantity(parseInt(qtyInput.value) - 1));
-                increaseBtn.addEventListener('click', () => updateQuantity(parseInt(qtyInput.value) + 1));
-                qtyInput.addEventListener('change', () => updateQuantity(parseInt(qtyInput.value)));
+            })
+            .catch(() => {
+                showToast('Lỗi kết nối!', true);
+                location.reload();
             });
-        </script>
+        };
+
+        decreaseBtn.addEventListener('click', () => updateQuantity(parseInt(qtyInput.value) - 1));
+        increaseBtn.addEventListener('click', () => updateQuantity(parseInt(qtyInput.value) + 1));
+        qtyInput.addEventListener('change', () => updateQuantity(qtyInput.value));
+    });
+</script>
     @endif
 @endsection
