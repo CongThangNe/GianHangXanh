@@ -67,9 +67,7 @@
                             </option>
                         @endforeach
                     </select>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="this.form.submit()">
-                        Cập nhật
-                    </button>
+                    
                 </form>
             </div>
         </div>
@@ -201,9 +199,6 @@
                         <span class="fs-4 fw-bold">{{ number_format($order->total) }}₫</span>
                     </div>
 
-                    <button onclick="window.print()" class="btn btn-outline-primary w-100 mt-4">
-                        In hóa đơn
-                    </button>
                 </div>
             </div>
         </div>
