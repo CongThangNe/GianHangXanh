@@ -28,6 +28,7 @@ class CheckoutController extends Controller
         $cartItems = $cart->items;
         $subtotal = $cartItems->sum(fn($i) => $i->price * $i->quantity);
 
+        // Lấy mã giảm giá từ session (nếu đã áp dụng)
         $discountCode = session('discount_code');
         $discountAmount = 0;
         $discountInfo = null;
@@ -52,10 +53,12 @@ class CheckoutController extends Controller
                 }
 
                 $discountInfo = [
-                    'code' => $code->code,
-                    'type' => $code->type,
-                    'value' => $code->type === 'percent' ? $code->discount_percent . '%' : number_format($code->discount_value) . 'đ',
-                    'amount' => $discountAmount
+                    'code'   => $code->code,
+                    'type'   => $code->type,
+                    'value'  => $code->type === 'percent'
+                        ? $code->discount_percent . '%'
+                        : number_format($code->discount_value) . 'đ',
+                    'amount' => $discountAmount,
                 ];
             } else {
                 session()->forget('discount_code');
@@ -68,6 +71,8 @@ class CheckoutController extends Controller
             'cartItems',
             'subtotal',
             'discountAmount',
+            'discountInfo',
+            'discountCode',
             'total'
         ));
     }
@@ -93,10 +98,49 @@ class CheckoutController extends Controller
             return redirect('/cart')->with('error', 'Giỏ hàng trống!');
         }
 
-        // TÍNH TỔNG TIỀN
-        $total = $cart->items->sum(fn($i) => $i->price * $i->quantity);
+        // 1. TÍNH SUBTOTAL (tiền hàng chưa giảm)
+        $subtotal = $cart->items->sum(function ($item) {
+            return $item->price * $item->quantity;
+        });
 
-        // TẠO ĐƠN HÀNG
+        // 2. TÍNH GIẢM GIÁ (nếu có mã)
+        $discountAmount = 0;
+        $discountCode = session('discount_code');
+
+        if ($discountCode) {
+            $code = DiscountCode::where('code', $discountCode)
+                ->where('starts_at', '<=', now())
+                ->where('expires_at', '>=', now())
+                ->where(function ($q) {
+                    $q->whereNull('max_uses')->orWhereRaw('used_count < max_uses');
+                })
+                ->first();
+
+            if ($code) {
+                if ($code->type === 'percent') {
+                    // Giảm theo %
+                    $discountAmount = $subtotal * ($code->discount_percent / 100);
+
+                    if ($code->max_discount_value) {
+                        $discountAmount = min($discountAmount, $code->max_discount_value);
+                    }
+                } else {
+                    // Giảm theo số tiền cố định
+                    $discountAmount = $code->discount_value;
+                }
+
+                // Tăng số lần sử dụng mã sau khi đơn được tạo
+                $code->increment('used_count');
+            } else {
+                // Mã không còn hợp lệ thì bỏ luôn trong session
+                session()->forget('discount_code');
+            }
+        }
+
+        // 3. TỔNG TIỀN CUỐI CÙNG SAU GIẢM
+        $total = max(0, $subtotal - $discountAmount);
+
+        // 4. TẠO ĐƠN HÀNG (LƯU TỔNG ĐÃ GIẢM)
         $order = Order::create([
             'order_code'       => 'DH' . now()->format('Ymd') . Str::upper(Str::random(4)),
             'total'            => $total,
@@ -108,15 +152,14 @@ class CheckoutController extends Controller
             'note'             => $request->note,
         ]);
 
-        // LƯU CHI TIẾT ĐƠN HÀNG
+        // 5. LƯU CHI TIẾT ĐƠN HÀNG + TRỪ KHO
         foreach ($cart->items as $item) {
-
             OrderDetail::create([
-                'order_id'          => $order->id,
-                'product_id'        => $item->product_id,
+                'order_id'           => $order->id,
+                'product_id'         => $item->product_id,
                 'product_variant_id' => $item->product_variant_id,
-                'quantity'          => $item->quantity,
-                'price'             => $item->price,
+                'quantity'           => $item->quantity,
+                'price'              => $item->price,
             ]);
 
             // GIẢM TỒN KHO
@@ -128,12 +171,10 @@ class CheckoutController extends Controller
             }
         }
 
-
-
-
-        // XÓA GIỎ HÀNG SAU KHI ĐẶT
+        // 6. XÓA GIỎ HÀNG VÀ MÃ GIẢM SAU KHI ĐẶT
         $cart->items()->delete();
         $cart->delete();
+        session()->forget('discount_code');
 
         // COD → redirect về home
         if ($request->payment_method === 'cod') {
