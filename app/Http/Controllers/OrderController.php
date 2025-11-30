@@ -14,32 +14,25 @@ class OrderController extends Controller
      *
      * - Hiển thị bảng đơn hàng, trạng thái, tổng tiền, ngày tạo.
      * - Hỗ trợ lọc theo trạng thái (?status=pending|confirmed|...).
-     * - Load sẵn quan hệ chi tiết để có thể dùng ngay khi cần.
+     * - Load sẵn quan hệ cần thiết để tránh N+1.
      */
     public function index(Request $request)
     {
-        $status = $request->query('status');
+        $query = Order::query()
+            ->withCount('details')
+            ->orderByDesc('created_at');
 
-        $query = Order::with('details.variant.product')
-            ->orderByDesc('id');
-
-        if (!empty($status)) {
+        if ($status = $request->get('status')) {
             $query->where('status', $status);
         }
 
-        $orders = $query->paginate(20);
+        $orders = $query->paginate(15);
 
-        return view('admin.orders.index', compact('orders', 'status'));
+        return view('admin.orders.index', compact('orders'));
     }
 
     /**
-     * Xem chi tiết một đơn hàng.
-     *
-     * Load đầy đủ dữ liệu:
-     * - Sản phẩm
-     * - Biến thể
-     * - Thuộc tính của biến thể
-     * Đồng thời tính tổng tiền đơn dựa trên chi tiết.
+     * Xem chi tiết đơn hàng (Admin).
      */
     public function show($id)
     {
@@ -48,10 +41,13 @@ class OrderController extends Controller
             'details.variant.values.attribute',
         ])->findOrFail($id);
 
-        // Tính tổng tiền đơn (phục vụ hiển thị / kiểm tra nếu cần).
-        $order->calculated_total = $this->calculateTotal($order);
+        // Tính tiền hàng (subtotal) từ chi tiết đơn
+        $subtotal = $this->calculateTotal($order);
 
-        return view('admin.orders.show', compact('order'));
+        // Giảm giá = chênh lệch giữa tiền hàng và tổng thanh toán thực tế
+        $discountAmount = max(0, (int) $subtotal - (int) $order->total);
+
+        return view('admin.orders.show', compact('order', 'subtotal', 'discountAmount'));
     }
 
     /**
@@ -67,7 +63,7 @@ class OrderController extends Controller
      */
     public function updateStatus(Request $request, Order $order)
     {
-        $request->validate([
+        $validated = $request->validate([
             'status' => 'required|string|in:pending,confirmed,preparing,shipping,delivered,cancelled',
         ]);
 
