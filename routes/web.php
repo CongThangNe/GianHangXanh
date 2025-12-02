@@ -1,7 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
+//AUTH CONTROLLER
+use App\Http\Controllers\AuthController;
 // CLIENT CONTROLLERS
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CartController;
@@ -44,7 +45,17 @@ Route::group(['prefix' => 'cart', 'as' => 'cart.'], function () {
     Route::post('/remove-discount', [CartController::class, 'removeDiscount'])->name('removeDiscount');
 });
 
+// Không đăng nhập
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 
+    Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
+    Route::post('/register', [AuthController::class, 'register'])->name('register.post');
+});
+
+// Đăng xuất
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // TRANG CHECKOUT (GET)
 Route::get('/checkout', [CheckoutController::class, 'index'])
     ->name('checkout.index')
@@ -55,7 +66,7 @@ Route::post('/checkout', [CheckoutController::class, 'process'])
     ->name('checkout.process')
     ->middleware('cart_notempty');
 
-Route::get('/check-zalopay-status/{order}', function(Order $order) {
+Route::get('/check-zalopay-status/{order}', function (Order $order) {
     // Nếu bạn tích hợp callback thật thì kiểm tra ở đây
     // Hiện tại chỉ demo: giả sử đã thanh toán nếu > 30 giây
     $paid = $order->updated_at->diffInSeconds(now()) > 30;
@@ -108,12 +119,12 @@ Route::get('/orders-demo', function () {
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-Route::resource('products', ProductController::class);
+    Route::resource('products', ProductController::class);
     Route::resource('categories', CategoryController::class);
     Route::resource('orders', OrderController::class)->only(['index', 'show']);
     // Thêm route cập nhật trạng thái
     Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])
-         ->name('orders.updateStatus');
+        ->name('orders.updateStatus');
 
     Route::resource('product-variants', ProductVariantController::class)->names('product_variants');
 
@@ -122,4 +133,3 @@ Route::resource('products', ProductController::class);
 
     Route::resource('discount-codes', DiscountCodeController::class);
 });
-
