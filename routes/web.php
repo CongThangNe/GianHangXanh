@@ -11,16 +11,18 @@ use App\Http\Controllers\PaymentController;
 use App\Models\Order;
 
 
-// ADMIN CONTROLLERS
+
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\AttributeController;
 use App\Http\Controllers\Admin\AttributeValueController;
 use App\Http\Controllers\Admin\DiscountCodeController;
 use Illuminate\Pagination\LengthAwarePaginator;
+// ADMIN CONTROLLERS
 
 /*
 |--------------------------------------------------------------------------
@@ -115,6 +117,13 @@ Route::get('/orders-demo', function () {
     return view('oders.index', compact('orders'))->with('statusFilter', 'all');
 })->name('user.orders.index');
 
+
+// USER PROFILE
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [UserProfileController::class, 'show'])->name('profile.show');
+    Route::put('/profile', [UserProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [UserProfileController::class, 'updatePassword'])->name('profile.password.update');
+});
 // ADMIN
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');

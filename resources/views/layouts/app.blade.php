@@ -202,7 +202,7 @@
 
                                 <div x-show="open" x-transition
                                     class="absolute right-0 mt-2 w-48 bg-green-200 border border-border-light dark:border-border-dark rounded-lg shadow-lg py-1">
-                                    <a href="#"
+                                    <a href="{{ route('profile.show') }}"
                                         class="block px-4 py-2 text-sm hover:bg-green-300 transition-colors">Hồ sơ cá
                                         nhân</a>
                                     <a href="#"
