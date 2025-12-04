@@ -19,13 +19,18 @@ class Kernel extends HttpKernel
         ],
 
         'api' => [
+            \App\Http\Middleware\CleanHtmlInput::class,     // Sanitize + chống XSS
+            \App\Http\Middleware\SecurityHeaders::class,    // Header bảo mật
+            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+            'throttle:api',
             \Illuminate\Routing\Middleware\ThrottleRequests::class . ':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
 
-    /*
+    
     protected $routeMiddleware = [
+    'auth:sanctum' => \Laravel\Sanctum\Http\Middleware\AuthenticateSession::class, // ← không cần nếu dùng token
         'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
         'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class,
         'can' => \Illuminate\Auth\Middleware\Authorize::class,
@@ -33,7 +38,7 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
     ];
-    */
+
 
     protected $middlewareAliases = [
         'cart_notempty' => \App\Http\Middleware\CartNotEmpty::class,
