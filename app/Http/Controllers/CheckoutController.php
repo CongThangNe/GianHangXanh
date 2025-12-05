@@ -87,6 +87,14 @@ class CheckoutController extends Controller
             'note'             => 'nullable|string',
         ]);
 
+        // Nếu user đang đăng nhập, đồng bộ số điện thoại hồ sơ với số nhập ở checkout
+        if ($user = $request->user()) {
+            if (empty($user->phone) || $user->phone !== $request->customer_phone) {
+                $user->phone = $request->customer_phone;
+                $user->save();
+            }
+        }
+
         $sessionId = session()->getId();
 
         $cart = Cart::with(['items.variant'])
@@ -145,7 +153,7 @@ class CheckoutController extends Controller
             'order_code'       => 'DH' . now()->format('Ymd') . Str::upper(Str::random(4)),
             'total'            => $total,
             'payment_method'   => $request->payment_method,
-            'status'           => $request->payment_method === 'cod' ? 'paid' : 'pending',
+            'status'           => 'pending',
             'customer_name'    => $request->customer_name,
             'customer_phone'   => $request->customer_phone,
             'customer_address' => $request->customer_address,

@@ -63,8 +63,13 @@ class OrderController extends Controller
      */
     public function updateStatus(Request $request, Order $order)
     {
+        // Nếu đơn đã giao thành công hoặc đã hủy thì không cho sửa nữa
+        if (in_array($order->status, ['delivered', 'cancelled'], true)) {
+            return back()->with('error', 'Đơn hàng đã hoàn tất, không thể thay đổi trạng thái nữa!');
+        }
+
         $validated = $request->validate([
-            'status' => 'required|string|in:pending,confirmed,preparing,shipping,delivered,cancelled',
+            'status' => 'required|string|in:pending,paid,confirmed,preparing,shipping,delivered,cancelled',
         ]);
 
         $order->status = $request->input('status');
@@ -73,7 +78,80 @@ class OrderController extends Controller
         return back()->with('success', 'Cập nhật trạng thái đơn hàng thành công!');
     }
 
+
     /**
+     * Danh sách đơn hàng của user đang đăng nhập.
+     * Lọc theo số điện thoại trong hồ sơ user (users.phone = orders.customer_phone).
+     */
+    public function userIndex(Request $request)
+    {
+        $user = $request->user();
+        $statusFilter = $request->get('status', 'all');
+
+        $query = Order::query()
+            ->with(['details.variant.product'])
+            ->orderByDesc('created_at');
+
+        // Nếu user đăng nhập, lọc đơn theo SĐT hoặc theo tên
+        if ($user) {
+            $query->where(function ($q) use ($user) {
+                if (!empty($user->phone)) {
+                    $q->where('customer_phone', $user->phone);
+                }
+
+                $q->orWhere('customer_name', $user->name);
+            });
+        } else {
+            // Nếu chưa đăng nhập thì không có đơn nào để hiển thị
+            $orders = collect();
+            return view('oders.index', [
+                'orders'       => $orders,
+                'statusFilter' => $statusFilter,
+            ]);
+        }
+
+        // Filter theo trạng thái (all | pending | confirmed | preparing | shipping | delivered | cancelled)
+        if ($statusFilter !== 'all') {
+            $query->where('status', $statusFilter);
+        }
+
+        $orders = $query->paginate(10);
+
+        return view('oders.index', compact('orders', 'statusFilter'));
+    }
+
+    /**
+     * Chi tiết 1 đơn hàng cho user (hóa đơn).
+     * Chỉ cho phép xem nếu số điện thoại đơn trùng với phone của user.
+     */
+    public function userShow(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $orderQuery = Order::with([
+            'details.variant.product',
+            'details.variant.values.attribute',
+        ])->where('id', $id);
+
+        if ($user) {
+            $orderQuery->where(function ($q) use ($user) {
+                if (!empty($user->phone)) {
+                    $q->where('customer_phone', $user->phone);
+                }
+
+                $q->orWhere('customer_name', $user->name);
+            });
+        }
+
+        $order = $orderQuery->firstOrFail();
+
+        $subtotal = $this->calculateTotal($order);
+        $discountAmount = max(0, (int) $subtotal - (int) $order->total);
+
+        return view('oders.show', compact('order', 'subtotal', 'discountAmount'));
+    }
+
+/**
      * Tính tổng tiền của một đơn hàng dựa trên bảng order_details.
      * Đây là phần "tính tổng tiền đơn" cho Huy, dùng nội bộ trong controller.
      */
