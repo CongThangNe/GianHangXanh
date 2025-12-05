@@ -3,8 +3,12 @@
 @section('title', 'Hồ sơ cá nhân')
 
 @section('content')
-<div class="container mx-auto px-4 py-8 max-w-4xl">
-    <h1 class="text-2xl font-bold mb-6">Hồ sơ cá nhân</h1>
+<div class="container mx-auto px-4 py-8 max-w-5xl">
+
+    <div class="text-center">
+        <h1 class="text-2xl font-bold mb-6">Hồ sơ cá nhân</h1>
+    </div>
+
 
     {{-- Thông báo chung --}}
     @if (session('success'))
@@ -29,26 +33,57 @@
         </div>
     @endif
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {{-- Cột trái: Avatar --}}
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+
+        {{-- SIDEBAR BÊN TRÁI --}}
         <div class="md:col-span-1">
-            <div class="bg-white rounded-xl shadow p-4 flex flex-col items-center">
-                <div class="w-32 h-32 rounded-full overflow-hidden mb-4 border">
+            <div class="bg-white shadow rounded-xl p-4">
+
+                {{-- Avatar --}}
+                <div class="w-28 h-28 rounded-full overflow-hidden mx-auto mb-4 border">
                     @if ($user->avatar_path)
-                        <img src="{{ asset('storage/' . $user->avatar_path) }}" alt="Avatar" class="w-full h-full object-cover">
+                        <img src="{{ asset('storage/' . $user->avatar_path) }}"
+                             class="w-full h-full object-cover" alt="Avatar">
                     @else
                         <div class="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
                             <span class="material-symbols-outlined text-5xl">account_circle</span>
                         </div>
                     @endif
                 </div>
-                <p class="font-semibold">{{ $user->name }}</p>
-                <p class="text-sm text-gray-500">{{ $user->email }}</p>
+
+                <p class="text-center font-semibold">{{ $user->name }}</p>
+                <p class="text-center text-sm text-gray-500 mb-6">{{ $user->email }}</p>
+
+                {{-- MENU SIDEBAR --}}
+                <div class="space-y-2 mt-4">
+                    <!-- <a href="{{ route('profile.show') }}"
+                       class="block px-4 py-2 rounded-md font-medium 
+                              {{ request()->routeIs('profile.show') ? 'bg-green-600 text-white' : 'text-gray-700 hover:bg-gray-100' }}">
+                        Hồ sơ cá nhân
+                    </a> -->
+
+                    <a href="{{ route('user.orders.index') }}"
+                    class="block px-4 py-2 rounded-md font-medium text-center
+                            {{ request()->routeIs('user.orders.index') 
+                                ? 'bg-green-600 text-white' 
+                                : 'text-gray-700 hover:bg-gray-100' }}">
+                        Đơn hàng của tôi
+                    </a>
+
+                    <a href="{{ route('profile.password') }}"
+                    class="block px-4 py-2 rounded-md font-medium text-center
+                            {{ request()->routeIs('profile.password') ? 'bg-green-600 text-white' : 'text-gray-700 hover:bg-gray-100' }}">
+                        Đổi mật khẩu
+                    </a>
+
+
+                </div>
+
             </div>
         </div>
 
-        {{-- Cột phải: Form cập nhật thông tin và đổi mật khẩu --}}
-        <div class="md:col-span-2 space-y-8">
+        {{-- CỘT PHẢI: FORM --}}
+        <div class="md:col-span-3 space-y-8">
 
             {{-- Form cập nhật thông tin hồ sơ --}}
             <div class="bg-white rounded-xl shadow p-6">
@@ -91,14 +126,14 @@
 
                     <div class="pt-2">
                         <button type="submit"
-                            class="inline-flex items-center px-4 py-2 rounded-md bg-primary text-white text-sm font-medium hover:bg-green-700 focus:outline-none">
+                            class="inline-flex items-center px-4 py-2 rounded-md bg-primary text-white text-sm font-medium hover:bg-green-700">
                             Lưu thay đổi
                         </button>
                     </div>
                 </form>
             </div>
 
-            {{-- Form đổi mật khẩu --}}
+            <!-- {{-- Form đổi mật khẩu --}}
             <div class="bg-white rounded-xl shadow p-6">
                 <h2 class="text-lg font-semibold mb-4">Đổi mật khẩu</h2>
 
@@ -126,12 +161,12 @@
 
                     <div class="pt-2">
                         <button type="submit"
-                            class="inline-flex items-center px-4 py-2 rounded-md bg-primary text-white text-sm font-medium hover:bg-green-700 focus:outline-none">
+                            class="inline-flex items-center px-4 py-2 rounded-md bg-primary text-white text-sm font-medium hover:bg-green-700">
                             Cập nhật mật khẩu
                         </button>
                     </div>
                 </form>
-            </div>
+            </div> -->
 
         </div>
     </div>
