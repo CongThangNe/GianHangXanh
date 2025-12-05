@@ -120,10 +120,24 @@ Route::get('/orders-demo', function () {
 
 // USER PROFILE
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [UserProfileController::class, 'show'])->name('profile.show');
-    Route::put('/profile', [UserProfileController::class, 'update'])->name('profile.update');
-    Route::put('/profile/password', [UserProfileController::class, 'updatePassword'])->name('profile.password.update');
+
+    // Trang hồ sơ
+    Route::get('/profile', [UserProfileController::class, 'show'])
+        ->name('profile.show');
+
+    // Cập nhật thông tin hồ sơ
+    Route::put('/profile', [UserProfileController::class, 'update'])
+        ->name('profile.update');
+
+    // 🔥 Trang đổi mật khẩu (GET)
+    Route::get('/profile/change-password', [UserProfileController::class, 'editPassword'])
+        ->name('profile.password');
+
+    // 🔥 Xử lý đổi mật khẩu (POST hoặc PUT đều được — tôi dùng POST cho chuẩn)
+    Route::post('/profile/change-password', [UserProfileController::class, 'updatePassword'])
+        ->name('profile.password.update');
 });
+
 // ADMIN
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
