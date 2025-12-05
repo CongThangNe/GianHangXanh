@@ -83,44 +83,17 @@ Route::view('/login', 'auth.login')->name('login');
 Route::view('/register', 'auth.register')->name('register');
 
 // Route tạm để xem giao diện danh sách đơn hàng
-Route::get('/orders-demo', function () {
-    $ordersArray = [
-        (object)[
-            'id' => 1,
-            'order_code' => 'DH001',
-            'status' => 'pending',
-            'total_amount' => 500000,
-            'orderItems' => [
-                (object)['product_name' => 'Sản phẩm A', 'quantity' => 2],
-                (object)['product_name' => 'Sản phẩm B', 'quantity' => 1],
-            ]
-        ],
-        (object)[
-            'id' => 2,
-            'order_code' => 'DH002',
-            'status' => 'delivered',
-            'total_amount' => 750000,
-            'orderItems' => [
-                (object)['product_name' => 'Sản phẩm C', 'quantity' => 1],
-            ]
-        ],
-    ];
-
-    $orders = new LengthAwarePaginator(
-        $ordersArray,
-        count($ordersArray),
-        10,
-        1,
-        ['path' => url('/orders-demo')]
-    );
-
-    return view('oders.index', compact('orders'))->with('statusFilter', 'all');
-})->name('user.orders.index');
 
 
 // USER PROFILE
 Route::middleware('auth')->group(function () {
+Route::get('/orders', [OrderController::class, 'userIndex'])
+        ->name('user.orders.index');
 
+    Route::get('/orders/{order}', [OrderController::class, 'userShow'])
+        ->name('user.orders.show');
+
+    
     // Trang hồ sơ
     Route::get('/profile', [UserProfileController::class, 'show'])
         ->name('profile.show');
