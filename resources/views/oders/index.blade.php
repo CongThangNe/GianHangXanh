@@ -1,10 +1,20 @@
-@extends('layouts.app') {{-- Layout chính của bạn --}}
+@extends('layouts.app')
 
 @section('title', 'Đơn hàng của tôi')
 
 @section('content')
 
 <div class="container mx-auto px-4 py-8 md:py-12 max-w-6xl">
+
+    {{-- Breadcrumb nhỏ trong trang hồ sơ --}}
+    <div class="mb-6 text-sm text-gray-600">
+        <a href="{{ route('profile.show') }}" class="hover:text-green-700 font-medium">
+            Hồ sơ cá nhân
+        </a>
+        <span class="mx-2 text-gray-400">/</span>
+        <span class="text-green-700 font-semibold">Đơn hàng của tôi</span>
+    </div>
+
     <h2 class="text-3xl font-extrabold text-gray-800 mb-8 border-b pb-3">
         Đơn hàng của tôi
     </h2>
@@ -45,12 +55,14 @@
         <div class="space-y-6">
             @foreach ($orders as $order)
                 <div class="bg-white shadow-lg rounded-xl overflow-hidden border border-gray-200">
+
                     {{-- HEADER ĐƠN HÀNG --}}
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 md:p-6 bg-gray-50 border-b border-gray-200">
                         <div class="mb-2 sm:mb-0">
                             <p class="text-xs uppercase font-medium text-gray-500">Mã đơn hàng</p>
                             <span class="text-lg font-bold text-green-700">{{ $order->order_code }}</span>
                         </div>
+
                         <div class="flex items-center space-x-4">
                             @php
                                 $statusDisplay = [
@@ -61,21 +73,26 @@
                                     'cancelled' => ['Đã hủy', 'bg-red-100 text-red-800'],
                                 ][$order->status] ?? ['Không xác định', 'bg-gray-100 text-gray-800'];
                             @endphp
+
                             <span class="px-3 py-1 text-sm font-semibold rounded-full {{ $statusDisplay[1] }}">
                                 {{ $statusDisplay[0] }}
                             </span>
-                            <a href="#" class="text-sm font-semibold bg-green-600 text-white hover:bg-green-700 px-3 py-1.5 rounded-lg transition duration-150 shadow-md">
+
+                            <a href="#"
+                               class="text-sm font-semibold bg-green-600 text-white hover:bg-green-700 px-3 py-1.5 rounded-lg transition duration-150 shadow-md">
                                 Chi tiết
                             </a>
                         </div>
                     </div>
 
-                    {{-- NỘI DUNG ĐƠN HÀNG --}}
+                    {{-- NỘI DUNG --}}
                     <div class="p-4 md:p-6">
                         @if (!empty($order->orderItems))
                             @php $firstItem = $order->orderItems[0]; @endphp
+
                             <div class="flex items-center space-x-4 mb-4">
-                                <img src="https://placehold.co/80x80/22C55E/white?text=SP" alt="{{ $firstItem->product_name }}"
+                                <img src="https://placehold.co/80x80/22C55E/white?text=SP"
+                                     alt="{{ $firstItem->product_name }}"
                                      class="w-16 h-16 object-cover rounded-lg border border-gray-100">
 
                                 <div>
@@ -96,6 +113,7 @@
                             <span class="text-2xl font-extrabold text-red-600">{{ number_format($order->total_amount) }}₫</span>
                         </div>
                     </div>
+
                 </div>
             @endforeach
         </div>
@@ -105,6 +123,7 @@
             {{ $orders->links() }}
         </div>
     @endif
+
 </div>
 
 @endsection
