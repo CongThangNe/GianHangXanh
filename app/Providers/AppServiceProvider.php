@@ -26,7 +26,6 @@ class AppServiceProvider extends ServiceProvider
         Route::middleware('api')
              ->prefix('api')
              ->group(base_path('routes/api.php'));  
-        // THROTTLE LOGIN – YÊU CẦU ANH BÁ VINH
         RateLimiter::for('login', function (Request $request) {
             return Limit::perMinute(5)
                 ->by($request->ip())
