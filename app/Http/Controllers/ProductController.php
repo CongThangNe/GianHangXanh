@@ -76,4 +76,5 @@ public function show($id)
     $categories = Category::all();
     return view('products.show', compact('product','categories'));
 }
+
 }

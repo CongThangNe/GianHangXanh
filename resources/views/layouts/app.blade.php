@@ -90,7 +90,7 @@
 
                         <!-- Logo -->
                         <div class="flex items-center gap-2 text-white">
-                            <img src="" class="h-12 mb-4" alt="Logo web để đây nhé">
+                           <a href="{{ url('/') }}"><img src="" class="h-12 mb-4" alt="Logo web để đây nhé"></a> 
 
                             <a class="text-xl font-bold" href="{{ url('/') }}">
                                 <h2>Gian Hàng Xanh</h2>
