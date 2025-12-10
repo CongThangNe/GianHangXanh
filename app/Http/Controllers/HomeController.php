@@ -42,11 +42,4 @@ class HomeController extends Controller
         $product = Product::with('category', 'variants')->findOrFail($id);
         return view('products.show', compact('product'));
     }
-    public function allProducts()
-    {
-        $categories = Category::all();
-        $products = Product::paginate(12);
-
-        return view('products.index', compact('categories', 'products'));
-    }
 }
