@@ -9,6 +9,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\PaymentController;
 use App\Models\Order;
+use App\Http\Controllers\OrderGuestController;
 
 
 
@@ -109,6 +110,9 @@ Route::get('/orders', [OrderController::class, 'userIndex'])
     // 🔥 Xử lý đổi mật khẩu (POST hoặc PUT đều được — tôi dùng POST cho chuẩn)
     Route::post('/profile/change-password', [UserProfileController::class, 'updatePassword'])
         ->name('profile.password.update');
+// Route hủy đơn hàng dành cho khách vãng lai
+Route::delete('/orders/cancel/{order_code}', [OrderGuestController::class, 'cancel'])
+     ->name('orders.cancel');
 });
 
 // ADMIN
