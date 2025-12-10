@@ -142,8 +142,7 @@
                                             {{ number_format($subtotal) }}₫
                                         </th>
                                     </tr>
-                                </tfoot>
-                            @endif
+                                @endif
                         </table>
                     </div>
                 </div>
@@ -200,11 +199,18 @@
                         </span>
                     </div>
 
+                    @php
+                        // Khi đơn đã hủy thì khóa lại, không cho đổi trạng thái / bấm nút nữa
+                        $statusLocked = $order->status === 'cancelled';
+                    @endphp
+
                     <form action="{{ route('admin.orders.updateStatus', $order) }}" method="POST" class="d-flex gap-2 align-items-center">
                         @csrf
                         @method('PATCH')
 
-                        <select name="status" class="form-select form-select-sm w-auto">
+                        <select name="status"
+                                class="form-select form-select-sm w-auto {{ $statusLocked ? 'pe-none opacity-75' : '' }}"
+                                {{ $statusLocked ? 'disabled' : '' }}>
                             @foreach([
                                 'pending'   => 'Chờ xử lý',
                                 'paid'      => 'Đã thanh toán',
@@ -220,7 +226,9 @@
                             @endforeach
                         </select>
 
-                        <button type="submit" class="btn btn-sm btn-primary">
+                        <button type="submit"
+                                class="btn btn-sm btn-primary"
+                                {{ $statusLocked ? 'disabled' : '' }}>
                             Cập nhật
                         </button>
                     </form>
