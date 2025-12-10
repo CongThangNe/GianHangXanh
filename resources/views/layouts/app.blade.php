@@ -7,9 +7,9 @@
     <title>@yield('title', 'Gian Hàng Xanh - Sản phẩm bền vững cho hành tinh tốt đẹp hơn')</title>
 
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -35,7 +35,7 @@
                         "surface-light": "#ffffff",
                         "surface-dark": "#1a2d1a",
                         "border-light": "#e0e6e0",
-                        "border-dark": "#2a3d2a"
+                        "border-dark": "#2a3d2a",
                     },
                     fontFamily: {
                         "display": ["Inter", "sans-serif"]
@@ -52,10 +52,27 @@
     </script>
 
     <style>
-        body { background-color: #f9f9f9; }
-        footer { background-color: #2e7d32; color: white; padding: 20px 0; margin-top: 40px; }
-        footer a { color: #c8e6c9; text-decoration: none; font-size: 1.3rem; transition: color .3s; }
-        footer a:hover { color: #fff176; }
+        body {
+            background-color: #f9f9f9;
+        }
+
+        footer {
+            background-color: #2e7d32;
+            color: white;
+            padding: 20px 0;
+            margin-top: 40px;
+        }
+
+        footer a {
+            color: #c8e6c9;
+            text-decoration: none;
+            font-size: 1.3rem;
+            transition: color .3s;
+        }
+
+        footer a:hover {
+            color: #fff176;
+        }
     </style>
 </head>
 
@@ -65,7 +82,7 @@
 
             <!-- TopNavBar -->
             <header
-                class="sticky top-0 z-50 flex justify-center bg-green-500/80 backdrop-blur-sm border-b border-solid border-border-light dark:border-border-dark text-white">
+                class="sticky top-0 z-50 flex justify-center bg-green-700 backdrop-blur-sm border-b border-solid border-border-light dark:border-border-dark text-white">
                 <div class="flex w-full max-w-7xl items-center justify-between whitespace-nowrap px-4 py-3">
 
                     <!-- Left: Logo & Navigation -->
@@ -73,12 +90,7 @@
 
                         <!-- Logo -->
                         <div class="flex items-center gap-2 text-white">
-                            <div class="size-6 text-primary">
-                                <svg fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 
-                                    14.17l7.59-7.59L19 8l-9 9z"></path>
-                                </svg>
-                            </div>
+                            <a href="{{ url('/') }}"><img src="" class="h-12 mb-4" alt="Logo web để đây nhé"></a>
 
                             <a class="text-xl font-bold" href="{{ url('/') }}">
                                 <h2>Gian Hàng Xanh</h2>
@@ -94,7 +106,9 @@
                             <a class="text-sm font-medium hover:text-primary" href="{{ route('cart.index') }}">
                                 Giỏ hàng
                             </a>
-
+                            <a class="text-sm font-medium hover:text-primary" href="{{ route('intro') }}">
+                                Giới thiệu 
+                            </a>
                             {{-- ❌ ĐÃ XOÁ ADMIN KHỎI MENU NGANG --}}
                         </nav>
                     </div>
@@ -105,65 +119,67 @@
                         <!-- Search Bar -->
                         <form action="{{ route('home') }}" method="GET"
                             class="hidden sm:flex flex-col min-w-40 !h-10 max-w-64">
-                            <div class="flex items-stretch rounded-lg h-full">
+
+                            <div class="flex items-stretch h-full border border-white rounded-lg overflow-hidden">
+
                                 <button type="submit"
-                                    class="text-white flex bg-green-100/50 items-center justify-center pl-3 pr-2 rounded-l-lg border border-r-0">
+                                    class="text-white flex bg-green-100/50 items-center justify-center pl-3 pr-2">
                                     <span class="material-symbols-outlined text-white" style="font-size:20px">Search</span>
                                 </button>
+
                                 <input type="search" name="keyword"
-                                    class="form-input flex w-full text-sm text-white bg-green-100/50 px-3 rounded-r-lg"
+                                    class="form-input flex w-full text-sm text-white bg-green-100/50 px-3"
                                     placeholder="Tìm kiếm sản phẩm..." value="{{ request('keyword') }}">
                             </div>
                         </form>
 
                         <!-- Auth Section -->
                         @guest
-                            <div class="hidden md:flex items-center gap-3">
-                                <a class="text-sm font-medium hover:text-primary" href="{{ route('login') }}">Đăng nhập</a>
-                                <a class="text-sm font-medium hover:text-primary" href="{{ route('register') }}">Đăng ký</a>
-                            </div>
+                        <div class="hidden md:flex items-center gap-3">
+                            <a class="text-sm font-medium hover:text-primary" href="{{ route('login') }}">Đăng nhập</a>
+                            <a class="text-sm font-medium hover:text-primary" href="{{ route('register') }}">Đăng ký</a>
+                        </div>
 
                         @else
-                            <!-- User Dropdown -->
-                            <div class="hidden md:block relative" x-data="{ open: false }">
-                                <button @click="open = !open" @click.away="open = false"
-                                    class="flex items-center gap-2 text-sm font-medium text-white hover:text-primary">
-                                    <span class="material-symbols-outlined" style="font-size:20px">account_circle</span>
-                                    <span>{{ Auth::user()->name }}</span>
-                                    <span class="material-symbols-outlined" style="font-size:16px">expand_more</span>
-                                </button>
+                        <!-- User Dropdown -->
+                        <div class="hidden md:block relative" x-data="{ open: false }">
+                            <button @click="open = !open" @click.away="open = false"
+                                class="flex items-center gap-2 text-sm font-medium text-white hover:text-primary">
+                                <span class="material-symbols-outlined" style="font-size:20px">account_circle</span>
+                                <span>{{ Auth::user()->name }}</span>
+                                <span class="material-symbols-outlined" style="font-size:16px">expand_more</span>
+                            </button>
 
-                                <div x-show="open" x-transition
-                                    class="absolute right-0 mt-2 w-48 bg-green-200 border rounded-lg shadow-lg py-1">
+                            <div x-show="open" x-transition
+                                class="absolute right-0 mt-2 w-48 bg-green-600 border rounded-lg shadow-lg py-1">
 
-                                    <a href="{{ route('profile.show') }}"
-                                        class="block px-4 py-2 text-sm hover:bg-green-300">
-                                        Hồ sơ cá nhân
-                                    </a>
+                                <a href="{{ route('profile.show') }}"
+                                    class="block px-4 py-2 text-sm hover:bg-green-500">
+                                    Hồ sơ cá nhân
+                                </a>
 
-                                    <a href="{{ route('user.orders.index') }}"
-                                        class="block px-4 py-2 text-sm hover:bg-green-300">
-                                        Đơn hàng
-                                    </a>
+                                <a href="{{ route('user.orders.index') }}"
+                                    class="block px-4 py-2 text-sm hover:bg-green-500">
+                                    Đơn hàng
+                                </a>
 
-                                    <hr class="my-1">
 
-                                    <form action="{{ route('logout') }}" method="POST">
-                                        @csrf
-                                        <button type="submit"
-                                            class="w-full text-left px-4 py-2 text-sm hover:bg-green-300">
-                                            Đăng xuất
-                                        </button>
-                                    </form>
+                                <form action="{{ route('logout') }}" method="POST">
+                                    @csrf
+                                    <button type="submit"
+                                        class="w-full text-left px-4 py-2 text-sm hover:bg-green-500">
+                                        Đăng xuất
+                                    </button>
+                                </form>
 
-                                    <!-- ⭐ THÊM ADMIN VÀO NGAY SAU ĐĂNG XUẤT -->
-                                    <a href="{{ route('admin.dashboard') }}"
-                                        class="block px-4 py-2 text-sm hover:bg-green-300 border-t">
-                                        Admin
-                                    </a>
+                                <!-- ⭐ THÊM ADMIN VÀO NGAY SAU ĐĂNG XUẤT -->
+                                <a href="{{ route('admin.dashboard') }}"
+                                    class="block px-4 py-2 text-sm hover:bg-green-500">
+                                    Admin
+                                </a>
 
-                                </div>
                             </div>
+                        </div>
                         @endguest
                     </div>
                 </div>
@@ -178,28 +194,82 @@
     </div>
 
     <!-- Footer -->
-    <footer class="bg-green-500 text-white">
-        <div class="container py-2">
-            <div class="row align-items-center">
-                <div class="col-12 col-md-4 text-center text-md-start mb-2">
-                    <img src="https://via.placeholder.com/100x40?text=LOGO" class="img-fluid" style="max-height:40px">
+    <footer class="bg-green-700 text-white text-sm pt-12 pb-6">
+        <div class="container mx-auto px-6">
+
+            <!-- ==== CỘT LOGO + THÔNG TIN ==== -->
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mt-6 text-sm">
+
+                <!-- Cột Logo -->
+                <div class="flex flex-col items-center md:items-start">
+                    <img src="" class="h-12 mb-4" alt="Logo web để đây nhé">
                 </div>
 
-                <div class="col-12 col-md-4 text-center mb-2">
-                    <p class="mb-0 text-sm">&copy; 2025 Gian Hàng Xanh. All rights reserved.</p>
+                <!-- Cột 1 -->
+                <div class="text-xs">
+                    <h4 class="font-bold mb-2 text-lg">VỀ CHÚNG TÔI</h4>
+                    <p>Gian Hàng Xanh – cung cấp sản phẩm xanh, thân thiện môi trường.</p>
+                    <p class="mt-2">Địa chỉ: Hà Nội</p>
+                    <p>Hotline: 035.2614.404</p>
                 </div>
 
-                <div class="col-12 col-md-4 text-center text-md-end">
-                    <a href="#" class="me-2"><i class="bi bi-facebook"></i></a>
-                    <a href="#" class="me-2"><i class="bi bi-instagram"></i></a>
-                    <a href="#"><i class="bi bi-envelope"></i></a>
+                <!-- Cột 2 -->
+                <div class="text-xs">
+                    <h4 class="font-bold mb-2 text-lg">CHÍNH SÁCH</h4>
+                    <ul class="space-y-1">
+                        <li>- Bảo hành</li>
+                        <li>- Đổi trả</li>
+                        <li>- Vận chuyển</li>
+                        <li>- Thanh toán</li>
+                    </ul>
+                </div>
+
+                <!-- Cột 3 -->
+                <div class="text-xs">
+                    <h4 class="font-bold mb-2 text-lg">HỖ TRỢ KHÁCH HÀNG</h4>
+                    <ul class="space-y-1">
+                        <li>- Hướng dẫn mua hàng</li>
+                        <li>- Hướng dẫn thanh toán</li>
+                        <li>- Câu hỏi thường gặp</li>
+                        <li>- Liên hệ hỗ trợ</li>
+                    </ul>
+                </div>
+
+                <!-- Cột 4 -->
+                <div class="text-xs">
+                    <h4 class="font-bold mb-2 text-lg">LÝ DO CHỌN CHÚNG TÔI</h4>
+                    <ul class="space-y-1">
+                        <li>- Chất lượng cao</li>
+                        <li>- Ship toàn quốc</li>
+                        <li>- Giá hợp lý</li>
+                        <li>- Hỗ trợ tận tâm</li>
+                    </ul>
                 </div>
             </div>
+
+            <!-- ==== DÒNG CUỐI ==== -->
+            <div class="mt-10 flex flex-col md:flex-row justify-between items-center border-t border-green-300 pt-4">
+                <p class="text-xs opacity-80">© 2025 Gian Hàng Xanh</p>
+                <p class="text-center text-xs mt-4 md:mt-0">
+                    Gian Hàng Xanh – Lan tỏa sản phẩm thân thiện môi trường.
+                </p>
+
+                <div class="flex space-x-4 text-xl mt-4 md:mt-0">
+                    <a href="#" class="hover:text-green-200"><i class="bi bi-facebook"></i></a>
+                    <a href="#" class="hover:text-green-200"><i class="bi bi-instagram"></i></a>
+                    <a href="#" class="hover:text-green-200"><i class="bi bi-envelope"></i></a>
+                </div>
+
+            </div>
+
         </div>
     </footer>
+
+
 
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
 </body>
+
 </html>
