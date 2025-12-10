@@ -134,7 +134,7 @@
 
             <a class="mt-8 inline-flex items-center gap-2 text-sm font-medium text-[#4c9a66] hover:text-[#13612d] hover:underline transition-colors"
                 href="{{ url('/') }}">
-                <span class="material-symbols-outlined">arrow_back</span> Tiếp tục mua sắm
+                <span class="material-symbols-outlined"></span> Tiếp tục mua sắm
             </a>
         </div>
 

@@ -37,6 +37,7 @@ Route::get('/category/{id}', [HomeController::class, 'category'])->name('categor
 Route::get('/product/{id}', [HomeController::class, 'show'])->name('product.show');
 Route::get('/search', [ProductController::class, 'search'])->name('search');
 Route::get('/products', [HomeController::class, 'allProducts'])->name('products.all');
+Route::view('/intro', 'intro.intro')->name('intro');
 // CART
 Route::group(['prefix' => 'cart', 'as' => 'cart.'], function () {
     Route::get('/', [CartController::class, 'index'])->name('index');

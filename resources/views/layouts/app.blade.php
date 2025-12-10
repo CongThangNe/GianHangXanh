@@ -90,7 +90,7 @@
 
                         <!-- Logo -->
                         <div class="flex items-center gap-2 text-white">
-                           <a href="{{ url('/') }}"><img src="" class="h-12 mb-4" alt="Logo web để đây nhé"></a> 
+                            <a href="{{ url('/') }}"><img src="" class="h-12 mb-4" alt="Logo web để đây nhé"></a>
 
                             <a class="text-xl font-bold" href="{{ url('/') }}">
                                 <h2>Gian Hàng Xanh</h2>
@@ -106,7 +106,9 @@
                             <a class="text-sm font-medium hover:text-primary" href="{{ route('cart.index') }}">
                                 Giỏ hàng
                             </a>
-
+                            <a class="text-sm font-medium hover:text-primary" href="{{ route('intro') }}">
+                                Giới thiệu 
+                            </a>
                             {{-- ❌ ĐÃ XOÁ ADMIN KHỎI MENU NGANG --}}
                         </nav>
                     </div>
