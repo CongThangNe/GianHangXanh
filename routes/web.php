@@ -134,3 +134,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     Route::resource('discount-codes', DiscountCodeController::class);
 });
+// banners
+Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
+    Route::resource('banners', \App\Http\Controllers\Admin\BannerController::class);
+});
