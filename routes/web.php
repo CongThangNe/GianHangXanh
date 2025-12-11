@@ -9,6 +9,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\PaymentController;
 use App\Models\Order;
+use App\Http\Controllers\OrderGuestController;
 
 
 
@@ -35,7 +36,8 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/category/{id}', [HomeController::class, 'category'])->name('category.show');
 Route::get('/product/{id}', [HomeController::class, 'show'])->name('product.show');
 Route::get('/search', [ProductController::class, 'search'])->name('search');
-
+Route::get('/products', [HomeController::class, 'allProducts'])->name('products.all');
+Route::view('/intro', 'intro.intro')->name('intro');
 // CART
 Route::group(['prefix' => 'cart', 'as' => 'cart.'], function () {
     Route::get('/', [CartController::class, 'index'])->name('index');
@@ -87,13 +89,13 @@ Route::view('/register', 'auth.register')->name('register');
 
 // USER PROFILE
 Route::middleware('auth')->group(function () {
-Route::get('/orders', [OrderController::class, 'userIndex'])
+    Route::get('/orders', [OrderController::class, 'userIndex'])
         ->name('user.orders.index');
 
     Route::get('/orders/{order}', [OrderController::class, 'userShow'])
         ->name('user.orders.show');
 
-    
+
     // Trang hồ sơ
     Route::get('/profile', [UserProfileController::class, 'show'])
         ->name('profile.show');
@@ -109,6 +111,9 @@ Route::get('/orders', [OrderController::class, 'userIndex'])
     // 🔥 Xử lý đổi mật khẩu (POST hoặc PUT đều được — tôi dùng POST cho chuẩn)
     Route::post('/profile/change-password', [UserProfileController::class, 'updatePassword'])
         ->name('profile.password.update');
+    // Route hủy đơn hàng dành cho khách vãng lai
+    Route::delete('/orders/cancel/{order_code}', [OrderGuestController::class, 'cancel'])
+        ->name('orders.cancel');
 });
 
 // ADMIN
