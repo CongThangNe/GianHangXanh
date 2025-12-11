@@ -9,7 +9,7 @@ class ProductController extends Controller
 {
     public function index()
     {
-        $products = Product::with('category')->paginate(20);
+        $products = Product::with('category')->paginate(10);
         return view('admin.products.index', compact('products'));
     }
 
@@ -76,4 +76,5 @@ public function show($id)
     $categories = Category::all();
     return view('products.show', compact('product','categories'));
 }
+
 }

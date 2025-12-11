@@ -11,7 +11,10 @@
     "require": {
         "php": "^8.2",
         "laravel/framework": "^12.0",
+        "laravel/sanctum": "^4.2",
         "laravel/tinker": "^2.10.1",
+        "predis/predis": "^3.3",
+        "stevebauman/purify": "^6.3",
         "vlucas/phpdotenv": "^5.6"
     },
     "require-dev": {
