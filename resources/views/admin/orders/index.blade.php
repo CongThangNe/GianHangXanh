@@ -38,13 +38,22 @@
                     </td>
 
                     <td>
-                        @if($o->status == 'paid')
-                            <span class="badge bg-success">Đã thanh toán</span>
-                        @elseif($o->status == 'pending')
-                            <span class="badge bg-warning">Chờ thanh toán</span>
-                        @else
-                            <span class="badge bg-secondary">{{ $o->status }}</span>
-                        @endif
+                        @php
+                            // Map trạng thái: text giống bên user
+                            $statusDisplay = [
+                                'pending'   => ['Chờ xác nhận',        'bg-warning text-dark'],
+                                'confirmed' => ['Đã xác nhận',         'bg-primary'],
+                                'preparing' => ['Đang chuẩn bị hàng',  'bg-info text-dark'],
+                                'shipping'  => ['Đang vận chuyển',     'bg-info text-dark'],
+                                'delivered' => ['Đã giao thành công',  'bg-success'],
+                                'cancelled' => ['Đã hủy',              'bg-danger'],
+                                'paid'      => ['Đã thanh toán',       'bg-success'],
+                            ][$o->status] ?? ['Không xác định', 'bg-secondary'];
+                        @endphp
+
+                        <span class="badge {{ $statusDisplay[1] }}">
+                            {{ $statusDisplay[0] }}
+                        </span>
                     </td>
 
                     <td>{{ $o->created_at->format('d/m/Y H:i') }}</td>
