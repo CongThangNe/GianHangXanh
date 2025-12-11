@@ -71,3 +71,7 @@ Route::post('/checkout', [CheckoutController::class, 'process'])
 // Trang thanh toán online
 Route::get('/payment/zalopay', [PaymentController::class, 'zaloPayApp'])->name('payment.zalopay');
 Route::get('/payment/zalopay/return', [PaymentController::class, 'zaloReturn'])->name('payment.zalopay.return');
+// banners
+Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
+    Route::resource('banners', \App\Http\Controllers\Admin\BannerController::class);
+});
