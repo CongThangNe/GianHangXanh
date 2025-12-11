@@ -175,6 +175,27 @@
            class="inline-flex items-center px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200">
             ← Quay lại danh sách đơn
         </a>
+        @if($order->status === 'pending')
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 max-w-md">
+            <p class="text-sm text-yellow-800 font-medium mb-3">
+                Bạn có thể hủy đơn hàng này vì chưa được xác nhận.
+            </p>
+            
+            <form action="{{ route('orders.cancel', $order->order_code) }}" method="POST" class="flex gap-3">
+                @csrf
+                @method('DELETE')
+                
+                <input type="text" name="phone" placeholder="Nhập SĐT đặt hàng để xác nhận" 
+                       class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500" 
+                       required maxlength="15">
+
+                <button type="submit"
+                        class="px-5 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition shadow-sm whitespace-nowrap">
+                    Hủy đơn hàng
+                </button>
+            </form>
+        </div>
+    @endif
     </div>
 </div>
 @endsection
