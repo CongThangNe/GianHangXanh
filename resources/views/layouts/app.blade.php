@@ -52,10 +52,27 @@
     </script>
 
     <style>
-        body { background-color: #f9f9f9; }
-        footer { background-color: #2e7d32; color: white; padding: 20px 0; margin-top: 40px; }
-        footer a { color: #c8e6c9; text-decoration: none; font-size: 1.3rem; transition: color .3s; }
-        footer a:hover { color: #fff176; }
+        body {
+            background-color: #f9f9f9;
+        }
+
+        footer {
+            background-color: #2e7d32;
+            color: white;
+            padding: 20px 0;
+            margin-top: 40px;
+        }
+
+        footer a {
+            color: #c8e6c9;
+            text-decoration: none;
+            font-size: 1.3rem;
+            transition: color .3s;
+        }
+
+        footer a:hover {
+            color: #fff176;
+        }
     </style>
 </head>
 
@@ -73,12 +90,11 @@
 
                         <!-- Logo -->
                         <div class="flex items-center gap-2 text-white">
-                            <div class="size-6 text-primary">
-                                <svg fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 
-                                    14.17l7.59-7.59L19 8l-9 9z"></path>
-                                </svg>
-                            </div>
+                                <img src="{{ asset('storage/uploads/logos/logo.png') }}" alt="Gian Hàng Xanh"
+                                    class="h-16 rounded-full object-cover">
+
+
+                           
 
                             <a class="text-xl font-bold" href="{{ url('/') }}">
                                 <h2>Gian Hàng Xanh</h2>
@@ -108,7 +124,8 @@
                             <div class="flex items-stretch rounded-lg h-full">
                                 <button type="submit"
                                     class="text-white flex bg-green-100/50 items-center justify-center pl-3 pr-2 rounded-l-lg border border-r-0">
-                                    <span class="material-symbols-outlined text-white" style="font-size:20px">Search</span>
+                                    <span class="material-symbols-outlined text-white"
+                                        style="font-size:20px">Search</span>
                                 </button>
                                 <input type="search" name="keyword"
                                     class="form-input flex w-full text-sm text-white bg-green-100/50 px-3 rounded-r-lg"
@@ -122,7 +139,6 @@
                                 <a class="text-sm font-medium hover:text-primary" href="{{ route('login') }}">Đăng nhập</a>
                                 <a class="text-sm font-medium hover:text-primary" href="{{ route('register') }}">Đăng ký</a>
                             </div>
-
                         @else
                             <!-- User Dropdown -->
                             <div class="hidden md:block relative" x-data="{ open: false }">
@@ -202,4 +218,5 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
 </body>
+
 </html>

@@ -81,7 +81,7 @@
                 <thead>
                   <tr>
                     <th>Biến thể</th>
-                    <th>SKU</th>
+                    <th>Ma mặt hàng </th>
                     <th width="160">Giá</th>
                     <th width="140">Tồn kho</th>
                     <th width="80">Xóa</th>
