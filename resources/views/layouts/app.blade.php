@@ -90,12 +90,8 @@
 
                         <!-- Logo -->
                         <div class="flex items-center gap-2 text-white">
-                            <div class="size-6 text-primary">
-                                <svg fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 
-                                    14.17l7.59-7.59L19 8l-9 9z"></path>
-                                </svg>
-                            </div>
+                            <img src="{{ asset('storage/uploads/logos/logo.png') }}" alt="Gian Hàng Xanh"
+                                class="h-10 w-10 rounded-full object-cover">
 
                             <a class="text-xl font-bold" href="{{ url('/') }}">
                                 <h2>Gian Hàng Xanh</h2>
@@ -112,7 +108,7 @@
                                 Giỏ hàng
                             </a>
                             <a class="text-sm font-medium hover:text-primary" href="{{ route('intro') }}">
-                                Giới thiệu 
+                                Giới thiệu
                             </a>
                             {{-- ❌ ĐÃ XOÁ ADMIN KHỎI MENU NGANG --}}
                         </nav>
@@ -129,7 +125,8 @@
 
                                 <button type="submit"
                                     class="text-white flex bg-green-100/50 items-center justify-center pl-3 pr-2 rounded-l-lg border border-r-0">
-                                    <span class="material-symbols-outlined text-white" style="font-size:20px">Search</span>
+                                    <span class="material-symbols-outlined text-white"
+                                        style="font-size:20px">Search</span>
                                 </button>
 
                                 <input type="search" name="keyword"
@@ -144,47 +141,46 @@
                                 <a class="text-sm font-medium hover:text-primary" href="{{ route('login') }}">Đăng nhập</a>
                                 <a class="text-sm font-medium hover:text-primary" href="{{ route('register') }}">Đăng ký</a>
                             </div>
-
                         @else
-                        <!-- User Dropdown -->
-                        <div class="hidden md:block relative" x-data="{ open: false }">
-                            <button @click="open = !open" @click.away="open = false"
-                                class="flex items-center gap-2 text-sm font-medium text-white hover:text-primary">
-                                <span class="material-symbols-outlined" style="font-size:20px">account_circle</span>
-                                <span>{{ Auth::user()->name }}</span>
-                                <span class="material-symbols-outlined" style="font-size:16px">expand_more</span>
-                            </button>
+                            <!-- User Dropdown -->
+                            <div class="hidden md:block relative" x-data="{ open: false }">
+                                <button @click="open = !open" @click.away="open = false"
+                                    class="flex items-center gap-2 text-sm font-medium text-white hover:text-primary">
+                                    <span class="material-symbols-outlined" style="font-size:20px">account_circle</span>
+                                    <span>{{ Auth::user()->name }}</span>
+                                    <span class="material-symbols-outlined" style="font-size:16px">expand_more</span>
+                                </button>
 
-                            <div x-show="open" x-transition
-                                class="absolute right-0 mt-2 w-48 bg-green-600 border rounded-lg shadow-lg py-1">
+                                <div x-show="open" x-transition
+                                    class="absolute right-0 mt-2 w-48 bg-green-600 border rounded-lg shadow-lg py-1">
 
-                                <a href="{{ route('profile.show') }}"
-                                    class="block px-4 py-2 text-sm hover:bg-green-500">
-                                    Hồ sơ cá nhân
-                                </a>
+                                    <a href="{{ route('profile.show') }}"
+                                        class="block px-4 py-2 text-sm hover:bg-green-500">
+                                        Hồ sơ cá nhân
+                                    </a>
 
-                                <a href="{{ route('user.orders.index') }}"
-                                    class="block px-4 py-2 text-sm hover:bg-green-500">
-                                    Đơn hàng
-                                </a>
+                                    <a href="{{ route('user.orders.index') }}"
+                                        class="block px-4 py-2 text-sm hover:bg-green-500">
+                                        Đơn hàng
+                                    </a>
 
 
-                                <form action="{{ route('logout') }}" method="POST">
-                                    @csrf
-                                    <button type="submit"
-                                        class="w-full text-left px-4 py-2 text-sm hover:bg-green-500">
-                                        Đăng xuất
-                                    </button>
-                                </form>
+                                    <form action="{{ route('logout') }}" method="POST">
+                                        @csrf
+                                        <button type="submit"
+                                            class="w-full text-left px-4 py-2 text-sm hover:bg-green-500">
+                                            Đăng xuất
+                                        </button>
+                                    </form>
 
-                                <!-- ⭐ THÊM ADMIN VÀO NGAY SAU ĐĂNG XUẤT -->
-                                <a href="{{ route('admin.dashboard') }}"
-                                    class="block px-4 py-2 text-sm hover:bg-green-500">
-                                    Admin
-                                </a>
+                                    <!-- ⭐ THÊM ADMIN VÀO NGAY SAU ĐĂNG XUẤT -->
+                                    <a href="{{ route('admin.dashboard') }}"
+                                        class="block px-4 py-2 text-sm hover:bg-green-500">
+                                        Admin
+                                    </a>
 
+                                </div>
                             </div>
-                        </div>
                         @endguest
                     </div>
                 </div>
@@ -206,9 +202,9 @@
             <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mt-6 text-sm">
 
                 <!-- Cột Logo -->
-                <div class="flex flex-col items-center md:items-start">
-                    <img src="" class="h-12 mb-4" alt="Logo web để đây nhé">
-                </div>
+                <img src="{{ asset('storage/uploads/logos/logo.png') }}" alt="Gian Hàng Xanh"
+                    class="h-40 w-auto object-contain">
+
 
                 <!-- Cột 1 -->
                 <div class="text-xs">
