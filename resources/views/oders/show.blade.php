@@ -184,11 +184,6 @@
             <form action="{{ route('orders.cancel', $order->order_code) }}" method="POST" class="flex gap-3">
                 @csrf
                 @method('DELETE')
-                
-                <input type="text" name="phone" placeholder="Nhập SĐT đặt hàng để xác nhận" 
-                       class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500" 
-                       required maxlength="15">
-
                 <button type="submit"
                         class="px-5 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition shadow-sm whitespace-nowrap">
                     Hủy đơn hàng
