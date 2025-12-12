@@ -10,7 +10,7 @@
     </div>
 
     @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
+    <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
     <div class="table-responsive">
@@ -42,14 +42,15 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="6" class="text-center">Chưa có biến thể</td></tr>
+                <tr>
+                    <td colspan="6" class="text-center">Chưa có biến thể</td>
+                </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
-
-    <div class="mt-3">
-        {{ $variants->links() }}
-    </div>
+    <nav class="mt-4 w-100 d-flex justify-content-center" aria-label="Product pagination">
+        {{ $variants->onEachSide(1)->links('pagination::bootstrap-5') }}
+    </nav>
 </div>
 @endsection

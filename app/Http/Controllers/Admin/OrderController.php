@@ -14,8 +14,8 @@ class OrderController extends Controller
 {
     public function index()
     {
-        $orders = Order::with(['user', 'details.product'])->latest()->get();
-        return response()->json($orders);
+        $orders = Order::latest()->paginate(20);
+        return view('admin.orders.index', compact('orders'));
     }
 
     public function store(Request $request)
@@ -86,16 +86,23 @@ class OrderController extends Controller
 
     public function show($id)
     {
-        $order = Order::with(['user', 'details.product', 'discountCode'])->findOrFail($id);
-        return response()->json($order);
+        $order = Order::with([
+            'details.variant.product',           // ĐÚNG: details → variant → product
+            'details.variant.values.attribute'   // Để hiển thị Màu, Size...
+        ])->findOrFail($id);
+
+        return view('admin.orders.show', compact('order'));
     }
 
-    public function updateStatus(Request $request, $id)
+    public function updateStatus(Request $request, Order $order)
     {
-        $request->validate(['status' => 'required|string']);
-        $order = Order::findOrFail($id);
+        $request->validate([
+            'status' => 'required|in:pending,confirmed,preparing,shipping,delivered,cancelled'
+        ]);
+
         $order->update(['status' => $request->status]);
-        return response()->json(['message' => 'Order status updated!', 'order' => $order]);
+
+        return back()->with('success', 'Cập nhật trạng thái thành công!');
     }
 
     public function destroy($id)
@@ -104,4 +111,5 @@ class OrderController extends Controller
         $order->delete();
         return response()->json(['message' => 'Order deleted!']);
     }
+    
 }
