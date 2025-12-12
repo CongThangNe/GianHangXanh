@@ -1,17 +1,247 @@
 @extends('layouts.admin')
-@section('title','Chi tiết đơn')
+@section('title', 'Đơn hàng #' . $order->order_code)
+
 @section('content')
-<h3>Chi tiết đơn #{{ $order->id }}</h3>
-<table class="table table-bordered">
-<thead><tr><th>Sản phẩm</th><th>Số lượng</th><th>Giá</th></tr></thead>
-<tbody>
-@foreach($order->items as $it)
-<tr>
-    <td>{{ $it->product->name ?? '' }}</td>
-    <td>{{ $it->quantity }}</td>
-    <td>{{ number_format($it->price,0,',','.') }}₫</td>
-</tr>
-@endforeach
-</tbody>
-</table>
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">Đơn hàng #{{ $order->order_code }}</h3>
+        <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-secondary">
+            Quay lại danh sách
+        </a>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- Cột trái: Chi tiết -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-dark text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">Thông tin khách hàng</span>
+                        <span class="badge bg-secondary">
+                            Mã đơn: {{ $order->order_code }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Tên khách hàng</label>
+                            <input type="text" class="form-control" value="{{ $order->customer_name }}" readonly>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Số điện thoại</label>
+                            <input type="text" class="form-control" value="{{ $order->customer_phone }}" readonly>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label fw-semibold">Địa chỉ giao hàng</label>
+                            <textarea class="form-control" rows="2" readonly>{{ $order->customer_address }}</textarea>
+                        </div>
+                        @if($order->note)
+                            <div class="col-12 mb-3">
+                                <label class="form-label fw-semibold">Ghi chú đơn hàng</label>
+                                <textarea class="form-control" rows="2" readonly>{{ $order->note }}</textarea>
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="row text-muted small">
+                        <div class="col-md-4">
+                            <span class="d-block">Ngày tạo:</span>
+                            <strong>{{ $order->created_at->format('d/m/Y H:i') }}</strong>
+                        </div>
+                        <div class="col-md-4">
+                            <span class="d-block">Cập nhật:</span>
+                            <strong>{{ $order->updated_at->format('d/m/Y H:i') }}</strong>
+                        </div>
+                        <div class="col-md-4">
+                            <span class="d-block">Phương thức thanh toán:</span>
+                            <strong>
+                                {{ $order->payment_method === 'zalopay' ? 'ZaloPay' : 'Thanh toán khi nhận hàng (COD)' }}
+                            </strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Danh sách sản phẩm -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <span class="fw-bold">Sản phẩm trong đơn</span>
+                    <span class="badge bg-light text-dark">
+                        {{ $order->details->count() }} sản phẩm
+                    </span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 70px;">#</th>
+                                    <th>Sản phẩm</th>
+                                    <th>Phân loại</th>
+                                    <th class="text-center" style="width: 90px;">Số lượng</th>
+                                    <th class="text-end" style="width: 130px;">Đơn giá</th>
+                                    <th class="text-end" style="width: 130px;">Thành tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($order->details as $index => $detail)
+                                    @php
+                                        $variant = $detail->variant;
+                                        $product = $variant?->product;
+                                        $attrs = $variant?->values->map(function ($v) {
+                                            return $v->attribute->name . ': ' . $v->value;
+                                        })->implode(' / ');
+                                    @endphp
+                                    <tr>
+                                        <td class="text-center">{{ $index + 1 }}</td>
+                                        <td>
+                                            <div class="fw-semibold">
+                                                {{ $product->name ?? 'Sản phẩm đã xoá' }}
+                                            </div>
+                                            @if($product && $product->sku)
+                                                <div class="text-muted small">
+                                                    SKU: {{ $product->sku }}
+                                                </div>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($attrs)
+                                                <span class="badge bg-secondary-subtle border text-dark">
+                                                    {{ $attrs }}
+                                                </span>
+                                            @else
+                                                <span class="text-muted small">Không có</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-center">
+                                            {{ $detail->quantity }}
+                                        </td>
+                                        <td class="text-end">
+                                            {{ number_format($detail->price) }}₫
+                                        </td>
+                                        <td class="text-end fw-semibold">
+                                            {{ number_format($detail->price * $detail->quantity) }}₫
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-4">
+                                            Không có sản phẩm nào trong đơn hàng này.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                            @if($order->details->count())
+                                <tfoot class="table-light">
+                                    <tr>
+                                        <th colspan="5" class="text-end">Tổng tiền hàng (theo chi tiết):</th>
+                                        <th class="text-end">
+                                            {{ number_format($subtotal) }}₫
+                                        </th>
+                                    </tr>
+                                @endif
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột phải: Tóm tắt + Trạng thái -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm sticky-top" style="top: 20px;">
+                <div class="card-header bg-dark text-white text-center fw-bold">
+                    Tóm tắt thanh toán
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between py-2 border-bottom">
+                        <span>Tiền hàng:</span>
+                        <strong>{{ number_format($subtotal) }}₫</strong>
+                    </div>
+                    <div class="d-flex justify-content-between py-2 border-bottom">
+                        <span>Phí vận chuyển:</span>
+                        <strong class="text-success">Miễn phí</strong>
+                    </div>
+                    <div class="d-flex justify-content-between py-2 border-bottom">
+                        <span>Giảm giá:</span>
+                        <strong>-{{ number_format($discountAmount) }}₫</strong>
+                    </div>
+                    <hr class="my-3">
+                    <div class="d-flex justify-content-between text-danger">
+                        <span class="fs-5 fw-bold">Thành tiền:</span>
+                        <span class="fs-4 fw-bold">{{ number_format($order->total) }}₫</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="card shadow-sm mt-4">
+                <div class="card-header bg-dark text-white text-center fw-bold">
+                    Trạng thái đơn hàng
+                </div>
+                <div class="card-body">
+                    <div class="mb-3 d-flex justify-content-between align-items-center">
+                        <span>Trạng thái hiện tại:</span>
+                        <span class="badge bg-primary">
+                            {{
+                                [
+                                    'pending'   => 'Chờ xử lý',
+                                    'paid'      => 'Đã thanh toán',
+                                    'confirmed' => 'Đã xác nhận',
+                                    'preparing' => 'Đang chuẩn bị',
+                                    'shipping'  => 'Đang giao hàng',
+                                    'delivered' => 'Đã giao thành công',
+                                    'cancelled' => 'Đã hủy'
+                                ][$order->status] ?? 'Không xác định'
+                            }}
+                        </span>
+                    </div>
+
+                    @php
+                        // Khi đơn đã hủy thì khóa lại, không cho đổi trạng thái / bấm nút nữa
+                        $statusLocked = $order->status === 'cancelled';
+                    @endphp
+
+                    <form action="{{ route('admin.orders.updateStatus', $order) }}" method="POST" class="d-flex gap-2 align-items-center">
+                        @csrf
+                        @method('PATCH')
+
+                        <select name="status"
+                                class="form-select form-select-sm w-auto {{ $statusLocked ? 'pe-none opacity-75' : '' }}"
+                                {{ $statusLocked ? 'disabled' : '' }}>
+                            @foreach([
+                                'pending'   => 'Chờ xử lý',
+                                'paid'      => 'Đã thanh toán',
+                                'confirmed' => 'Đã xác nhận',
+                                'preparing' => 'Đang chuẩn bị',
+                                'shipping'  => 'Đang giao hàng',
+                                'delivered' => 'Đã giao thành công',
+                                'cancelled' => 'Đã hủy'
+                            ] as $value => $label)
+                                <option value="{{ $value }}" @selected($order->status === $value)>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
+
+                        <button type="submit"
+                                class="btn btn-sm btn-primary"
+                                {{ $statusLocked ? 'disabled' : '' }}>
+                            Cập nhật
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    .bg-secondary-subtle {
+        background-color: #f1f3f5;
+    }
+</style>
 @endsection
