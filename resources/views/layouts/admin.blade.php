@@ -151,8 +151,6 @@
         <a class="nav-link" href="{{ route('admin.categories.index') }}">📂 Danh mục</a>
       </li>
       <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.orders.*') ? 'active' : '' }}" href="{{ route('admin.orders.index') }}">🧾 Đơn hàng</a></li>
-      <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.product_variants.*') ? 'active' : '' }}" href="{{ route('admin.product_variants.index') }}">🎛️ Biến thể</a></li>
-
       <!-- ✅ Dropdown Thuộc tính (thêm vào ngay sau Biến thể) -->
       <li class="nav-item has-submenu">
         <a href="#" class="nav-link submenu-toggle">
