@@ -21,6 +21,7 @@ class ProductVariant extends Model
         return $this->belongsTo(Product::class, 'product_id');
     }
 
+    // Quan hệ dùng để load value → attribute
     public function values()
     {
         return $this->belongsToMany(
@@ -31,14 +32,9 @@ class ProductVariant extends Model
         );
     }
 
-   public function attributeValues()
-{
-    return $this->belongsToMany(
-        \App\Models\AttributeValue::class,
-        'product_variant_values', 
-        'product_variant_id',     
-        'attribute_value_id'     
-    );
-}
-
+    // Quan hệ alias để dùng trong các chỗ khác (nếu cần)
+    public function attributeValues()
+    {
+        return $this->values();
+    }
 }

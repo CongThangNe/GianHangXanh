@@ -15,10 +15,10 @@
     </div>
 
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
     @endif
 
     <div class="card shadow-sm">
@@ -58,10 +58,10 @@
                     </tbody>
                 </table>
             </div>
+            <nav class="mt-4 w-100 d-flex justify-content-center" aria-label="Product pagination">
+                {{ $categories->onEachSide(1)->links('pagination::bootstrap-5') }}
+            </nav>
 
-            <div class="mt-3">
-                {{ $categories->links() }}
-            </div>
         </div>
     </div>
 
