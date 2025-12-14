@@ -23,6 +23,8 @@ use App\Http\Controllers\Admin\AttributeController;
 use App\Http\Controllers\Admin\AttributeValueController;
 use App\Http\Controllers\Admin\DiscountCodeController;
 use Illuminate\Pagination\LengthAwarePaginator;
+use App\Http\Controllers\Admin\BannerController;
+
 // ADMIN CONTROLLERS
 
 /*
@@ -136,5 +138,5 @@ Route::prefix('admin')->name('admin.')->group(function () {
 });
 // banners
 Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
-    Route::resource('banners', \App\Http\Controllers\Admin\BannerController::class);
+    Route::resource('banners', BannerController::class);
 });
