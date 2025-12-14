@@ -23,8 +23,6 @@ use App\Http\Controllers\Admin\AttributeController;
 use App\Http\Controllers\Admin\AttributeValueController;
 use App\Http\Controllers\Admin\DiscountCodeController;
 use Illuminate\Pagination\LengthAwarePaginator;
-use App\Http\Controllers\Admin\BannerController;
-
 // ADMIN CONTROLLERS
 
 /*
@@ -136,7 +134,25 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     Route::resource('discount-codes', DiscountCodeController::class);
 });
+// TRANG HIỂN THỊ CHECKOUT (GET)
+Route::get('/checkout', [CheckoutController::class, 'index'])
+    ->name('checkout.index')
+    ->middleware('cart_notempty');
+
+// XỬ LÝ THANH TOÁN (POST)
+Route::post('/checkout', [CheckoutController::class, 'process'])
+    ->name('checkout.process')
+    ->middleware('cart_notempty');
+
+// Trang thanh toán online
+Route::get('/payment/zalopay', [PaymentController::class, 'zaloPayApp'])->name('payment.zalopay');
+Route::get('/payment/zalopay/return', [PaymentController::class, 'zaloReturn'])->name('payment.zalopay.return');
+
+//VNPAY
+Route::get('/payment/create', [PaymentController::class, 'createPayment'])->name('payment.create');
+Route::get('/payment/return', [PaymentController::class, 'vnpayReturn'])->name('payment.return');
+
 // banners
 Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
-    Route::resource('banners', BannerController::class);
+    Route::resource('banners', \App\Http\Controllers\Admin\BannerController::class);
 });

@@ -1,5 +1,5 @@
-@extends('layouts.admin')
-@section('title','Thêm Banner')
+@extends('layouts.app')
+
 @section('content')
 <div class="container">
     <h1>Thêm Banner</h1>
