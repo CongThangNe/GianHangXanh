@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Order;
+use App\Models\Cart;            
+use App\Models\ProductVariant;  
+use App\Models\OrderDetail;
 
 class PaymentController extends Controller
 {
@@ -68,11 +71,9 @@ class PaymentController extends Controller
     // Chuyển logic từ vnpay_return.php
     public function vnpayReturn(Request $request)
     {
-        // 1. Lấy cấu hình
         $vnp_HashSecret = env('VNP_HASH_SECRET');
         $inputData = array();
 
-        // 2. Lấy dữ liệu VNPAY trả về
         foreach ($request->all() as $key => $value) {
             if (substr($key, 0, 4) == "vnp_") {
                 $inputData[$key] = $value;
@@ -95,37 +96,62 @@ class PaymentController extends Controller
 
         $secureHash = hash_hmac('sha512', $hashData, $vnp_HashSecret);
 
-        // 3. Kiểm tra tính toàn vẹn dữ liệu (Chữ ký số)
         if ($secureHash == $vnp_SecureHash) {
-
-            // Lấy thông tin đơn hàng từ mã tham chiếu
             $orderId = $request->vnp_TxnRef;
-            $order = Order::find($orderId);
+            // Tìm đơn hàng kèm chi tiết để xử lý hoàn kho nếu cần
+            $order = Order::with('details')->find($orderId);
 
-            // Kiểm tra kết quả giao dịch (00 là thành công)
+            if (!$order) {
+                return "Đơn hàng không tồn tại!";
+            }
+
+            // === TRƯỜNG HỢP 1: THANH TOÁN THÀNH CÔNG ===
             if ($request->vnp_ResponseCode == '00') {
+                
+                // $order->status = 'processing'; // Hoặc 'paid'
+                $order->status = 'pending'; // chờ xác nhận
+                $order->save();
 
-                if ($order) {
-                    // CẬP NHẬT TRẠNG THÁI ĐƠN HÀNG
-                    // Giả sử bạn có cột 'status' hoặc 'payment_status'
-                    $order->status = 'processing'; // Hoặc 'paid', 'completed' tùy enum của bạn
-                    $order->save();
-
-                    return view('checkout.success', [
-                        'order_code' => $order->order_code,
-                        'amount' => $request->vnp_Amount / 100, // Chia 100 vì VNPAY nhân 100
-                        'bank' => $request->vnp_BankCode,
-                        'time' => $request->vnp_PayDate
-                    ]);
-                } else {
-                    return "Đơn hàng không tồn tại!";
+                // [QUAN TRỌNG] Xóa giỏ hàng sau khi thanh toán thành công
+                $sessionId = session()->getId();
+                $cart = Cart::where('session_id', $sessionId)->first();
+                if ($cart) {
+                    $cart->items()->delete();
+                    $cart->delete();
                 }
+                session()->forget('discount_code');
+
+                return view('checkout.success', [
+                    'order_code' => $order->order_code,
+                    'amount' => $request->vnp_Amount / 100,
+                    'bank' => $request->vnp_BankCode,
+                    'time' => $request->vnp_PayDate
+                ]);
+
             } else {
-                // Thanh toán thất bại hoặc bị hủy
-                return view('checkout.failed', ['msg' => 'Giao dịch bị hủy bỏ hoặc thất bại.']);
+                // === TRƯỜNG HỢP 2: THANH TOÁN THẤT BẠI / HỦY ===
+                
+                // 1. Hoàn lại số lượng tồn kho (Vì lúc tạo đơn ở CheckoutController đã trừ rồi)
+                foreach ($order->details as $detail) {
+                    $variant = ProductVariant::find($detail->product_variant_id);
+                    if ($variant) {
+                        $variant->stock += $detail->quantity;
+                        $variant->save();
+                    }
+                }
+
+                // 2. Xóa đơn hàng ảo (hoặc chuyển trạng thái hủy)
+                // Nếu bạn muốn đơn hàng biến mất khỏi danh sách: dùng $order->delete();
+                // Nếu muốn lưu vết là đã hủy: dùng $order->status = 'canceled';
+                
+                $order->delete(); // Xóa hẳn đơn hàng để không hiện trong "Đơn hàng của tôi"
+
+                // 3. Quay về trang giỏ hàng (Giỏ hàng vẫn còn nguyên do chưa xóa ở CheckoutController)
+                return redirect()->route('checkout.index')
+                ->with('error', 'Bạn đã hủy thanh toán hoặc giao dịch thất bại. Vui lòng thử lại.');
             }
         } else {
-            return "Chữ ký không hợp lệ! (Có thể do sai HashSecret)";
+            return "Chữ ký không hợp lệ!";
         }
     }
 
