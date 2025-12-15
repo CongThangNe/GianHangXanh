@@ -161,9 +161,14 @@ class CheckoutController extends Controller
         }
 
         // 6. XÓA GIỎ HÀNG
-        $cart->items()->delete();
-        $cart->delete();
-        session()->forget('discount_code');
+        // $cart->items()->delete();
+        // $cart->delete();
+        // session()->forget('discount_code');
+        if ($request->payment_method === 'cod') {
+            $cart->items()->delete();
+            $cart->delete();
+            session()->forget('discount_code');
+        }
 
         // --- PHÂN LOẠI XỬ LÝ THEO CỔNG THANH TOÁN ---
 
@@ -182,7 +187,7 @@ class CheckoutController extends Controller
             ]);
         }
 
-        // 3. Thanh toán ZaloPay (Logic cũ của bạn)
+        // 3. Thanh toán ZaloPay 
         return response()->json([
             'success'    => true,
             'order_id'   => $order->id,
