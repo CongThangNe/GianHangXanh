@@ -3,14 +3,20 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Banner;
 
 class HomeController extends Controller
 {
     public function index(Request $request)
     {
         $categories = Category::all();
+        // Banner
+        $banners = Banner::where('status', 1)
+            ->orderBy('sort_order')
+            ->get();
         $keyword = $request->input('keyword');
 
         // Thêm dòng FEATURED PRODUCTS
@@ -26,7 +32,8 @@ class HomeController extends Controller
             'categories',
             'products',
             'keyword',
-            'featuredProducts'
+            'featuredProducts',
+            'banners'
         ));
     }
 
@@ -42,4 +49,6 @@ class HomeController extends Controller
         $product = Product::with('category', 'variants')->findOrFail($id);
         return view('products.show', compact('product'));
     }
+
+    
 }

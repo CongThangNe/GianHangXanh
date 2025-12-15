@@ -3,15 +3,17 @@
 
 @section('content')
 
-
+ @include('layouts.banner')
 <!-- Banner -->
 <div id="banner-slideshow" class="mb-4 rounded-3"
-    style="height: 250px; position: relative; overflow: hidden;">
-    <!-- Slide items -->
-    <div class="slide" style="background: url('https://picsum.photos/1200/600?green') center/cover no-repeat;"></div>
-    <div class="slide" style="background: url('https://picsum.photos/1200/600?forest') center/cover no-repeat;"></div>
-    <div class="slide" style="background: url('https://picsum.photos/1200/600?leaf') center/cover no-repeat;"></div>
 
+     style="height: 250px; position: relative; overflow: hidden;">
+
+    <div class="slide"
+         style="height:100%; background: url('{{ asset('storage/banners/banner1.jpg') }}') center/cover no-repeat;">
+    </div>
+</div>
+<div>
     <!-- Nội dung cố định -->
     <div class="d-flex flex-column justify-content-center align-items-center h-100 text-center px-3 position-absolute top-0 start-0 w-100">
         <h1 class="fw-bold" style="color: green; font-size: 1.8rem;">Chào mừng đến Gian Hàng Xanh 🌱</h1>
