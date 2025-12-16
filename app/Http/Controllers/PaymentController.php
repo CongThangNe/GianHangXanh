@@ -120,6 +120,7 @@ class PaymentController extends Controller
                     $cart->delete();
                 }
                 session()->forget('discount_code');
+                
 
                 return view('checkout.success', [
                     'order_code' => $order->order_code,

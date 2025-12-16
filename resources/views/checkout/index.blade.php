@@ -6,8 +6,8 @@
 
         {{-- TIÊU ĐỀ --}}
         <!-- <h2 class="text-3xl md:text-4xl font-extrabold text-center text-green-700 mb-8 md:mb-12">
-                Thanh Toán Đơn Hàng
-            </h2> -->
+                    Thanh Toán Đơn Hàng
+                </h2> -->
 
         {{-- THÔNG BÁO LỖI --}}
         @if (session('error'))
@@ -37,33 +37,45 @@
                             <div class="mb-4">
                                 <label for="customer_name" class="block text-sm font-semibold text-gray-700 mb-2">Họ và tên
                                     <span class="text-red-500">*</span></label>
-                                <input type="text" id="customer_name" name="customer_name" required
-                                    class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-green-500 focus:border-green-500 transition duration-150"
+                                <input type="text" id="customer_name" name="customer_name" 
+                                    class="w-full border @error('customer_name') border-red-500 @else border-gray-300 @enderror rounded-lg px-4 py-2 focus:ring-green-500 focus:border-green-500 transition duration-150"
                                     value="{{ old('customer_name', $user->name ?? '') }}">
+                                @error('customer_name')
+                                    <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <div class="mb-4">
                                 <label for="customer_phone" class="block text-sm font-semibold text-gray-700 mb-2">Số điện
                                     thoại <span class="text-red-500">*</span></label>
-                                <input type="text" id="customer_phone" name="customer_phone" required
-                                    class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-green-500 focus:border-green-500 transition duration-150"
+                                <input type="text" id="customer_phone" name="customer_phone" 
+                                    class="w-full border @error('customer_phone') border-red-500 @else border-gray-300 @enderror rounded-lg px-4 py-2 focus:ring-green-500 focus:border-green-500 transition duration-150"
                                     value="{{ old('customer_phone', $user->phone ?? '') }}">
+                                @error('customer_phone')
+                                    <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <div class="mb-4">
                                 <label for="customer_address" class="block text-sm font-semibold text-gray-700 mb-2">Địa chỉ
                                     <span class="text-red-500">*</span></label>
-                                <input type="text" id="customer_address" name="customer_address" required
-                                    class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-green-500 focus:border-green-500 transition duration-150"
+                                <input type="text" id="customer_address" name="customer_address" 
+                                    class="w-full border @error('customer_address') border-red-500 @else border-gray-300 @enderror rounded-lg px-4 py-2 focus:ring-green-500 focus:border-green-500 transition duration-150"
                                     value="{{ old('customer_address', $user->address ?? '') }}">
+                                @error('customer_address')
+                                    <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <div class="mb-4">
                                 <label for="customer_email" class="block text-sm font-semibold text-gray-700 mb-2">Email
                                     (nếu có)</label>
                                 <input type="email" id="customer_email" name="customer_email"
-                                    class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-green-500 focus:border-green-500 transition duration-150"
+                                    class="w-full border @error('customer_email') border-red-500 @else border-gray-300 @enderror rounded-lg px-4 py-2 focus:ring-green-500 focus:border-green-500 transition duration-150"
                                     value="{{ old('customer_email', $user->email ?? '') }}">
+                                @error('customer_email')
+                                    <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <div class="mb-4">
@@ -122,8 +134,8 @@
                                         <input type="radio" name="payment_method" value="vnpay"
                                             class="form-radio text-green-500 focus:ring-green-500">
                                         <span class="ml-3 font-semibold text-gray-800">Thanh toán qua VNPAY (Mã QR)</span>
-                                        <img src="https://vnpay.vn/assets/images/logo-icon/logo-primary.svg" alt="VNPAY"
-                                            class="h-6 ml-auto">
+                                        <img src="https://vnpay.vn/assets/images/logo-icon/logo-primary.svg"
+                                            alt="VNPAY" class="h-6 ml-auto">
                                     </label>
                                     <p class="mt-2 text-sm text-gray-600 ml-7">
                                         Hệ thống sẽ chuyển hướng sang cổng VNPAY để tạo mã QR an toàn. Bạn có thể quét bằng

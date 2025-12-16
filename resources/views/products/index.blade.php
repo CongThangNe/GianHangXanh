@@ -3,7 +3,7 @@
 
 @section('content')
 
- @include('layouts.banner')
+
 <!-- Banner -->
 <div id="banner-slideshow" class="mb-4 rounded-3"
 
