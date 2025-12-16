@@ -46,7 +46,7 @@ class AuthController extends Controller
              'name'     => $request->name,
             'email'    => $request->email,
             'password' => Hash::make($request->password),
-            'role'     => 'user', // mặc định user
+            'role'     => User::ROLE_CUSTOMER, // mặc định: khách hàng
         ]);
         return redirect()->route('login')->with('success','Đăng ký thành công');
     }
