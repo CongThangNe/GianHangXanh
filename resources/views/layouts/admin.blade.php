@@ -164,9 +164,9 @@
       </li>
       <!-- ✅ End Dropdown -->
       <li class="nav-item"><a class="nav-link" href="{{ route('admin.discount-codes.index') }}">🎟️ Mã Giảm Giá</a></li>
-      <li class="nav-item"><a class="nav-link" href="{{ route('admin.banners.index') }}">👥 Banner</a></li>
-        <a class="nav-link" href="{{ url('/') }}">🏠 Về trang chủ</a>
-      </li>
+      <li class="nav-item"><a class="nav-link" href="{{ route('admin.banners.index') }}">🖼️ Banner</a></li>
+      <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" href="{{ route('admin.users.index') }}">👤 Quản lý tài khoản</a></li>
+      <li class="nav-item"><a class="nav-link" href="{{ url('/') }}">🏠 Về trang chủ</a></li>
     </ul>
   </nav>
 

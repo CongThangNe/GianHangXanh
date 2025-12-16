@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\AttributeController;
 use App\Http\Controllers\Admin\AttributeValueController;
 use App\Http\Controllers\Admin\DiscountCodeController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use Illuminate\Pagination\LengthAwarePaginator;
 // ADMIN CONTROLLERS
 
@@ -117,8 +118,11 @@ Route::middleware('auth')->group(function () {
 });
 
 // ADMIN
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Quản lý tài khoản (mới: role admin/khách hàng/nhân viên)
+    Route::resource('users', AdminUserController::class)->only(['index', 'edit', 'update']);
 
     Route::resource('products', ProductController::class);
     Route::resource('categories', CategoryController::class);
