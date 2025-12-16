@@ -80,16 +80,38 @@ class CheckoutController extends Controller
 
     public function process(Request $request)
     {
-        // [SỬA MỚI 1]: Thêm 'vnpay' vào rule validation
         $request->validate([
             'payment_method'   => 'required|in:cod,zalopay,vnpay',
-            'customer_name'    => 'required|string|max:255',
-            'customer_phone'   => 'required|string|max:20',
-            'customer_address' => 'required|string|max:500',
-            'note'             => 'nullable|string',
+            'customer_name'    => [
+                'required',
+                'string',
+                'min:3',
+                'max:100',
+                'regex:/^[\p{L}\s]+$/u',
+            ],
+            'customer_phone'   => [
+                'required',
+                'digits_between:10,11',
+                'starts_with:0,84' 
+            ],
+            'customer_address' => 'required|string|min:10|max:500',
+            'customer_email'   => 'nullable|email|max:255',
+            'note'             => 'nullable|string|max:1000',
+
+        ], [
+            // Thông báo lỗi
+            'customer_name.required'     => 'Vui lòng nhập họ và tên.',
+            'customer_name.min'          => 'Họ và tên phải có ít nhất :min ký tự.',
+            'customer_name.regex'        => 'Họ và tên không được chứa số hoặc ký tự đặc biệt.',
+
+            'customer_phone.required'    => 'Vui lòng nhập số điện thoại.',
+            'customer_phone.digits_between' => 'Số điện thoại phải là chữ số và có độ dài từ :min đến :max ký tự.',
+
+            'customer_address.required'  => 'Vui lòng nhập địa chỉ giao hàng.',
+            'customer_address.min'       => 'Địa chỉ phải có ít nhất :min ký tự.',
+            'customer_email.email'       => 'Email không đúng định dạng.',
         ]);
 
-        // ... (Giữ nguyên logic cập nhật user phone) ...
         if ($user = $request->user()) {
             if (empty($user->phone) || $user->phone !== $request->customer_phone) {
                 $user->phone = $request->customer_phone;
@@ -106,19 +128,15 @@ class CheckoutController extends Controller
             return redirect('/cart')->with('error', 'Giỏ hàng trống!');
         }
 
-        // ... (Giữ nguyên logic tính toán tiền hàng & giảm giá) ...
         $subtotal = $cart->items->sum(function ($item) {
             return $item->price * $item->quantity;
         });
 
         $discountAmount = 0;
         $discountCode = session('discount_code');
-        // ... (Logic tính discount giữ nguyên) ...
         if ($discountCode) {
-            $code = DiscountCode::where('code', $discountCode)->first(); // Rút gọn cho ngắn
+            $code = DiscountCode::where('code', $discountCode)->first();
             if ($code) {
-                // ... logic tính toán discount ...
-                // Giả sử logic cũ của bạn ở đây đúng
                 if ($code->type === 'percent') {
                     $discountAmount = $subtotal * ($code->discount_percent / 100);
                     if ($code->max_discount_value) $discountAmount = min($discountAmount, $code->max_discount_value);
