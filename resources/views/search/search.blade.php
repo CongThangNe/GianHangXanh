@@ -21,7 +21,7 @@
                         shadow-sm min-w-[250px] border border-border-light dark:border-border-dark overflow-hidden">
 
                 <div class="w-full bg-center bg-no-repeat aspect-square bg-cover"
-                    style="background-image: url('{{ $p->image ? asset('storage/' . $p->image) : asset('https://via.placeholder.com/300x300?text=No+Image') }}');">
+                    style="background-image: url('{{ $p->image_url ?? 'https://via.placeholder.com/300x300?text=No+Image' }}');">
                 </div>
 
                 <div class="flex flex-col flex-1 justify-between p-4 pt-2 gap-2">
