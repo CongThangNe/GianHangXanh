@@ -95,21 +95,38 @@
         </div>
     </div>
 
-    <!-- Related Products -->
+    <!-- Related Products (Same Category) -->
     @if(isset($relatedProducts) && $relatedProducts->count() > 0)
     <div class="w-full mt-16 border-t border-border-light dark:border-border-dark pt-12">
         <div class="flex flex-col gap-4 max-w-6xl mx-auto">
-            <h2 class="text-2xl font-bold">Sản phẩm liên quan</h2>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-6 mt-4">
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold">
+                    Sản phẩm liên quan theo danh mục
+                    @if($product->category)
+                        <span class="text-base font-semibold text-text-muted-light dark:text-text-muted-dark">({{ $product->category->name }})</span>
+                    @endif
+                </h2>
+                @if($product->category)
+                    <a href="{{ route('category.show', $product->category->id) }}" class="text-primary font-semibold hover:underline">
+                        Xem thêm
+                    </a>
+                @endif
+            </div>
+
+            <!-- Horizontal scroll list (easy to browse) -->
+            <div class="flex overflow-x-auto gap-6 py-4 px-1">
                 @foreach($relatedProducts as $related)
-                <a href="{{ route('product.show', $related->id) }}" class="block border border-border-light dark:border-border-dark rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
-                    <div class="w-full h-48">
-                        <img src="{{ $related->image_url ?? 'https://via.placeholder.com/300x300?text=No+Image' }}"
-                            alt="{{ $related->name }}" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105">
+                <a href="{{ route('product.show', $related->id) }}"
+                   class="block min-w-64 border border-border-light dark:border-border-dark rounded-xl overflow-hidden hover:shadow-lg transition-shadow bg-surface-light dark:bg-surface-dark">
+                    <div class="w-full aspect-square bg-center bg-no-repeat bg-cover"
+                         style="background-image: url('{{ $related->image_url ?? 'https://via.placeholder.com/300x300?text=No+Image' }}');">
                     </div>
-                    <div class="p-3">
-                        <h3 class="text-sm font-semibold">{{ $related->name }}</h3>
-                        <p class="text-primary font-bold">{{ number_format($related->price, 0, ',', '.') }}₫</p>
+                    <div class="p-4">
+                        <h3 class="text-sm font-semibold line-clamp-2">{{ $related->name }}</h3>
+                        <p class="text-primary font-bold mt-1">{{ number_format($related->price, 0, ',', '.') }}₫</p>
+                        <div class="mt-3 flex items-center justify-center rounded-lg h-10 px-4 bg-primary/20 dark:bg-primary/30 text-sm font-bold hover:bg-primary/30 dark:hover:bg-primary/40">
+                            Xem chi tiết
+                        </div>
                     </div>
                 </a>
                 @endforeach

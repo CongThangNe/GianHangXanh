@@ -13,9 +13,10 @@ class HomeController extends Controller
     /**
      * Trang chủ:
      * - Top 10 sản phẩm nổi bật
-     * - Sản phẩm liên quan theo danh mục (mỗi danh mục lấy 8 sp mới nhất)
      * - Banner (active)
      * - Hỗ trợ tìm kiếm nhanh bằng keyword (nếu có)
+     *
+     * Ghi chú: "Sản phẩm liên quan theo danh mục" sẽ hiển thị trong trang chi tiết sản phẩm.
      */
     public function index(Request $request)
     {
@@ -43,26 +44,11 @@ class HomeController extends Controller
         // ==========================
         $products = Product::latest()->take(10)->get();
 
-        // ==========================
-        // SẢN PHẨM LIÊN QUAN THEO DANH MỤC
-        // (mỗi danh mục lấy 8 sp mới nhất)
-        // ==========================
-        $productsByCategory = $categories->map(function ($category) {
-            $category->setRelation('products', Product::where('category_id', $category->id)
-                ->latest()
-                ->take(8)
-                ->get());
+        // NOTE:
+        // "Sản phẩm liên quan theo danh mục" sẽ hiển thị trong trang chi tiết sản phẩm.
+        // Trang chủ chỉ hiển thị Top 10 + danh mục + banner.
 
-            return $category;
-        });
-
-        return view('products.index', compact(
-            'categories',
-            'products',
-            'productsByCategory',
-            'keyword',
-            'banners'
-        ));
+        return view('products.index', compact('categories', 'products', 'keyword', 'banners'));
     }
 
     /**
