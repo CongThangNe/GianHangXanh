@@ -10,7 +10,7 @@
             <!-- Main Image -->
             <div class="w-full h-[400px] lg:h-[500px] rounded-xl overflow-hidden border border-border-light dark:border-border-dark">
                 <img id="main-image"
-                    src="{{ $product->image ? asset('storage/' . $product->image) : 'https://via.placeholder.com/600x450?text=No+Image' }}"
+                    src="{{ $product->image_url ?? 'https://via.placeholder.com/600x450?text=No+Image' }}"
                     alt="{{ $product->name }}"
                     class="w-full h-full object-cover transition-transform duration-300 hover:scale-105">
             </div>
@@ -102,9 +102,9 @@
             <h2 class="text-2xl font-bold">Sản phẩm liên quan</h2>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-6 mt-4">
                 @foreach($relatedProducts as $related)
-                <a href="{{ route('products.show', $related->id) }}" class="block border border-border-light dark:border-border-dark rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                <a href="{{ route('product.show', $related->id) }}" class="block border border-border-light dark:border-border-dark rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
                     <div class="w-full h-48">
-                        <img src="{{ $related->image ? asset('storage/' . $related->image) : 'https://via.placeholder.com/300x300?text=No+Image' }}"
+                        <img src="{{ $related->image_url ?? 'https://via.placeholder.com/300x300?text=No+Image' }}"
                             alt="{{ $related->name }}" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105">
                     </div>
                     <div class="p-3">
