@@ -41,7 +41,7 @@
                             overflow-hidden">
 
                     <div class="w-full bg-center bg-no-repeat aspect-square bg-cover"
-                        style="background-image: url('{{ $p->image ? asset('storage/' . $p->image) : asset('https://via.placeholder.com/300x200?text=No+Image') }}');">
+                        style="background-image: url('{{ $p->image_url ?? 'https://via.placeholder.com/300x200?text=No+Image' }}');">
                     </div>
 
                     <div class="flex flex-col flex-1 justify-between p-4 pt-0 gap-4">
@@ -98,6 +98,63 @@
 
 
 
+
+
+
+<!-- Products by Category -->
+@if(isset($productsByCategory) && $productsByCategory->count())
+<section class="py-5 px-4" id="category-products">
+    <div class="container mx-auto">
+        <h2 class="text-center mb-4">Sản phẩm theo danh mục</h2>
+
+        @foreach($productsByCategory as $cat)
+            @if($cat->products && $cat->products->count())
+            <div class="mt-8">
+                <div class="flex items-center justify-between mb-3 px-1">
+                    <h4 class="text-xl font-bold">{{ $cat->name }}</h4>
+                    <a href="{{ route('category.show', $cat->id) }}" class="text-primary font-semibold hover:underline">
+                        Xem thêm
+                    </a>
+                </div>
+
+                <div class="w-full flex justify-center">
+                    <div class="flex overflow-x-auto gap-6 py-4 px-4
+                                [-ms-scrollbar-style:none] [scrollbar-width:none]
+                                [&::-webkit-scrollbar]:hidden">
+                        @foreach($cat->products as $p)
+                        <div class="flex flex-col gap-4 rounded-xl bg-surface-light dark:bg-surface-dark
+                                    shadow-sm min-w-64 border border-border-light dark:border-border-dark
+                                    overflow-hidden">
+                            <div class="w-full bg-center bg-no-repeat aspect-square bg-cover"
+                                style="background-image: url('{{ $p->image_url ?? 'https://via.placeholder.com/300x200?text=No+Image' }}');">
+                            </div>
+
+                            <div class="flex flex-col flex-1 justify-between p-4 pt-0 gap-4">
+                                <div>
+                                    <p class="text-base font-medium">{{ $p->name }}</p>
+                                    <p class="text-sm text-subtle-light dark:text-subtle-dark">
+                                        {{ number_format($p->price, 0, ',', '.') }}₫
+                                    </p>
+                                </div>
+
+                                <a href="{{ route('product.show', $p->id) }}"
+                                    class="flex items-center justify-center rounded-lg h-10 px-4
+                                           bg-primary/20 dark:bg-primary/30 text-sm font-bold hover:bg-primary/30
+                                           dark:hover:bg-primary/40">
+                                    Xem chi tiết
+                                </a>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            @endif
+        @endforeach
+
+    </div>
+</section>
+@endif
 
 
 <!-- About -->
