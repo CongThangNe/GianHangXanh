@@ -41,7 +41,7 @@
                             overflow-hidden">
 
                     <div class="w-full bg-center bg-no-repeat aspect-square bg-cover"
-                        style="background-image: url('{{ $p->image ? asset('storage/' . $p->image) : asset('https://via.placeholder.com/300x200?text=No+Image') }}');">
+                        style="background-image: url('{{ $p->image_url ?? 'https://via.placeholder.com/300x200?text=No+Image' }}');">
                     </div>
 
                     <div class="flex flex-col flex-1 justify-between p-4 pt-0 gap-4">
@@ -98,6 +98,10 @@
 
 
 
+
+
+
+{{-- Sản phẩm liên quan theo danh mục sẽ được hiển thị trong trang chi tiết sản phẩm --}}
 
 
 <!-- About -->

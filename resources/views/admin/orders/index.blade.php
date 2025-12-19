@@ -17,7 +17,8 @@
                     <th>Người đặt</th>
                     <th>Số điện thoại</th>
                     <th>Tổng tiền</th>
-                    <th>Trạng thái</th>
+                    <th>Giao hàng</th>
+                    <th>Thanh toán</th>
                     <th>Ngày tạo</th>
                     <th width="120">Hành động</th>
                 </tr>
@@ -39,20 +40,29 @@
 
                     <td>
                         @php
-                            // Map trạng thái: text giống bên user
-                            $statusDisplay = [
+                            $deliveryDisplay = [
                                 'pending'   => ['Chờ xác nhận',        'bg-warning text-dark'],
                                 'confirmed' => ['Đã xác nhận',         'bg-primary'],
                                 'preparing' => ['Đang chuẩn bị hàng',  'bg-info text-dark'],
                                 'shipping'  => ['Đang vận chuyển',     'bg-info text-dark'],
                                 'delivered' => ['Đã giao thành công',  'bg-success'],
                                 'cancelled' => ['Đã hủy',              'bg-danger'],
-                                'paid'      => ['Đã thanh toán',       'bg-success'],
-                            ][$o->status] ?? ['Không xác định', 'bg-secondary'];
+                            ][$o->delivery_status] ?? ['Không xác định', 'bg-secondary'];
                         @endphp
+                        <span class="badge {{ $deliveryDisplay[1] }}">
+                            {{ $deliveryDisplay[0] }}
+                        </span>
+                    </td>
 
-                        <span class="badge {{ $statusDisplay[1] }}">
-                            {{ $statusDisplay[0] }}
+                    <td>
+                        @php
+                            $paymentDisplay = [
+                                'unpaid' => ['Chưa thanh toán', 'bg-secondary'],
+                                'paid'   => ['Đã thanh toán',  'bg-success'],
+                            ][$o->payment_status] ?? ['Không xác định', 'bg-secondary'];
+                        @endphp
+                        <span class="badge {{ $paymentDisplay[1] }}">
+                            {{ $paymentDisplay[0] }}
                         </span>
                     </td>
 
@@ -67,7 +77,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="8" class="text-center text-muted">Chưa có đơn hàng nào</td>
+                    <td colspan="9" class="text-center text-muted">Chưa có đơn hàng nào</td>
                 </tr>
                 @endforelse
             </tbody>

@@ -12,7 +12,8 @@ class OrderGuestController extends Controller
         
 
         $order = Order::where('order_code', $order_code)
-                      ->where('status', 'pending')
+                      ->where('delivery_status', 'pending')
+                      ->where('payment_status', 'unpaid')
                       ->firstOrFail();
 
                       

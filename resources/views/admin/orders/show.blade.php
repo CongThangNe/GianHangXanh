@@ -182,49 +182,79 @@
                     Trạng thái đơn hàng
                 </div>
                 <div class="card-body">
-                    <div class="mb-3 d-flex justify-content-between align-items-center">
-                        <span>Trạng thái hiện tại:</span>
-                        <span class="badge bg-primary">
-                            {{
-                                [
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Giao hàng:</span>
+                            @php
+                                $deliveryLabel = [
                                     'pending'   => 'Chờ xử lý',
-                                    'paid'      => 'Đã thanh toán',
                                     'confirmed' => 'Đã xác nhận',
                                     'preparing' => 'Đang chuẩn bị',
                                     'shipping'  => 'Đang giao hàng',
                                     'delivered' => 'Đã giao thành công',
                                     'cancelled' => 'Đã hủy'
-                                ][$order->status] ?? 'Không xác định'
-                            }}
-                        </span>
+                                ][$order->delivery_status] ?? 'Không xác định';
+                            @endphp
+                            <span class="badge bg-primary">{{ $deliveryLabel }}</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Thanh toán:</span>
+                            @php
+                                $paymentLabel = [
+                                    'unpaid' => 'Chưa thanh toán',
+                                    'paid'   => 'Đã thanh toán',
+                                ][$order->payment_status] ?? 'Không xác định';
+                            @endphp
+                            <span class="badge {{ $order->payment_status === 'paid' ? 'bg-success' : 'bg-secondary' }}">
+                                {{ $paymentLabel }}
+                            </span>
+                        </div>
                     </div>
 
                     @php
-                        // Khi đơn đã hủy thì khóa lại, không cho đổi trạng thái / bấm nút nữa
-                        $statusLocked = $order->status === 'cancelled';
+                        // Khi đơn đã giao xong hoặc đã hủy thì khóa lại, không cho đổi trạng thái nữa
+                        $statusLocked = in_array($order->delivery_status, ['delivered', 'cancelled'], true);
                     @endphp
 
-                    <form action="{{ route('admin.orders.updateStatus', $order) }}" method="POST" class="d-flex gap-2 align-items-center">
+                    <form action="{{ route('admin.orders.updateStatus', $order) }}" method="POST" class="d-flex flex-wrap gap-2 align-items-center">
                         @csrf
                         @method('PATCH')
 
-                        <select name="status"
-                                class="form-select form-select-sm w-auto {{ $statusLocked ? 'pe-none opacity-75' : '' }}"
-                                {{ $statusLocked ? 'disabled' : '' }}>
-                            @foreach([
-                                'pending'   => 'Chờ xử lý',
-                                'paid'      => 'Đã thanh toán',
-                                'confirmed' => 'Đã xác nhận',
-                                'preparing' => 'Đang chuẩn bị',
-                                'shipping'  => 'Đang giao hàng',
-                                'delivered' => 'Đã giao thành công',
-                                'cancelled' => 'Đã hủy'
-                            ] as $value => $label)
-                                <option value="{{ $value }}" @selected($order->status === $value)>
-                                    {{ $label }}
-                                </option>
-                            @endforeach
-                        </select>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-muted small">Giao hàng</span>
+                            <select name="delivery_status"
+                                    class="form-select form-select-sm w-auto {{ $statusLocked ? 'pe-none opacity-75' : '' }}"
+                                    {{ $statusLocked ? 'disabled' : '' }}>
+                                @foreach([
+                                    'pending'   => 'Chờ xử lý',
+                                    'confirmed' => 'Đã xác nhận',
+                                    'preparing' => 'Đang chuẩn bị',
+                                    'shipping'  => 'Đang giao hàng',
+                                    'delivered' => 'Đã giao thành công',
+                                    'cancelled' => 'Đã hủy'
+                                ] as $value => $label)
+                                    <option value="{{ $value }}" @selected($order->delivery_status === $value)>
+                                        {{ $label }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-muted small">Thanh toán</span>
+                            <select name="payment_status"
+                                    class="form-select form-select-sm w-auto">
+                                @foreach([
+                                    'unpaid' => 'Chưa thanh toán',
+                                    'paid'   => 'Đã thanh toán',
+                                ] as $value => $label)
+                                    <option value="{{ $value }}" @selected($order->payment_status === $value)>
+                                        {{ $label }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
 
                         <button type="submit"
                                 class="btn btn-sm btn-primary"
