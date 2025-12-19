@@ -40,9 +40,9 @@
                             shadow-sm min-w-64 border border-border-light dark:border-border-dark
                             overflow-hidden">
 
-                    <div class="w-full bg-center bg-no-repeat aspect-square bg-cover"
+                <a href="{{ route('product.show', $p->id) }}">    <div class="w-full bg-center bg-no-repeat aspect-square bg-cover"
                         style="background-image: url('{{ $p->image_url ?? 'https://via.placeholder.com/300x200?text=No+Image' }}');">
-                    </div>
+                    </div> </a>
 
                     <div class="flex flex-col flex-1 justify-between p-4 pt-0 gap-4">
                         <div>
