@@ -45,4 +45,18 @@ class Product extends Model
     {
         return $this->hasMany(ProductVariant::class);
     }
+
+    // Quan hệ bắc cầu để tính lượt bán từ chi tiết đơn hàng
+    public function orderDetails()
+    {
+        // return $this->hasManyThrough(OrderDetail::class, ProductVariant::class);
+        return $this->hasManyThrough(
+        OrderDetail::class,
+        ProductVariant::class,
+        'product_id',           // foreign key trên product_variants
+        'product_variant_id',   // foreign key trên order_details
+        'id',                   // local key trên products
+        'id'                    // local key trên product_variants
+    );
+    }
 }
