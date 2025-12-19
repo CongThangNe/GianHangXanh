@@ -146,7 +146,7 @@
                 <!-- PHẦN NHẬP MÃ GIẢM GIÁ -->
                 <div class="mb-6 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900/50">
                     <p class="text-sm font-semibold text-[#0d1b12] dark:text-white mb-3 flex items-center gap-2">
-                        <span class="material-symbols-outlined text-lg text-[#4c9a66]">discount</span>
+                        {{-- <span class="material-symbols-outlined text-lg text-[#4c9a66]">discount</span> --}}
                         Mã giảm giá
                     </p>
 
