@@ -75,10 +75,10 @@ Route::get('/check-zalopay-status/{order}', function (Order $order) {
     // Nếu bạn tích hợp callback thật thì kiểm tra ở đây
     // Hiện tại chỉ demo: giả sử đã thanh toán nếu > 30 giây
     $paid = $order->updated_at->diffInSeconds(now()) > 30;
-    if ($paid && $order->status === 'pending') {
-        $order->update(['status' => 'paid']);
+    if ($paid && ($order->payment_status ?? 'unpaid') === 'unpaid') {
+        $order->update(['payment_status' => 'paid']);
     }
-    return response()->json(['paid' => $order->status === 'paid']);
+    return response()->json(['paid' => ($order->payment_status ?? 'unpaid') === 'paid']);
 })->name('check.zalopay.status');
 
 // AUTH (login / register)

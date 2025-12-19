@@ -23,7 +23,7 @@ class OrderController extends Controller
             ->orderByDesc('created_at');
 
         if ($status = $request->get('status')) {
-            $query->where('status', $status);
+            $query->where('delivery_status', $status);
         }
 
         $orders = $query->paginate(15);
@@ -64,15 +64,19 @@ class OrderController extends Controller
     public function updateStatus(Request $request, Order $order)
     {
         // Nếu đơn đã giao thành công hoặc đã hủy thì không cho sửa nữa
-        if (in_array($order->status, ['delivered', 'cancelled'], true)) {
+        if (in_array($order->delivery_status, ['delivered', 'cancelled'], true)) {
             return back()->with('error', 'Đơn hàng đã hoàn tất, không thể thay đổi trạng thái nữa!');
         }
 
         $validated = $request->validate([
-            'status' => 'required|string|in:pending,paid,confirmed,preparing,shipping,delivered,cancelled',
+            'delivery_status' => 'required|string|in:pending,confirmed,preparing,shipping,delivered,cancelled',
+            'payment_status'  => 'nullable|string|in:unpaid,paid',
         ]);
 
-        $order->status = $request->input('status');
+        $order->delivery_status = $request->input('delivery_status');
+        if ($request->filled('payment_status')) {
+            $order->payment_status = $request->input('payment_status');
+        }
         $order->save();
 
         return back()->with('success', 'Cập nhật trạng thái đơn hàng thành công!');
@@ -112,7 +116,7 @@ class OrderController extends Controller
 
         // Filter theo trạng thái (all | pending | confirmed | preparing | shipping | delivered | cancelled)
         if ($statusFilter !== 'all') {
-            $query->where('status', $statusFilter);
+            $query->where('delivery_status', $statusFilter);
         }
 
         $orders = $query->paginate(10);
