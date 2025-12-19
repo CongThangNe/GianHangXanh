@@ -82,8 +82,7 @@
                         'shipping'  => ['Đang vận chuyển', 'bg-indigo-100 text-indigo-800'],
                         'delivered' => ['Đã giao thành công', 'bg-green-100 text-green-800'],
                         'cancelled' => ['Đã hủy', 'bg-red-100 text-red-800'],
-                        'paid'      => ['Đã thanh toán', 'bg-green-100 text-green-800'],
-                    ][$order->status] ?? ['Không xác định', 'bg-gray-100 text-gray-800'];
+                    ][$order->delivery_status] ?? ['Không xác định', 'bg-gray-100 text-gray-800'];
 
                     $totalQuantity = $order->details->sum('quantity');
                     $firstDetail   = $order->details->first();
@@ -103,6 +102,16 @@
                         <div class="flex items-center gap-3">
                             <span class="px-3 py-1 text-sm font-semibold rounded-full {{ $statusDisplay[1] }}">
                                 {{ $statusDisplay[0] }}
+                            </span>
+
+                            @php
+                                $pay = [
+                                    'unpaid' => ['Chưa TT', 'bg-gray-100 text-gray-800'],
+                                    'paid'   => ['Đã TT',  'bg-green-100 text-green-800'],
+                                ][$order->payment_status] ?? ['TT ?', 'bg-gray-100 text-gray-800'];
+                            @endphp
+                            <span class="px-3 py-1 text-sm font-semibold rounded-full {{ $pay[1] }}">
+                                {{ $pay[0] }}
                             </span>
 
                             <a href="{{ route('user.orders.show', $order->id) }}"
