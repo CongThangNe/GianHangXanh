@@ -109,7 +109,8 @@ class PaymentController extends Controller
             if ($request->vnp_ResponseCode == '00') {
                 
                 // $order->status = 'processing'; // Hoặc 'paid'
-                $order->status = 'pending'; // chờ xác nhận
+                $order->payment_status = 'paid';
+                $order->delivery_status = 'pending'; // chờ xác nhận
                 $order->save();
 
                 // [QUAN TRỌNG] Xóa giỏ hàng sau khi thanh toán thành công
