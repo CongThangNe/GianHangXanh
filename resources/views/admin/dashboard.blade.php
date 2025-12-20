@@ -87,8 +87,14 @@
                                             <td class="fw-bold">{{ $item->id }}</td>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    <img src="{{ $item->image_url ?? asset('images/no-image.png') }}"
-                                                        alt="{{ $item->name }}" class="rounded border me-3"
+                                                    @php
+                                                        $img = $item->image
+                                                            ? asset('storage/' . $item->image)
+                                                            : asset('images/no-image.png');
+                                                    @endphp
+
+                                                    <img src="{{ $img }}" alt="{{ $item->name }}"
+                                                        class="rounded border me-3"
                                                         style="width: 50px; height: 50px; object-fit: cover;">
                                                     <div>
                                                         <div class="fw-bold text-dark">{{ $item->name }}</div>

@@ -17,7 +17,7 @@ class DashboardController extends Controller
     {
         $userCount  = User::count();
         $orderCount = Order::count();
-        $revenue = Order::where('status', 'paid')->sum('total');
+        $revenue = Order::where('payment_status', 'paid')->sum('total');
         $stockCount = ProductVariant::sum('stock');
 
         // Danh sách user mới
@@ -26,21 +26,23 @@ class DashboardController extends Controller
         // Đơn hàng mới
         $orders = Order::latest()->take(3)->get();
 
-        
-       $topSellingProducts = Product::withSum(
-            ['orderDetails as total_sold' => function ($query) {
-                    $query->whereHas('order', function ($q) {
-                        $q->where('status', 'paid');
-                    });
-                }], 
-                'quantity'
+        //sản phẩm bán chạy
+        $topSellingProducts = DB::table('order_details as od')
+            ->join('orders as o', 'o.id', '=', 'od.order_id')
+            ->join('product_variants as pv', 'pv.id', '=', 'od.product_variant_id')
+            ->join('products as p', 'p.id', '=', 'pv.product_id')
+            ->where('o.payment_status', 'paid') // chỉ tính đơn đã thanh toán
+            ->select(
+                'p.id',
+                'p.name',
+                'p.price',
+                'p.image',
+                DB::raw('SUM(od.quantity) as total_sold')
             )
+            ->groupBy('p.id', 'p.name', 'p.price', 'p.image')
             ->orderByDesc('total_sold')
-            ->take(3)
+            ->limit(10)
             ->get();
-            // dd(
-            //     Product::first()->orderDetails()->get()
-            // );
         return view('admin.dashboard', compact(
             'userCount',
             'orderCount',
@@ -50,5 +52,6 @@ class DashboardController extends Controller
             'topSellingProducts',
             'orders'
         ));
+
     }
 }
