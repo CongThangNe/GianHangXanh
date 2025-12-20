@@ -21,7 +21,10 @@ class DashboardController extends Controller
         $stockCount = ProductVariant::sum('stock');
 
         // Danh sách user mới
-        $users = User::latest()->take(5)->get();
+        $users = User::latest()->take(3)->get();
+
+        // Đơn hàng mới
+        $orders = Order::latest()->take(3)->get();
 
         
        $topSellingProducts = Product::withSum(
@@ -44,7 +47,8 @@ class DashboardController extends Controller
             'revenue',
             'stockCount',
             'users',
-            'topSellingProducts'
+            'topSellingProducts',
+            'orders'
         ));
     }
 }
