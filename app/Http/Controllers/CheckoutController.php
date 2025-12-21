@@ -40,6 +40,7 @@ class CheckoutController extends Controller
         // Lấy mã giảm giá từ session (nếu đã áp dụng)
         $discountCode = session('discount_code');
         $discountAmount = 0;
+        $displayDiscount = 0; // Thêm biến mới để hiển thị giá trị gốc
         $discountInfo = null;
 
         if ($discountCode) {
@@ -60,14 +61,20 @@ class CheckoutController extends Controller
                 } else {
                     $discountAmount = $code->discount_value;
                 }
+                // Giá trị hiển thị giữ nguyên giá trị gốc đã tính
+                $displayDiscount = $discountAmount;
+
+                // Giới hạn giá trị áp dụng thực tế không vượt quá subtotal
+                $discountAmount = min($discountAmount, $subtotal);
 
                 $discountInfo = [
                     'code'   => $code->code,
                     'type'   => $code->type,
                     'value'  => $code->type === 'percent'
                         ? $code->discount_percent . '%'
-                        : number_format($code->discount_value) . 'đ',
+                        : number_format($displayDiscount, 0, ',', '.') . 'đ',
                     'amount' => $discountAmount,
+                    'display_amount' => $displayDiscount // Thêm để view dùng hiển thị
                 ];
             } else {
                 session()->forget('discount_code');
@@ -141,6 +148,7 @@ class CheckoutController extends Controller
         });
 
         $discountAmount = 0;
+        $displayDiscount = 0; // Thêm biến mới để hiển thị giá trị gốc
         $discountCode = session('discount_code');
         if ($discountCode) {
             $code = DiscountCode::where('code', $discountCode)->first();
@@ -151,6 +159,11 @@ class CheckoutController extends Controller
                 } else {
                     $discountAmount = $code->discount_value;
                 }
+                // Giá trị hiển thị giữ nguyên giá trị gốc đã tính
+                $displayDiscount = $discountAmount;
+
+                // Giới hạn giá trị áp dụng thực tế không vượt quá subtotal
+                $discountAmount = min($discountAmount, $subtotal);
                 $code->increment('used_count');
             }
         }
