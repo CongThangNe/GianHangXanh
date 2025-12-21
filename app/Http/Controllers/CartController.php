@@ -27,6 +27,7 @@ class CartController extends Controller
         // Lấy mã giảm giá từ session (nếu đã áp dụng)
         $discountCode = session('discount_code');
         $discountAmount = 0;
+        $displayDiscount = 0; // Thêm biến mới để hiển thị giá trị gốc
         $discountInfo = null;
 
         if ($discountCode) {
@@ -48,11 +49,18 @@ class CartController extends Controller
                     $discountAmount = $code->discount_value;
                 }
 
+                // Giá trị hiển thị giữ nguyên giá trị gốc đã tính
+                $displayDiscount = $discountAmount;
+
+                // Giới hạn giá trị áp dụng thực tế không vượt quá subtotal
+                $discountAmount = min($discountAmount, $subtotal);
+
                 $discountInfo = [
                     'code' => $code->code,
                     'type' => $code->type,
-                    'value' => $code->type === 'percent' ? $code->discount_percent . '%' : number_format($code->discount_value) . 'đ',
-                    'amount' => $discountAmount
+                    'value' => $code->type === 'percent' ? $code->discount_percent . '%' : number_format($displayDiscount, 0, ',', '.') . 'đ',
+                    'amount' => $discountAmount,
+                    'display_amount' => $displayDiscount // Thêm để view dùng hiển thị
                 ];
             } else {
                 // Mã không hợp lệ → xóa khỏi session
@@ -64,14 +72,14 @@ class CartController extends Controller
         $total = $subtotal - $discountAmount;
 
         return view('cart.index', compact(
-        'cart', 
-        'cartItems',
-        'subtotal', 
-        'discountCode', 
-        'discountInfo', 
-        'discountAmount', 
-        'total'
-));
+            'cart',
+            'cartItems',
+            'subtotal',
+            'discountCode',
+            'discountInfo',
+            'discountAmount',
+            'total'
+        ));
     }
 
     public function applyDiscount(Request $request)
@@ -95,7 +103,7 @@ class CartController extends Controller
         // Lưu vào session để dùng tiếp ở checkout
         session(['discount_code' => $code->code]);
 
-        return back()->with('success', "Áp dụng mã giảm giá thành công! Giảm " . ($code->type === 'percent' ? $code->discount_percent . '%' : number_format($code->discount_value) . 'đ'));
+        return back()->with('success', "Áp dụng mã giảm giá thành công! Giảm " . ($code->type === 'percent' ? $code->discount_percent . '%' : number_format($code->discount_value, 0, ',', '.') . 'đ'));
     }
 
     public function removeDiscount()
@@ -188,6 +196,7 @@ class CartController extends Controller
 
             // Tính lại discount nếu có (copy logic từ index)
             $discountAmount = 0;
+            $displayDiscount = 0; // Thêm biến mới để hiển thị giá trị gốc
             $discountCode = session('discount_code');
             if ($discountCode) {
                 $code = DiscountCode::where('code', $discountCode)
@@ -207,6 +216,12 @@ class CartController extends Controller
                     } else {
                         $discountAmount = $code->discount_value;
                     }
+
+                    // Giá trị hiển thị giữ nguyên giá trị gốc đã tính
+                    $displayDiscount = $discountAmount;
+
+                    // Giới hạn giá trị áp dụng thực tế không vượt quá subtotal
+                    $discountAmount = min($discountAmount, $subtotal);
                 }
             }
 
@@ -216,7 +231,8 @@ class CartController extends Controller
                 'success' => true,
                 'line_total' => $line_total,
                 'subtotal' => $subtotal,
-                'discount_amount' => $discountAmount,
+                'discount_amount' => $discountAmount, // Áp dụng thực tế
+                'display_discount_amount' => $displayDiscount, // Hiển thị gốc
                 'total' => $total,
             ]);
         }
