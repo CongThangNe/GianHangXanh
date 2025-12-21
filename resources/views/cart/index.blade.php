@@ -43,6 +43,7 @@
             <div
                 class="hidden border-b border-gray-200/80 dark:border-gray-700/80 pb-3 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 md:grid md:grid-cols-6 md:gap-4">
                 <span class="col-span-3">Sản phẩm</span>
+                
                 <span class="col-span-1 text-center">Số lượng</span>
                 <span class="col-span-1 text-right">Giá</span>
                 <span class="col-span-1"></span>
@@ -163,7 +164,7 @@
                 <!-- PHẦN NHẬP MÃ GIẢM GIÁ -->
                 <div class="mb-6 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900/50">
                     <p class="text-sm font-semibold text-[#0d1b12] dark:text-white mb-3 flex items-center gap-2">
-                        {{-- <span class="material-symbols-outlined text-lg text-[#4c9a66]">discount</span> --}}
+                        <!-- <span class="material-symbols-outlined text-lg text-[#4c9a66]">discount</span> -->
                         Mã giảm giá
                     </p>
 
@@ -189,8 +190,8 @@
                     @else
                     <form action="{{ route('cart.applyDiscount') }}" method="POST" class="flex gap-2">
                         @csrf
-                        <input type="text" name="code" class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4c9a66] dark:bg-gray-800" placeholder="Nhập mã giảm giá" required>
-                        <button type="submit" class="px-4 py-2 bg-[#13612d] text-white font-medium rounded-lg hover:bg-[#1f8045] transition text-sm whitespace-nowrap">
+                        <input type="text" name="code" class="flex-1 px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4c9a66] dark:bg-gray-800" placeholder="Nhập mã giảm giá" required>
+                        <button type="submit" class="px-3 py-2 bg-[#13612d] text-white font-medium rounded-lg hover:bg-[#1f8045] transition text-sm whitespace-nowrap">
                             Áp dụng
                         </button>
                     </form>
@@ -202,26 +203,26 @@
 
                 <!-- Tóm tắt thanh toán -->
                 <!-- Subtotal -->
-                <div class="flex justify-between text-sm">
-                    <span class="text-gray-600 dark:text-gray-400">Tạm tính</span>
-                    <span class="font-medium" id="subtotal">{{ number_format($subtotal, 0, ',', '.') }}₫</span>
-                </div>
+                <!-- Phần tóm tắt đơn hàng (thay toàn bộ phần liên quan giảm giá) -->
+                <div class="space-y-4">
+                    <!-- Tạm tính -->
+                    <div class="flex justify-between text-base font-medium text-[#0d1b12] dark:text-white">
+                        <span>Tạm tính</span>
+                        <span id="subtotal">{{ number_format($subtotal, 0, ',', '.') }}đ</span>
+                    </div>
 
-                <!-- Discount -->
-                @if(isset($discountAmount) && $discountAmount > 0)
-                <div class="flex justify-between text-sm text-green-600 dark:text-green-400 font-semibold">
-                    <span>Giảm giá ({{ session('discount_code') }}):</span>
-                    <span id="discount-amount">-{{ number_format($discountAmount, 0, ',', '.') }}₫</span>
-                </div>
-                @endif
+                    <!-- Giảm giá (sửa để dùng display_amount - giá trị gốc) -->
+                    @if ($discountInfo)
+                    <div class="flex justify-between text-base font-medium text-[#13612d] dark:text-green-400">
+                        <span>Giảm giá ({{ $discountInfo['code'] }}):</span>
+                        <span id="discount-amount">-{{ number_format($discountInfo['display_amount'], 0, ',', '.') }}đ</span>
+                    </div>
+                    @endif
 
-                <!-- Total -->
-                <div class="mt-6 border-t border-gray-300 dark:border-gray-600 pt-4">
-                    <div class="flex justify-between font-bold text-xl">
-                        <span class="text-[#0d1b12] dark:text-white">Thành tiền</span>
-                        <span class="text-[#13612d]" id="total-final">
-                            {{ number_format($total, 0, ',', '.') }}₫
-                        </span>
+                    <!-- Thành tiền -->
+                    <div class="flex justify-between text-lg font-bold text-[#0d1b12] dark:text-white border-t border-gray-200/80 dark:border-gray-700/80 pt-4">
+                        <span>Thành tiền</span>
+                        <span id="total-final">{{ number_format($total, 0, ',', '.') }}đ</span>
                     </div>
                 </div>
 
