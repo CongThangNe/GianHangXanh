@@ -13,7 +13,7 @@ use App\Http\Controllers\OrderGuestController;
 
 
 
-use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\OrderController;
