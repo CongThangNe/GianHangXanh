@@ -163,7 +163,7 @@
                                             <h5 class="font-semibold text-gray-800 line-clamp-2">
                                                 {{ $item->variant->product->name ?? 'Sản phẩm không tồn tại' }}</h5>
                                             <p class="text-sm text-gray-500 mt-1">
-                                                Phân loại: {{ $item->variant->attribute_value ?? 'Mặc định' }}
+                                                Phân loại: {{ $item->variant?->variant_label ?? 'Mặc định' }}
                                             </p>
                                             <div class="flex justify-between mt-2">
                                                 <span class="text-sm font-medium text-gray-600">SL:
