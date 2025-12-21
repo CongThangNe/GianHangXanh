@@ -13,6 +13,14 @@ use App\Http\Controllers\PaymentController;
 
 class CheckoutController extends Controller
 {
+    /**
+     * Bắt buộc đăng nhập trước khi vào checkout / đặt hàng.
+     */
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     public function index()
     {
         $sessionId = session()->getId();
