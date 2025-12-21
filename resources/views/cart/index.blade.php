@@ -147,7 +147,7 @@
                 <!-- PHẦN NHẬP MÃ GIẢM GIÁ -->
                 <div class="mb-6 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900/50">
                     <p class="text-sm font-semibold text-[#0d1b12] dark:text-white mb-3 flex items-center gap-2">
-                        {{-- <span class="material-symbols-outlined text-lg text-[#4c9a66]">discount</span> --}}
+                        <!-- <span class="material-symbols-outlined text-lg text-[#4c9a66]">discount</span> -->
                         Mã giảm giá
                     </p>
 
@@ -173,8 +173,8 @@
                     @else
                     <form action="{{ route('cart.applyDiscount') }}" method="POST" class="flex gap-2">
                         @csrf
-                        <input type="text" name="code" class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4c9a66] dark:bg-gray-800" placeholder="Nhập mã giảm giá" required>
-                        <button type="submit" class="px-4 py-2 bg-[#13612d] text-white font-medium rounded-lg hover:bg-[#1f8045] transition text-sm whitespace-nowrap">
+                        <input type="text" name="code" class="flex-1 px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4c9a66] dark:bg-gray-800" placeholder="Nhập mã giảm giá" required>
+                        <button type="submit" class="px-3 py-2 bg-[#13612d] text-white font-medium rounded-lg hover:bg-[#1f8045] transition text-sm whitespace-nowrap">
                             Áp dụng
                         </button>
                     </form>
