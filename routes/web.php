@@ -44,6 +44,7 @@ Route::group(['prefix' => 'cart', 'as' => 'cart.'], function () {
     Route::get('/', [CartController::class, 'index'])->name('index');
     Route::post('/add', [CartController::class, 'add'])->name('add');
     Route::post('/update', [CartController::class, 'update'])->name('update');
+    Route::post('/update-variant', [CartController::class, 'updateVariant'])->name('updateVariant');
     Route::post('/remove/{id}', [CartController::class, 'remove'])->name('remove');
     Route::post('/clear', [CartController::class, 'clear'])->name('clear');
     Route::post('/apply-discount', [CartController::class, 'applyDiscount'])->name('applyDiscount');
