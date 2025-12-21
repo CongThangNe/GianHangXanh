@@ -185,11 +185,13 @@
                                     <span class="text-gray-700">Vận chuyển</span>
                                     <span class="text-green-600">Miễn phí</span>
                                 </div>
-                                @if ($discountAmount > 0)
-                                    <div class="flex justify-between text-sm font-medium">
-                                        <span class="text-gray-700">Giảm giá</span>
-                                        <span class="text-red-600">-{{ number_format($discountAmount) }}₫</span>
+                                <!-- Giữ nguyên cấu trúc cũ, chỉ thay đổi hiển thị giảm giá -->
+                                @if ($discountInfo)
+                                    <div class="flex justify-between text-base font-medium text-green-600">
+                                        <span>Giảm giá ({{ $discountInfo['code'] }}):</span>
+                                        <span>-{{ number_format($discountInfo['display_amount'], 0, ',', '.') }}đ</span>
                                     </div>
+                                
                                 @endif
                                 <div class="flex justify-between text-lg font-bold pt-2 border-t">
                                     <span class="text-gray-800">Tổng thanh toán</span>
