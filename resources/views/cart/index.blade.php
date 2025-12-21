@@ -56,7 +56,9 @@
             @endphp
 
             <div class="cart-item flex flex-col gap-4 border-b border-gray-200/80 dark:border-gray-700/80 pb-4 md:grid md:grid-cols-6 md:items-center"
-                data-item-id="{{ $item->id }}">
+                data-item-id="{{ $item->id }}"
+                data-unit-price="{{ (int)($item->price ?? 0) }}"
+                data-max-stock="{{ (int)($variant?->stock ?? 999) }}">
                 <div class="flex items-start gap-4 md:col-span-3">
                     @if ($product)
                     @if ($product->image)
@@ -89,9 +91,24 @@
                         <p class="text-base font-medium leading-normal text-[#0d1b12] dark:text-white">Sản
                             phẩm không tồn tại</p>
                         @endif
-                        <p class="text-sm font-normal leading-normal text-[#4c9a66]">
-                            {{ $variant ? $variant->attribute_value : '' }}
-                        </p>
+                        {{-- Chọn biến thể ngay tại giỏ hàng --}}
+                        @if ($product && $product->variants && $product->variants->count() > 0)
+                            <div class="mt-2 flex items-center gap-2">
+                                <span class="text-xs text-gray-500">Phân loại:</span>
+                                <select class="variant-select text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#4c9a66]"
+                                    data-item-id="{{ $item->id }}">
+                                    @foreach ($product->variants as $pv)
+                                        <option value="{{ $pv->id }}" @selected($variant && $pv->id == $variant->id)>
+                                            {{ $pv->variant_label }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @else
+                            <p class="text-sm font-normal leading-normal text-[#4c9a66]">
+                                {{ $variant ? $variant->variant_label : '' }}
+                            </p>
+                        @endif
                     </div>
                 </div>
 
@@ -241,20 +258,29 @@
         setTimeout(() => toast.style.opacity = '0', 3000);
     }
 
+    const refreshSummary = (data) => {
+        const subtotalEl = document.getElementById('subtotal');
+        const discountEl = document.getElementById('discount-amount');
+        const totalEl = document.getElementById('total-final');
+        if (subtotalEl) subtotalEl.textContent = formatCurrency(data.subtotal);
+        if (discountEl) discountEl.textContent = '-' + formatCurrency(data.discount_amount || 0);
+        if (totalEl) totalEl.textContent = formatCurrency(data.total);
+    };
+
     document.querySelectorAll('.cart-item').forEach(cartItem => {
         const qtyInput = cartItem.querySelector('input[type="number"]');
         const decreaseBtn = cartItem.querySelector('.decrease-btn');
         const increaseBtn = cartItem.querySelector('.increase-btn');
         const lineTotalEl = cartItem.querySelector('.line-total');
-        const itemId = cartItem.dataset.itemId;
+        const variantSelect = cartItem.querySelector('.variant-select');
 
-        const unitPrice = parseFloat(lineTotalEl.textContent.replace(/[^\d]/g, '')) / parseInt(qtyInput.value);
-        const maxStock = parseInt(qtyInput.max);
+        const getUnitPrice = () => parseInt(cartItem.dataset.unitPrice || '0');
+        const getMaxStock = () => parseInt(cartItem.dataset.maxStock || qtyInput.max || '999');
 
         const updateQuantity = (newQty) => {
+            const maxStock = getMaxStock();
             newQty = parseInt(newQty) || 1;
 
-            // Kiểm tra số lượng hợp lệ
             if (newQty < 1) {
                 showToast('Số lượng không được nhỏ hơn 1', true);
                 return;
@@ -265,52 +291,76 @@
             }
 
             qtyInput.value = newQty;
+            lineTotalEl.textContent = formatCurrency(getUnitPrice() * newQty);
 
-            // Cập nhật line total tạm thời
-            lineTotalEl.textContent = formatCurrency(unitPrice * newQty);
-
-            // Gửi request lên server
             fetch("{{ route('cart.update') }}", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                    },
-                    body: JSON.stringify({
-                        item_id: itemId,
-                        quantity: newQty
-                    })
-                })
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                },
+                body: JSON.stringify({ item_id: cartItem.dataset.itemId, quantity: newQty })
+            })
                 .then(r => r.json())
                 .then(data => {
                     if (data.success) {
-                        // Update chính xác từ server
                         lineTotalEl.textContent = formatCurrency(data.line_total);
-
-                        // Update subtotal, discount, total
-                        const subtotalEl = document.getElementById('subtotal');
-                        const discountEl = document.getElementById('discount-amount');
-                        const totalEl = document.getElementById('total-final');
-
-                        if (subtotalEl) subtotalEl.textContent = formatCurrency(data.subtotal);
-                        if (discountEl) discountEl.textContent = '-' + formatCurrency(data.discount_amount || 0);
-                        if (totalEl) totalEl.textContent = formatCurrency(data.total);
-
+                        refreshSummary(data);
                         showToast('Cập nhật giỏ hàng thành công!');
                     } else {
                         showToast(data.message || 'Lỗi cập nhật số lượng', true);
                         qtyInput.value = data.current_quantity || 1;
-                        lineTotalEl.textContent = formatCurrency(unitPrice * qtyInput.value);
+                        lineTotalEl.textContent = formatCurrency(getUnitPrice() * parseInt(qtyInput.value));
                     }
                 })
-                .catch(() => {
-                    showToast('Không thể kết nối server, vui lòng thử lại sau', true);
-                });
+                .catch(() => showToast('Không thể kết nối server, vui lòng thử lại sau', true));
         };
 
         decreaseBtn.addEventListener('click', () => updateQuantity(parseInt(qtyInput.value) - 1));
         increaseBtn.addEventListener('click', () => updateQuantity(parseInt(qtyInput.value) + 1));
         qtyInput.addEventListener('change', () => updateQuantity(qtyInput.value));
+
+        // Đổi biến thể ngay trong giỏ
+        if (variantSelect) {
+            variantSelect.addEventListener('change', (e) => {
+                const newVariantId = e.target.value;
+
+                fetch("{{ route('cart.updateVariant') }}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                    },
+                    body: JSON.stringify({ item_id: cartItem.dataset.itemId, variant_id: newVariantId })
+                })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (!data.success) {
+                            showToast(data.message || 'Không thể đổi biến thể', true);
+                            return;
+                        }
+
+                        // Nếu server gộp item => id mới
+                        if (String(data.item_id) !== String(cartItem.dataset.itemId)) {
+                            // Reload nhanh nhất để tránh mismatch DOM
+                            window.location.reload();
+                            return;
+                        }
+
+                        cartItem.dataset.unitPrice = data.unit_price;
+                        cartItem.dataset.maxStock = data.max_stock;
+                        qtyInput.max = data.max_stock;
+
+                        // Nếu qty bị hạ do stock
+                        qtyInput.value = data.quantity;
+
+                        lineTotalEl.textContent = formatCurrency(data.line_total);
+                        refreshSummary(data);
+                        showToast('Đổi biến thể thành công!');
+                    })
+                    .catch(() => showToast('Không thể kết nối server, vui lòng thử lại sau', true));
+            });
+        }
     });
 </script>
 
