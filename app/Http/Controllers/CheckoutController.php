@@ -193,11 +193,11 @@ class CheckoutController extends Controller
                 'price'              => $item->price,
             ]);
 
-            $variant = ProductVariant::find($item->product_variant_id);
-            if ($variant) {
-                $variant->stock = max(0, $variant->stock - $item->quantity);
-                $variant->save();
-            }
+            // $variant = ProductVariant::find($item->product_variant_id);
+            // if ($variant) {
+            //     $variant->stock = max(0, $variant->stock - $item->quantity);
+            //     $variant->save();
+            // }
         }
 
         // 6. XÓA GIỎ HÀNG
