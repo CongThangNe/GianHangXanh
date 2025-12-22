@@ -7,6 +7,7 @@ use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\ProductVariant;
 use App\Models\DiscountCode;
+use Illuminate\Support\Facades\DB;
 
 class CartController extends Controller
 {
@@ -17,17 +18,15 @@ class CartController extends Controller
         $cart = Cart::with([
             'items.variant.product',
             'items.variant.values.attribute',
-            // để hiển thị dropdown chọn biến thể trên trang giỏ hàng
             'items.variant.product.variants.values.attribute'
         ])->where('session_id', $sessionId)->first();
 
         $cartItems = $cart?->items ?? collect([]);
         $subtotal = $cartItems->sum(fn($i) => $i->price * $i->quantity);
 
-        // Lấy mã giảm giá từ session (nếu đã áp dụng)
         $discountCode = session('discount_code');
         $discountAmount = 0;
-        $displayDiscount = 0; // Thêm biến mới để hiển thị giá trị gốc
+        $displayDiscount = 0;
         $discountInfo = null;
 
         if ($discountCode) {
@@ -49,23 +48,20 @@ class CartController extends Controller
                     $discountAmount = $code->discount_value;
                 }
 
-                // Giá trị hiển thị giữ nguyên giá trị gốc đã tính
                 $displayDiscount = $discountAmount;
-
-                // Giới hạn giá trị áp dụng thực tế không vượt quá subtotal
                 $discountAmount = min($discountAmount, $subtotal);
 
                 $discountInfo = [
                     'code' => $code->code,
                     'type' => $code->type,
-                    'value' => $code->type === 'percent' ? $code->discount_percent . '%' : number_format($displayDiscount, 0, ',', '.') . 'đ',
+                    'value' => $code->type === 'percent'
+                        ? $code->discount_percent . '%'
+                        : number_format($displayDiscount, 0, ',', '.') . 'đ',
                     'amount' => $discountAmount,
-                    'display_amount' => $displayDiscount // Thêm để view dùng hiển thị
+                    'display_amount' => $displayDiscount
                 ];
             } else {
-                // Mã không hợp lệ → xóa khỏi session
                 session()->forget('discount_code');
-                $discountCode = null;
             }
         }
 
@@ -100,10 +96,12 @@ class CartController extends Controller
             return back()->with('error', 'Mã giảm giá không hợp lệ hoặc đã hết hạn!');
         }
 
-        // Lưu vào session để dùng tiếp ở checkout
         session(['discount_code' => $code->code]);
 
-        return back()->with('success', "Áp dụng mã giảm giá thành công! Giảm " . ($code->type === 'percent' ? $code->discount_percent . '%' : number_format($code->discount_value, 0, ',', '.') . 'đ'));
+        return back()->with('success', "Áp dụng mã giảm giá thành công! Giảm " .
+            ($code->type === 'percent'
+                ? $code->discount_percent . '%'
+                : number_format($code->discount_value, 0, ',', '.') . 'đ'));
     }
 
     public function removeDiscount()
@@ -112,6 +110,7 @@ class CartController extends Controller
         return back()->with('success', 'Đã bỏ áp dụng mã giảm giá');
     }
 
+    // ADD: thêm giỏ => TRỪ KHO NGAY
     public function add(Request $request)
     {
         $request->validate([
@@ -119,50 +118,130 @@ class CartController extends Controller
             'quantity'   => 'required|integer|min:1',
         ]);
 
-        $variant = ProductVariant::with('product')->findOrFail($request->variant_id);
-        $price = $variant->price ?? $variant->product->price;
-
         $sessionId = session()->getId();
+        $variantId = (int) $request->variant_id;
+        $qtyAdd    = (int) $request->quantity;
 
-        $cart = Cart::firstOrCreate(
-            ['session_id' => $sessionId],
-            ['user_id' => null]
-        );
+        try {
+            DB::transaction(function () use ($sessionId, $variantId, $qtyAdd) {
 
-        $item = CartItem::where('cart_id', $cart->id)
-            ->where('product_variant_id', $variant->id)
-            ->first();
+                $cart = Cart::firstOrCreate(
+                    ['session_id' => $sessionId],
+                    ['user_id' => null]
+                );
 
-        if ($item) {
-            $item->increment('quantity', $request->quantity);
-        } else {
-            CartItem::create([
-                'cart_id'            => $cart->id,
-                'product_id'         => $variant->product_id,
-                'product_variant_id' => $variant->id,
-                'quantity'           => $request->quantity,
-                'price'              => $price,
-            ]);
+                $variant = ProductVariant::with('product')
+                    ->where('id', $variantId)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if ((int)$variant->stock < $qtyAdd) {
+                    throw new \RuntimeException('Số lượng không được vượt quá tồn kho');
+                }
+
+                // reserve stock
+                $variant->decrement('stock', $qtyAdd);
+
+                $price = $variant->price ?? $variant->product->price;
+
+                $item = CartItem::where('cart_id', $cart->id)
+                    ->where('product_variant_id', $variant->id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($item) {
+                    $item->increment('quantity', $qtyAdd);
+                } else {
+                    CartItem::create([
+                        'cart_id'            => $cart->id,
+                        'product_id'         => $variant->product_id,
+                        'product_variant_id' => $variant->id,
+                        'quantity'           => $qtyAdd,
+                        'price'              => $price,
+                    ]);
+                }
+            });
+        } catch (\Throwable $e) {
+            return back()->with('error', $e->getMessage());
         }
 
         return redirect()->route('cart.index')->with('success', 'Đã thêm vào giỏ hàng');
     }
 
+    // REMOVE ITEM: hoàn kho
     public function remove($id)
     {
-        CartItem::destroy($id);
+        $sessionId = session()->getId();
+
+        try {
+            DB::transaction(function () use ($sessionId, $id) {
+
+                $cart = Cart::where('session_id', $sessionId)->lockForUpdate()->first();
+                if (!$cart) return;
+
+                $item = CartItem::where('id', $id)
+                    ->where('cart_id', $cart->id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$item) return;
+
+                $variant = ProductVariant::where('id', $item->product_variant_id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($variant) {
+                    $variant->increment('stock', (int)$item->quantity);
+                }
+
+                $item->delete();
+            });
+        } catch (\Throwable $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
         return back()->with('success', 'Đã xóa sản phẩm khỏi giỏ hàng');
     }
 
+    // CLEAR: hoàn kho toàn bộ
     public function clear()
     {
         $sessionId = session()->getId();
-        Cart::where('session_id', $sessionId)->delete();
-        session()->forget('discount_code'); // Xóa luôn mã giảm nếu có
+
+        try {
+            DB::transaction(function () use ($sessionId) {
+
+                $cart = Cart::with('items')
+                    ->where('session_id', $sessionId)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$cart) return;
+
+                foreach ($cart->items as $item) {
+                    $variant = ProductVariant::where('id', $item->product_variant_id)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($variant) {
+                        $variant->increment('stock', (int)$item->quantity);
+                    }
+                }
+
+                $cart->items()->delete();
+                $cart->delete();
+            });
+
+            session()->forget('discount_code');
+
+        } catch (\Throwable $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
         return back()->with('success', 'Đã làm trống giỏ hàng');
     }
 
-    // THÊM METHOD NÀY: Cập nhật số lượng realtime + tính lại tổng
+    // UPDATE QTY: trừ/bù kho theo DIFF + trả max_allowed cho UI
     public function update(Request $request)
     {
         $request->validate([
@@ -170,81 +249,108 @@ class CartController extends Controller
             'quantity' => 'required|integer|min:1',
         ]);
 
-        $item = CartItem::findOrFail($request->item_id);
         $sessionId = session()->getId();
-        $cart = Cart::where('session_id', $sessionId)->first();
 
-        if ($cart && $item->cart_id === $cart->id) {
-            // Kiểm tra stock (nếu có)
-            $variant = $item->variant;
-            $maxStock = $variant ? $variant->stock : 999;
-            if ($request->quantity > $maxStock) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Vượt quá tồn kho!',
-                    'current_quantity' => $item->quantity,
-                ], 400);
-            }
+        try {
+            $payload = DB::transaction(function () use ($request, $sessionId) {
 
-            $item->quantity = $request->quantity;
-            $item->save();
+                $cart = Cart::where('session_id', $sessionId)->lockForUpdate()->first();
+                if (!$cart) {
+                    throw new \RuntimeException('Giỏ hàng không tồn tại!');
+                }
 
-            $line_total = $item->price * $item->quantity;
+                $item = CartItem::where('id', $request->item_id)
+                    ->where('cart_id', $cart->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
 
-            // Tính lại subtotal toàn giỏ
-            $subtotal = $cart->items->sum(fn($i) => $i->price * $i->quantity);
-
-            // Tính lại discount nếu có (copy logic từ index)
-            $discountAmount = 0;
-            $displayDiscount = 0; // Thêm biến mới để hiển thị giá trị gốc
-            $discountCode = session('discount_code');
-            if ($discountCode) {
-                $code = DiscountCode::where('code', $discountCode)
-                    ->where('starts_at', '<=', now())
-                    ->where('expires_at', '>=', now())
-                    ->where(function ($q) {
-                        $q->whereNull('max_uses')->orWhereRaw('used_count < max_uses');
-                    })
+                $variant = ProductVariant::where('id', $item->product_variant_id)
+                    ->lockForUpdate()
                     ->first();
 
-                if ($code) {
-                    if ($code->type === 'percent') {
-                        $discountAmount = $subtotal * ($code->discount_percent / 100);
-                        if ($code->max_discount_value) {
-                            $discountAmount = min($discountAmount, $code->max_discount_value);
+                $oldQty = (int) $item->quantity;
+                $newQty = (int) $request->quantity;
+                $diff   = $newQty - $oldQty;
+
+                if ($variant) {
+                    if ($diff > 0) {
+                        if ((int)$variant->stock < $diff) {
+                            throw new \RuntimeException('Số lượng không được vượt quá tồn kho');
                         }
-                    } else {
-                        $discountAmount = $code->discount_value;
+                        $variant->decrement('stock', $diff);
+                    } elseif ($diff < 0) {
+                        $variant->increment('stock', abs($diff));
                     }
-
-                    // Giá trị hiển thị giữ nguyên giá trị gốc đã tính
-                    $displayDiscount = $discountAmount;
-
-                    // Giới hạn giá trị áp dụng thực tế không vượt quá subtotal
-                    $discountAmount = min($discountAmount, $subtotal);
                 }
-            }
 
-            $total = $subtotal - $discountAmount;
+                $item->quantity = $newQty;
+                $item->save();
 
+                // reload
+                $cart->load('items');
+
+                $line_total = $item->price * $item->quantity;
+                $subtotal = $cart->items->sum(fn($i) => $i->price * $i->quantity);
+
+                // discount
+                $discountAmount = 0;
+                $displayDiscount = 0;
+                $discountCode = session('discount_code');
+                if ($discountCode) {
+                    $code = DiscountCode::where('code', $discountCode)
+                        ->where('starts_at', '<=', now())
+                        ->where('expires_at', '>=', now())
+                        ->where(function ($q) {
+                            $q->whereNull('max_uses')->orWhereRaw('used_count < max_uses');
+                        })
+                        ->first();
+
+                    if ($code) {
+                        if ($code->type === 'percent') {
+                            $discountAmount = $subtotal * ($code->discount_percent / 100);
+                            if ($code->max_discount_value) {
+                                $discountAmount = min($discountAmount, $code->max_discount_value);
+                            }
+                        } else {
+                            $discountAmount = $code->discount_value;
+                        }
+
+                        $displayDiscount = $discountAmount;
+                        $discountAmount = min($discountAmount, $subtotal);
+                    }
+                }
+
+                $total = $subtotal - $discountAmount;
+
+                $remainingStock = (int)($variant?->stock ?? 0);
+                $maxAllowed = (int)$item->quantity + $remainingStock;
+
+                return [
+                    'success' => true,
+                    'line_total' => $line_total,
+                    'subtotal' => $subtotal,
+                    'discount_amount' => $discountAmount,
+                    'display_discount_amount' => $displayDiscount,
+                    'total' => $total,
+
+                    // QUAN TRỌNG CHO UI
+                    'remaining_stock' => $remainingStock,
+                    'max_allowed' => $maxAllowed,
+                    'current_quantity' => (int)$item->quantity,
+                ];
+            });
+
+            return response()->json($payload);
+
+        } catch (\Throwable $e) {
             return response()->json([
-                'success' => true,
-                'line_total' => $line_total,
-                'subtotal' => $subtotal,
-                'discount_amount' => $discountAmount, // Áp dụng thực tế
-                'display_discount_amount' => $displayDiscount, // Hiển thị gốc
-                'total' => $total,
-            ]);
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 400);
         }
-
-        return response()->json(['success' => false, 'message' => 'Lỗi cập nhật!'], 400);
     }
 
-    /**
-     * Đổi biến thể cho 1 item trong giỏ hàng (AJAX)
-     * - Chỉ cho phép đổi sang biến thể cùng product
-     * - Nếu trong giỏ đã có item với biến thể mới => gộp số lượng
-     */
+    // UPDATE VARIANT: hoàn kho cũ + giữ kho mới + trả max_allowed
     public function updateVariant(Request $request)
     {
         $request->validate([
@@ -253,88 +359,135 @@ class CartController extends Controller
         ]);
 
         $sessionId = session()->getId();
-        $cart = Cart::where('session_id', $sessionId)->first();
-        if (!$cart) {
-            return response()->json(['success' => false, 'message' => 'Giỏ hàng không tồn tại!'], 400);
-        }
 
-        $item = CartItem::with(['variant.product', 'cart.items'])->findOrFail($request->item_id);
-        if ($item->cart_id !== $cart->id) {
-            return response()->json(['success' => false, 'message' => 'Không có quyền thao tác item này!'], 403);
-        }
+        try {
+            $payload = DB::transaction(function () use ($request, $sessionId) {
 
-        $newVariant = ProductVariant::with(['product', 'values'])->findOrFail($request->variant_id);
-
-        // Bắt buộc cùng product
-        if ((int)$newVariant->product_id !== (int)$item->product_id) {
-            return response()->json(['success' => false, 'message' => 'Biến thể không hợp lệ cho sản phẩm này!'], 400);
-        }
-
-        // Nếu số lượng hiện tại vượt stock của biến thể mới => tự hạ xuống
-        $newMaxStock = (int)($newVariant->stock ?? 999);
-        $newQty = min((int)$item->quantity, max(1, $newMaxStock));
-
-        // Nếu đã tồn tại item khác cùng cart + variant mới => gộp
-        $existing = CartItem::where('cart_id', $cart->id)
-            ->where('product_variant_id', $newVariant->id)
-            ->where('id', '!=', $item->id)
-            ->first();
-
-        $newUnitPrice = (int)($newVariant->price ?? ($newVariant->product->price ?? 0));
-
-        if ($existing) {
-            $existing->quantity = min($existing->quantity + $newQty, max(1, $newMaxStock));
-            $existing->price = $newUnitPrice;
-            $existing->save();
-            $item->delete();
-            $item = $existing;
-        } else {
-            $item->product_variant_id = $newVariant->id;
-            $item->price = $newUnitPrice;
-            $item->quantity = $newQty;
-            $item->save();
-        }
-
-        // Tính lại totals
-        $cart->load('items');
-        $subtotal = $cart->items->sum(fn($i) => $i->price * $i->quantity);
-
-        $discountAmount = 0;
-        $discountCode = session('discount_code');
-        if ($discountCode) {
-            $code = DiscountCode::where('code', $discountCode)
-                ->where('starts_at', '<=', now())
-                ->where('expires_at', '>=', now())
-                ->where(function ($q) {
-                    $q->whereNull('max_uses')->orWhereRaw('used_count < max_uses');
-                })
-                ->first();
-
-            if ($code) {
-                if ($code->type === 'percent') {
-                    $discountAmount = $subtotal * ($code->discount_percent / 100);
-                    if ($code->max_discount_value) {
-                        $discountAmount = min($discountAmount, $code->max_discount_value);
-                    }
-                } else {
-                    $discountAmount = $code->discount_value;
+                $cart = Cart::where('session_id', $sessionId)->lockForUpdate()->first();
+                if (!$cart) {
+                    throw new \RuntimeException('Giỏ hàng không tồn tại!');
                 }
-            }
+
+                $item = CartItem::with(['variant.product', 'cart.items'])
+                    ->where('id', $request->item_id)
+                    ->where('cart_id', $cart->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                $oldVariant = ProductVariant::where('id', $item->product_variant_id)
+                    ->lockForUpdate()
+                    ->first();
+
+                $newVariant = ProductVariant::with(['product', 'values'])
+                    ->where('id', $request->variant_id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if ((int)$newVariant->product_id !== (int)$item->product_id) {
+                    throw new \RuntimeException('Biến thể không hợp lệ cho sản phẩm này!');
+                }
+
+                $oldQty = (int)$item->quantity;
+
+                // hoàn kho biến thể cũ
+                if ($oldVariant) {
+                    $oldVariant->increment('stock', $oldQty);
+                }
+
+                // qty mới không vượt tồn mới
+                $availableNew = (int)($newVariant->stock ?? 0);
+                $newQty = min($oldQty, max(1, $availableNew));
+
+                if ($newQty > (int)$newVariant->stock) {
+                    throw new \RuntimeException('Số lượng không được vượt quá tồn kho');
+                }
+
+                // giữ kho biến thể mới
+                $newVariant->decrement('stock', $newQty);
+
+                // gộp nếu đã có item cùng variant mới
+                $existing = CartItem::where('cart_id', $cart->id)
+                    ->where('product_variant_id', $newVariant->id)
+                    ->where('id', '!=', $item->id)
+                    ->lockForUpdate()
+                    ->first();
+
+                $newUnitPrice = (int)($newVariant->price ?? ($newVariant->product->price ?? 0));
+
+                if ($existing) {
+                    $existing->quantity = $existing->quantity + $newQty;
+                    $existing->price = $newUnitPrice;
+                    $existing->save();
+
+                    $item->delete();
+                    $item = $existing;
+                } else {
+                    $item->product_variant_id = $newVariant->id;
+                    $item->price = $newUnitPrice;
+                    $item->quantity = $newQty;
+                    $item->save();
+                }
+
+                // totals
+                $cart->load('items');
+                $subtotal = $cart->items->sum(fn($i) => $i->price * $i->quantity);
+
+                $discountAmount = 0;
+                $discountCode = session('discount_code');
+                if ($discountCode) {
+                    $code = DiscountCode::where('code', $discountCode)
+                        ->where('starts_at', '<=', now())
+                        ->where('expires_at', '>=', now())
+                        ->where(function ($q) {
+                            $q->whereNull('max_uses')->orWhereRaw('used_count < max_uses');
+                        })
+                        ->first();
+
+                    if ($code) {
+                        if ($code->type === 'percent') {
+                            $discountAmount = $subtotal * ($code->discount_percent / 100);
+                            if ($code->max_discount_value) {
+                                $discountAmount = min($discountAmount, $code->max_discount_value);
+                            }
+                        } else {
+                            $discountAmount = $code->discount_value;
+                        }
+                        $discountAmount = min($discountAmount, $subtotal);
+                    }
+                }
+
+                $total = $subtotal - $discountAmount;
+
+                $remainingStock = (int)($newVariant->stock ?? 0);
+                $maxAllowed = (int)$item->quantity + $remainingStock;
+
+                return [
+                    'success' => true,
+                    'item_id' => $item->id,
+                    'unit_price' => (int)$item->price,
+                    'quantity' => (int)$item->quantity,
+
+                    // UI dùng cái này để chặn
+                    'max_allowed' => $maxAllowed,
+                    'remaining_stock' => $remainingStock,
+
+                    'max_stock' => $maxAllowed,
+
+                    'variant_label' => $newVariant->variant_label,
+                    'line_total' => (int)($item->price * $item->quantity),
+                    'subtotal' => (int)$subtotal,
+                    'discount_amount' => (int)$discountAmount,
+                    'total' => (int)$total,
+                ];
+            });
+
+            return response()->json($payload);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 400);
         }
-
-        $total = $subtotal - $discountAmount;
-
-        return response()->json([
-            'success' => true,
-            'item_id' => $item->id,
-            'unit_price' => $item->price,
-            'quantity' => $item->quantity,
-            'max_stock' => $newMaxStock,
-            'variant_label' => $newVariant->variant_label,
-            'line_total' => $item->price * $item->quantity,
-            'subtotal' => $subtotal,
-            'discount_amount' => $discountAmount,
-            'total' => $total,
-        ]);
     }
 }
