@@ -8,6 +8,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\SupportController;
 use App\Models\Order;
 use App\Http\Controllers\OrderGuestController;
 
@@ -39,6 +40,10 @@ Route::get('/product/{id}', [HomeController::class, 'show'])->name('product.show
 Route::get('/search', [ProductController::class, 'search'])->name('search');
 Route::get('/products', [HomeController::class, 'allProducts'])->name('products.all');
 Route::view('/intro', 'intro.intro')->name('intro');
+// Support / Contact
+Route::get('/support', [SupportController::class, 'index'])->name('support.index');
+Route::post('/support', [SupportController::class, 'store'])->name('support.store');
+
 // CART
 Route::group(['prefix' => 'cart', 'as' => 'cart.'], function () {
     Route::get('/', [CartController::class, 'index'])->name('index');
