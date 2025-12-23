@@ -10,6 +10,16 @@
         </p>
     </div>
 
+    @if ($errors->any())
+        <div class="mb-6 rounded-xl border border-red-200 bg-red-50 text-red-700 px-4 py-3">
+            <ul class="list-disc pl-5 text-sm">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     @if(session('success'))
         <div class="mb-6 rounded-xl border border-green-200 bg-green-50 text-green-700 px-4 py-3">
             {{ session('success') }}
@@ -91,45 +101,40 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="text-sm font-semibold">Họ tên <span class="text-red-500">*</span></label>
-                            <input name="name" value="{{ old('name') }}"
+                            <input name="name" value="{{ old('name') }}" required maxlength="255"
                                    class="mt-1 w-full rounded-lg border border-border-light dark:border-border-dark bg-transparent px-3 py-2"
                                    placeholder="Nhập họ tên">
                             @error('name')<div class="text-red-500 text-xs mt-1">{{ $message }}</div>@enderror
                         </div>
 
                         <div>
-                            <label class="text-sm font-semibold">Số điện thoại</label>
-                            <input name="phone" value="{{ old('phone') }}"
-                                   class="mt-1 w-full rounded-lg border border-border-light dark:border-border-dark bg-transparent px-3 py-2"
-                                   placeholder="VD: 09xx xxx xxx">
+                            <label class="text-sm font-semibold">Số điện thoại <span class="text-red-500">*</span></label>
+                            <input name="phone" value="{{ old('phone') }}" required maxlength="20"
+                                   inputmode="tel"
+                                   placeholder="VD: 0912345678 hoặc +84912345678"
+                                   class="mt-1 w-full rounded-lg border border-border-light dark:border-border-dark bg-transparent px-3 py-2">
+                            <div class="text-xs text-subtle-light dark:text-subtle-dark mt-1">
+                                Hỗ trợ nhập có khoảng trắng/dấu gạch (hệ thống sẽ tự chuẩn hoá).
+                            </div>
                             @error('phone')<div class="text-red-500 text-xs mt-1">{{ $message }}</div>@enderror
                         </div>
 
                         <div>
-                            <label class="text-sm font-semibold">Email</label>
-                            <input name="email" value="{{ old('email') }}"
+                            <label class="text-sm font-semibold">Email <span class="text-red-500">*</span></label>
+                            <input name="email" type="email" value="{{ old('email') }}" required maxlength="255"
                                    class="mt-1 w-full rounded-lg border border-border-light dark:border-border-dark bg-transparent px-3 py-2"
                                    placeholder="VD: email@domain.com">
                             @error('email')<div class="text-red-500 text-xs mt-1">{{ $message }}</div>@enderror
                         </div>
 
                         <div>
-                            <label class="text-sm font-semibold">Chủ đề</label>
-                            <select name="subject"
+                            <label class="text-sm font-semibold">Chủ đề <span class="text-red-500">*</span></label>
+                            <select name="subject" required
                                     class="mt-1 w-full rounded-lg border border-border-light dark:border-border-dark bg-transparent px-3 py-2">
-                                @php
-                                    $subjects = [
-                                        '' => 'Chọn chủ đề',
-                                        'Đơn hàng' => 'Đơn hàng',
-                                        'Thanh toán' => 'Thanh toán',
-                                        'Giao hàng' => 'Giao hàng',
-                                        'Đổi trả' => 'Đổi trả',
-                                        'Sản phẩm' => 'Sản phẩm',
-                                        'Khác' => 'Khác',
-                                    ];
-                                @endphp
-                                @foreach($subjects as $val => $label)
-                                    <option value="{{ $val }}" @selected(old('subject') === $val)>{{ $label }}</option>
+                                <option value="" disabled @selected(old('subject') === null || old('subject') === '')>Chọn chủ đề</option>
+                                @php $subjects = ['Đơn hàng','Thanh toán','Giao hàng','Đổi trả','Sản phẩm','Khác']; @endphp
+                                @foreach($subjects as $s)
+                                    <option value="{{ $s }}" @selected(old('subject') === $s)>{{ $s }}</option>
                                 @endforeach
                             </select>
                             @error('subject')<div class="text-red-500 text-xs mt-1">{{ $message }}</div>@enderror
@@ -138,7 +143,7 @@
 
                     <div>
                         <label class="text-sm font-semibold">Nội dung <span class="text-red-500">*</span></label>
-                        <textarea name="message" rows="6"
+                        <textarea name="message" rows="6" required minlength="10" maxlength="5000"
                                   class="mt-1 w-full rounded-lg border border-border-light dark:border-border-dark bg-transparent px-3 py-2"
                                   placeholder="Mô tả vấn đề bạn gặp phải...">{{ old('message') }}</textarea>
                         @error('message')<div class="text-red-500 text-xs mt-1">{{ $message }}</div>@enderror
