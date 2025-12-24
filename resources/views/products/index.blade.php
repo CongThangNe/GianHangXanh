@@ -2,6 +2,12 @@
 @section('title', isset($keyword) && $keyword ? 'Kết quả tìm kiếm: ' . $keyword : 'Trang chủ')
 
 @section('content')
+@include('layouts.banner')
+@foreach($products as $product)
+    <a href="{{ route('product.show', $product->id) }}">
+        {{ $product->name }}
+    </a>
+@endforeach
 
 <!-- Banner -->
 <div id="banner-slideshow" class="mb-4 rounded-3"
