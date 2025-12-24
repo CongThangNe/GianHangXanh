@@ -44,8 +44,8 @@ Route::view('/intro', 'intro.intro')->name('intro');
 Route::get('/support', [SupportController::class, 'index'])->name('support.index');
 Route::post('/support', [SupportController::class, 'store'])->name('support.store');
 
-// CART
-Route::group(['prefix' => 'cart', 'as' => 'cart.'], function () {
+// CART (Require login for viewing/using cart)
+Route::group(['prefix' => 'cart', 'as' => 'cart.', 'middleware' => ['cart_auth']], function () {
     Route::get('/', [CartController::class, 'index'])->name('index');
     Route::post('/add', [CartController::class, 'add'])->name('add');
     Route::post('/update', [CartController::class, 'update'])->name('update');
@@ -70,12 +70,12 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // TRANG CHECKOUT (GET)
 Route::get('/checkout', [CheckoutController::class, 'index'])
     ->name('checkout.index')
-    ->middleware(['auth','cart_notempty']);
+    ->middleware(['cart_notempty']);
 
 // XỬ LÝ CHECKOUT (POST)
 Route::post('/checkout', [CheckoutController::class, 'process'])
     ->name('checkout.process')
-    ->middleware(['auth','cart_notempty']);
+    ->middleware(['cart_notempty']);
 
 Route::get('/check-zalopay-status/{order}', function (Order $order) {
     // Nếu bạn tích hợp callback thật thì kiểm tra ở đây
@@ -144,23 +144,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
 
     Route::resource('discount-codes', DiscountCodeController::class);
 });
-// TRANG HIỂN THỊ CHECKOUT (GET)
-Route::get('/checkout', [CheckoutController::class, 'index'])
-    ->name('checkout.index')
-    ->middleware(['auth','cart_notempty']);
+// Trang thanh toán online (khách vãng lai vẫn có thể thanh toán)
+Route::get('/payment/zalopay', [PaymentController::class, 'zaloPayApp'])->name('payment.zalopay');
+Route::get('/payment/zalopay/return', [PaymentController::class, 'zaloReturn'])->name('payment.zalopay.return');
 
-// XỬ LÝ THANH TOÁN (POST)
-Route::post('/checkout', [CheckoutController::class, 'process'])
-    ->name('checkout.process')
-    ->middleware(['auth','cart_notempty']);
-
-// Trang thanh toán online
-Route::get('/payment/zalopay', [PaymentController::class, 'zaloPayApp'])->name('payment.zalopay')->middleware('auth');
-Route::get('/payment/zalopay/return', [PaymentController::class, 'zaloReturn'])->name('payment.zalopay.return')->middleware('auth');
-
-//VNPAY
-Route::get('/payment/create', [PaymentController::class, 'createPayment'])->name('payment.create')->middleware('auth');
-Route::get('/payment/return', [PaymentController::class, 'vnpayReturn'])->name('payment.return')->middleware('auth');
+// VNPAY
+Route::get('/payment/create', [PaymentController::class, 'createPayment'])->name('payment.create');
+Route::get('/payment/return', [PaymentController::class, 'vnpayReturn'])->name('payment.return');
 
 // banners
 Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {

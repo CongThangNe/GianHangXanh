@@ -73,8 +73,15 @@ class OrderController extends Controller
             'payment_status'  => 'nullable|string|in:unpaid,paid',
         ]);
 
-        $order->delivery_status = $request->input('delivery_status');
-        if ($request->filled('payment_status')) {
+        $newDelivery = $request->input('delivery_status');
+
+        $order->delivery_status = $newDelivery;
+
+        // Quy ước: khi đơn đã giao thành công -> tự động chuyển sang "Đã thanh toán"
+        // và sau khi lưu thì trạng thái sẽ bị khóa (đã xử lý ở đầu hàm cho các lần sửa tiếp theo).
+        if ($newDelivery === 'delivered') {
+            $order->payment_status = 'paid';
+        } elseif ($request->filled('payment_status')) {
             $order->payment_status = $request->input('payment_status');
         }
         $order->save();
