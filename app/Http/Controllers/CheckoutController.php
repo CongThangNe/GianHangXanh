@@ -13,13 +13,8 @@ use App\Http\Controllers\PaymentController;
 
 class CheckoutController extends Controller
 {
-    /**
-     * Bắt buộc đăng nhập trước khi vào checkout / đặt hàng.
-     */
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
+    // Cho phép khách vãng lai (chưa đăng nhập) vẫn có thể checkout.
+    // Nếu user đã đăng nhập thì vẫn tận dụng $request->user() để cập nhật SĐT.
 
     public function index()
     {
