@@ -156,3 +156,9 @@ Route::get('/payment/return', [PaymentController::class, 'vnpayReturn'])->name('
 Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
     Route::resource('banners', \App\Http\Controllers\Admin\BannerController::class);
 });
+// search nâng cao trong ctsp
+// Route::get('/product/{id}', [ProductController::class, 'show'])->name('product.show');
+Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::resource('products', ProductController::class)->except(['show']);
+});

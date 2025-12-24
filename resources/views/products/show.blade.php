@@ -95,6 +95,46 @@
         </div>
     </div>
 
+
+<form method="GET" class="mb-10 p-6 border rounded-xl bg-gray-50">
+    <h3 class="text-xl font-bold mb-4">🔍 Tìm kiếm nâng cao</h3>
+
+    <!-- Giá -->
+    <div class="grid grid-cols-2 gap-4 mb-4">
+        <input type="number" name="price_min"
+               value="{{ request('price_min') }}"
+               placeholder="Giá từ"
+               class="border rounded px-3 py-2">
+
+        <input type="number" name="price_max"
+               value="{{ request('price_max') }}"
+               placeholder="Giá đến"
+               class="border rounded px-3 py-2">
+    </div>
+
+    <!-- Attributes -->
+    @foreach($attributes as $attribute)
+        <div class="mb-3">
+            <label class="font-semibold">{{ $attribute->name }}</label>
+            <select name="attributes[{{ $attribute->id }}]"
+                    class="w-full border rounded px-3 py-2">
+                <option value="">-- Chọn {{ $attribute->name }} --</option>
+                @foreach($attribute->values as $value)
+                    <option value="{{ $value->id }}"
+                        {{ request("attributes.$attribute->id") == $value->id ? 'selected' : '' }}>
+                        {{ $value->value }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+    @endforeach
+
+    <button class="mt-4 px-6 py-2 bg-primary text-white rounded">
+        Áp dụng lọc
+    </button>
+</form>
+
+
     <!-- Related Products (Same Category) -->
     @if(isset($relatedProducts) && $relatedProducts->count() > 0)
     <div class="w-full mt-16 border-t border-border-light dark:border-border-dark pt-12">
