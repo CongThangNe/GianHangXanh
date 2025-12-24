@@ -24,6 +24,8 @@ use App\Http\Controllers\Admin\AttributeController;
 use App\Http\Controllers\Admin\AttributeValueController;
 use App\Http\Controllers\Admin\DiscountCodeController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Admin\NewsController;
+use App\Http\Controllers\Frontend\NewsController as FrontNewsController;
 use Illuminate\Pagination\LengthAwarePaginator;
 // ADMIN CONTROLLERS
 
@@ -162,3 +164,23 @@ Route::get('/products', [ProductController::class, 'index'])->name('products.ind
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('products', ProductController::class)->except(['show']);
 });
+
+
+// tin tức
+Route::prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::resource('news', NewsController::class);
+    });
+
+Route::get('/tin-tuc', [NewsController::class, 'index'])
+    ->name('news.index');
+
+// FRONTEND NEWS
+
+Route::get('/tin-tuc', [FrontNewsController::class, 'index'])
+    ->name('news.index');
+
+Route::get('/tin-tuc/{id}', [FrontNewsController::class, 'show'])
+    ->name('news.show');
+
