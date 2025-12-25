@@ -110,6 +110,13 @@
                             <a class="text-sm font-medium hover:text-primary" href="{{ route('intro') }}">
                                 Giới thiệu
                             </a>
+                            <a class="text-sm font-medium hover:text-primary" href="{{ route('support.index') }}">
+                                Liên hệ & Hỗ trợ
+                            </a>
+                            <a class="text-sm font-medium hover:text-primary" href="{{ route('news.index') }}">
+                                Tin tức
+                            </a>
+
                             {{-- ❌ ĐÃ XOÁ ADMIN KHỎI MENU NGANG --}}
                         </nav>
                     </div>

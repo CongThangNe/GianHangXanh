@@ -163,7 +163,7 @@
                                             <h5 class="font-semibold text-gray-800 line-clamp-2">
                                                 {{ $item->variant->product->name ?? 'Sản phẩm không tồn tại' }}</h5>
                                             <p class="text-sm text-gray-500 mt-1">
-                                                Phân loại: {{ $item->variant->attribute_value ?? 'Mặc định' }}
+                                                Phân loại: {{ $item->variant?->variant_label ?? 'Mặc định' }}
                                             </p>
                                             <div class="flex justify-between mt-2">
                                                 <span class="text-sm font-medium text-gray-600">SL:
@@ -185,11 +185,13 @@
                                     <span class="text-gray-700">Vận chuyển</span>
                                     <span class="text-green-600">Miễn phí</span>
                                 </div>
-                                @if ($discountAmount > 0)
-                                    <div class="flex justify-between text-sm font-medium">
-                                        <span class="text-gray-700">Giảm giá</span>
-                                        <span class="text-red-600">-{{ number_format($discountAmount) }}₫</span>
+                                <!-- Giữ nguyên cấu trúc cũ, chỉ thay đổi hiển thị giảm giá -->
+                                @if ($discountInfo)
+                                    <div class="flex justify-between text-base font-medium text-green-600">
+                                        <span>Giảm giá ({{ $discountInfo['code'] }}):</span>
+                                        <span>-{{ number_format($discountInfo['display_amount'], 0, ',', '.') }}đ</span>
                                     </div>
+                                
                                 @endif
                                 <div class="flex justify-between text-lg font-bold pt-2 border-t">
                                     <span class="text-gray-800">Tổng thanh toán</span>

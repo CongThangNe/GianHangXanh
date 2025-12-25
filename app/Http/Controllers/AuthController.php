@@ -22,9 +22,9 @@ class AuthController extends Controller
             $user = Auth::user();
             //redirect theo role
             if ($user->role === 'admin') {
-                return redirect()->route('admin.dashboard');
+                return redirect()->intended(route('admin.dashboard'));
             }
-            return redirect()->route('home');
+            return redirect()->intended(route('home'));
         }
         return back()->withErrors([
             'email' => 'Email hoặc mật khẩu không chính xác.',
