@@ -57,6 +57,10 @@
                     ›
                 </button>
 
+
+                <a href="{{ route('product.show', $p->id) }}">    <div class="w-full bg-center bg-no-repeat aspect-square bg-cover"
+                        style="background-image: url('{{ $p->image_url ?? 'https://via.placeholder.com/300x200?text=No+Image' }}');">
+                    </div> </a>
                 <!-- Slider -->
                 <div id="top10Slider"
                      class="flex overflow-x-auto gap-6 py-4 px-4 scroll-smooth
