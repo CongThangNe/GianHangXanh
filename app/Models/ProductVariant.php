@@ -16,6 +16,19 @@ class ProductVariant extends Model
         'image',
     ];
 
+    /**
+     * Nhãn hiển thị biến thể (vd: "500g / Đỏ").
+     * Dựa trên các attribute values gắn với variant.
+     */
+    protected $appends = ['variant_label'];
+
+    public function getVariantLabelAttribute(): string
+    {
+        // values có thể đã được eager load ở controller
+        $label = $this->values?->pluck('value')->filter()->implode(' / ');
+        return $label ?: 'Mặc định';
+    }
+
     public function product()
     {
         return $this->belongsTo(Product::class, 'product_id');

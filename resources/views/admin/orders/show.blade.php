@@ -142,7 +142,8 @@
                                             {{ number_format($subtotal) }}₫
                                         </th>
                                     </tr>
-                                @endif
+                                </tfoot>
+                            @endif
                         </table>
                     </div>
                 </div>
@@ -173,7 +174,6 @@
                         <span class="fs-5 fw-bold">Thành tiền:</span>
                         <span class="fs-4 fw-bold">{{ number_format($order->total) }}₫</span>
                     </div>
-
                 </div>
             </div>
 
@@ -213,18 +213,21 @@
                     </div>
 
                     @php
-                        // Khi đơn đã giao xong hoặc đã hủy thì khóa lại, không cho đổi trạng thái nữa
+                        // Khi đơn đã giao xong hoặc đã hủy thì KHÓA (không cho đổi cả giao hàng + thanh toán)
                         $statusLocked = in_array($order->delivery_status, ['delivered', 'cancelled'], true);
                     @endphp
 
-                    <form action="{{ route('admin.orders.updateStatus', $order) }}" method="POST" class="d-flex flex-wrap gap-2 align-items-center">
+                    <form action="{{ route('admin.orders.updateStatus', $order) }}"
+                          method="POST"
+                          class="d-flex flex-wrap gap-2 align-items-center">
                         @csrf
                         @method('PATCH')
 
                         <div class="d-flex align-items-center gap-2">
-                            <span class="text-muted small">Giao hàng</span>
+                            <span class="text-muted small mb-0">Giao hàng</span>
                             <select name="delivery_status"
-                                    class="form-select form-select-sm w-auto {{ $statusLocked ? 'pe-none opacity-75' : '' }}"
+                                    id="delivery_status"
+                                    class="form-select form-select-sm w-auto"
                                     {{ $statusLocked ? 'disabled' : '' }}>
                                 @foreach([
                                     'pending'   => 'Chờ xử lý',
@@ -242,9 +245,11 @@
                         </div>
 
                         <div class="d-flex align-items-center gap-2">
-                            <span class="text-muted small">Thanh toán</span>
+                            <span class="text-muted small mb-0">Thanh toán</span>
                             <select name="payment_status"
-                                    class="form-select form-select-sm w-auto">
+                                    id="payment_status"
+                                    class="form-select form-select-sm w-auto"
+                                    {{ $statusLocked ? 'disabled' : '' }}>
                                 @foreach([
                                     'unpaid' => 'Chưa thanh toán',
                                     'paid'   => 'Đã thanh toán',
@@ -262,6 +267,7 @@
                             Cập nhật
                         </button>
                     </form>
+
                 </div>
             </div>
         </div>
@@ -270,8 +276,44 @@
 </div>
 
 <style>
-    .bg-secondary-subtle {
-        background-color: #f1f3f5;
-    }
+    .bg-secondary-subtle { background-color: #f1f3f5; }
+    /* Giữ layout cân: chỉ làm mờ nhẹ khi disabled, không thêm class gây lệch */
+    select.form-select:disabled { opacity: .85; }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const delivery = document.getElementById('delivery_status');
+    const payment  = document.getElementById('payment_status');
+    if (!delivery || !payment) return;
+
+    // Nếu payment bị disable thì sẽ KHÔNG gửi lên server -> cần 1 hidden input để giữ giá trị.
+    let hiddenPayment = document.getElementById('payment_status_hidden');
+    if (!hiddenPayment) {
+        hiddenPayment = document.createElement('input');
+        hiddenPayment.type = 'hidden';
+        hiddenPayment.name = 'payment_status';
+        hiddenPayment.id = 'payment_status_hidden';
+        payment.closest('form')?.appendChild(hiddenPayment);
+    }
+
+    function syncLock() {
+        const isDelivered = (delivery.value === 'delivered');
+        const isCancelled = (delivery.value === 'cancelled');
+        const locked = (isDelivered || isCancelled);
+
+        // Khi chọn "Đã giao thành công" -> tự set thanh toán = paid.
+        if (isDelivered) {
+            payment.value = 'paid';
+        }
+
+        // Disable dropdown để tránh sửa sai, nhưng vẫn gửi giá trị qua hidden input.
+        payment.disabled = locked;
+        hiddenPayment.value = payment.value;
+    }
+
+    delivery.addEventListener('change', syncLock);
+    syncLock();
+});
+</script>
 @endsection

@@ -8,6 +8,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\SupportController;
 use App\Models\Order;
 use App\Http\Controllers\OrderGuestController;
 
@@ -23,6 +24,8 @@ use App\Http\Controllers\Admin\AttributeController;
 use App\Http\Controllers\Admin\AttributeValueController;
 use App\Http\Controllers\Admin\DiscountCodeController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Admin\NewsController;
+use App\Http\Controllers\Frontend\NewsController as FrontNewsController;
 use Illuminate\Pagination\LengthAwarePaginator;
 // ADMIN CONTROLLERS
 
@@ -39,11 +42,16 @@ Route::get('/product/{id}', [HomeController::class, 'show'])->name('product.show
 Route::get('/search', [ProductController::class, 'search'])->name('search');
 Route::get('/products', [HomeController::class, 'allProducts'])->name('products.all');
 Route::view('/intro', 'intro.intro')->name('intro');
-// CART
-Route::group(['prefix' => 'cart', 'as' => 'cart.'], function () {
+// Support / Contact
+Route::get('/support', [SupportController::class, 'index'])->name('support.index');
+Route::post('/support', [SupportController::class, 'store'])->name('support.store');
+
+// CART (Require login for viewing/using cart)
+Route::group(['prefix' => 'cart', 'as' => 'cart.', 'middleware' => ['cart_auth']], function () {
     Route::get('/', [CartController::class, 'index'])->name('index');
     Route::post('/add', [CartController::class, 'add'])->name('add');
     Route::post('/update', [CartController::class, 'update'])->name('update');
+    Route::post('/update-variant', [CartController::class, 'updateVariant'])->name('updateVariant');
     Route::post('/remove/{id}', [CartController::class, 'remove'])->name('remove');
     Route::post('/clear', [CartController::class, 'clear'])->name('clear');
     Route::post('/apply-discount', [CartController::class, 'applyDiscount'])->name('applyDiscount');
@@ -64,12 +72,12 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // TRANG CHECKOUT (GET)
 Route::get('/checkout', [CheckoutController::class, 'index'])
     ->name('checkout.index')
-    ->middleware('cart_notempty');
+    ->middleware(['cart_notempty']);
 
 // XỬ LÝ CHECKOUT (POST)
 Route::post('/checkout', [CheckoutController::class, 'process'])
     ->name('checkout.process')
-    ->middleware('cart_notempty');
+    ->middleware(['cart_notempty']);
 
 Route::get('/check-zalopay-status/{order}', function (Order $order) {
     // Nếu bạn tích hợp callback thật thì kiểm tra ở đây
@@ -138,21 +146,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
 
     Route::resource('discount-codes', DiscountCodeController::class);
 });
-// TRANG HIỂN THỊ CHECKOUT (GET)
-Route::get('/checkout', [CheckoutController::class, 'index'])
-    ->name('checkout.index')
-    ->middleware('cart_notempty');
-
-// XỬ LÝ THANH TOÁN (POST)
-Route::post('/checkout', [CheckoutController::class, 'process'])
-    ->name('checkout.process')
-    ->middleware('cart_notempty');
-
-// Trang thanh toán online
+// Trang thanh toán online (khách vãng lai vẫn có thể thanh toán)
 Route::get('/payment/zalopay', [PaymentController::class, 'zaloPayApp'])->name('payment.zalopay');
 Route::get('/payment/zalopay/return', [PaymentController::class, 'zaloReturn'])->name('payment.zalopay.return');
 
-//VNPAY
+// VNPAY
 Route::get('/payment/create', [PaymentController::class, 'createPayment'])->name('payment.create');
 Route::get('/payment/return', [PaymentController::class, 'vnpayReturn'])->name('payment.return');
 
@@ -160,3 +158,29 @@ Route::get('/payment/return', [PaymentController::class, 'vnpayReturn'])->name('
 Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
     Route::resource('banners', \App\Http\Controllers\Admin\BannerController::class);
 });
+// search nâng cao trong ctsp
+// Route::get('/product/{id}', [ProductController::class, 'show'])->name('product.show');
+Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::resource('products', ProductController::class)->except(['show']);
+});
+
+
+// tin tức
+Route::prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::resource('news', NewsController::class);
+    });
+
+Route::get('/tin-tuc', [NewsController::class, 'index'])
+    ->name('news.index');
+
+// FRONTEND NEWS
+
+Route::get('/tin-tuc', [FrontNewsController::class, 'index'])
+    ->name('news.index');
+
+Route::get('/tin-tuc/{id}', [FrontNewsController::class, 'show'])
+    ->name('news.show');
+

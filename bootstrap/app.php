@@ -6,6 +6,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 
 use App\Http\Middleware\CartNotEmpty;
 use App\Http\Middleware\CheckCartDB;
+use App\Http\Middleware\CartAuth;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -17,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Đăng ký middleware alias theo chuẩn Laravel 12
         $middleware->alias([
+            'cart_auth' => CartAuth::class,
             'cart_notempty' => CartNotEmpty::class,
             'check_cart_db' => CheckCartDB::class,
         ]);
