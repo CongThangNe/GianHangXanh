@@ -3,8 +3,36 @@
 
 @section('content')
     <div class="container-fluid p-4">
-        <h4 class="fw-bold">Dashboard</h4>
-        <p class="text-muted">Tổng quan hệ thống bán hàng</p>
+        
+        <div class="container-fluid p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h4 class="fw-bold mb-0">Dashboard</h4>
+                <p class="text-muted mb-0">Tổng quan hệ thống bán hàng</p>
+            </div>
+            
+            <form action="{{ route('admin.dashboard') }}" method="GET" class="d-flex gap-2 align-items-end">
+                <div class="form-group">
+                    <label class="small fw-bold">Từ ngày:</label>
+                    <input type="date" name="start_date" class="form-control form-control-sm" 
+                           value="{{ request('start_date', $startDate->format('Y-m-d')) }}">
+                </div>
+                <div class="form-group">
+                    <label class="small fw-bold">Đến ngày:</label>
+                    <input type="date" name="end_date" class="form-control form-control-sm" 
+                           value="{{ request('end_date', $endDate->format('Y-m-d')) }}">
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm px-3">
+                    <i class="bi bi-filter"></i> Lọc
+                </button>
+                <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-clockwise"></i> Reset
+                </a>
+            </form>
+        </div>
+
+        <div class="row mb-4">
+            </div>
 
         <div class="row mb-4">
             <div class="col-lg-3 col-6">
@@ -87,8 +115,14 @@
                                             <td class="fw-bold">{{ $item->id }}</td>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    <img src="{{ $item->image_url ?? asset('images/no-image.png') }}"
-                                                        alt="{{ $item->name }}" class="rounded border me-3"
+                                                    @php
+                                                        $img = $item->image
+                                                            ? asset('storage/' . $item->image)
+                                                            : asset('images/no-image.png');
+                                                    @endphp
+
+                                                    <img src="{{ $img }}" alt="{{ $item->name }}"
+                                                        class="rounded border me-3"
                                                         style="width: 50px; height: 50px; object-fit: cover;">
                                                     <div>
                                                         <div class="fw-bold text-dark">{{ $item->name }}</div>

@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Banner;
+use App\Models\Attribute;
 
 class HomeController extends Controller
 {
@@ -67,18 +68,37 @@ class HomeController extends Controller
     /**
      * Trang chi tiết sản phẩm + sản phẩm liên quan cùng danh mục
      */
-    public function show($id)
-    {
-        $product = Product::with('category', 'variants')->findOrFail($id);
+    // public function show($id)
+    // {
+    //     $product = Product::with('category', 'variants')->findOrFail($id);
 
-        $relatedProducts = Product::where('category_id', $product->category_id)
-            ->where('id', '!=', $product->id)
-            ->latest()
-            ->take(8)
-            ->get();
+    //     $relatedProducts = Product::where('category_id', $product->category_id)
+    //         ->where('id', '!=', $product->id)
+    //         ->latest()
+    //         ->take(8)
+    //         ->get();
 
-        return view('products.show', compact('product', 'relatedProducts'));
-    }
+    //     return view('products.show', compact('product', 'relatedProducts'));
+    // }
+
+    public function show(Request $request, $id)
+{
+    // 1️⃣ Lấy sản phẩm
+    $product = Product::with([
+        'category',
+        'variants',
+        'attributeValues.attribute'
+    ])->findOrFail($id);
+
+    // 2️⃣ Lấy toàn bộ attributes + values (CHO SEARCH NÂNG CAO)
+    $attributes = Attribute::with('values')->get();
+
+    // 3️⃣ Trả về view (QUAN TRỌNG)
+    return view('products.show', compact(
+        'product',
+        'attributes'
+    ));
+}
 
     /**
      * Xem tất cả sản phẩm (route: /products)
