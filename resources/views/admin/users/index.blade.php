@@ -42,7 +42,7 @@
                                     <span class="badge bg-secondary">{{ $user->role_label }}</span>
                                 </td>
                                 <td>
-                                    <a class="btn btn-sm btn-outline-primary" href="{{ route('admin.users.edit', $user) }}">Sửa role</a>
+                                    <a class="btn btn-sm btn-outline-primary" href="{{ route('admin.users.edit', $user) }}">Sửa vai trò</a>
                                 </td>
                             </tr>
                         @empty
