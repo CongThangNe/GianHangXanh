@@ -30,9 +30,17 @@ class DashboardController extends Controller
             ->whereBetween('created_at', [$startDate, $endDate])
             ->sum('total');
 
+        // Staff không được xem doanh thu
+        if (($request->user()->role ?? null) === 'staff') {
+            $revenue = 0;
+        }
+
         $stockCount = ProductVariant::sum('stock');
 
-        $users = User::whereBetween('created_at', [$startDate, $endDate])->latest()->take(5)->get();
+        // Staff cũng không xem danh sách tài khoản trên dashboard
+        $users = (($request->user()->role ?? null) === 'staff')
+            ? collect()
+            : User::whereBetween('created_at', [$startDate, $endDate])->latest()->take(5)->get();
         $orders = Order::whereBetween('created_at', [$startDate, $endDate])->latest()->take(5)->get();
 
         $topSellingProducts = DB::table('order_details as od')
