@@ -9,6 +9,8 @@
 </a>
 @endforeach
 
+
+
 <!-- Banner -->
 <div id="banner-slideshow" class="mb-4 rounded-3"
     style="height: 250px; position: relative; overflow: hidden;">
