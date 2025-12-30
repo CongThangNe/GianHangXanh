@@ -9,6 +9,8 @@ use App\Models\Product;
 use App\Models\Category;
 use App\Models\Attribute;
 use App\Models\ProductVariant;
+use App\Models\OrderDetail;
+use Illuminate\Support\Facades\Schema;
 
 class ProductController extends Controller
 {
@@ -115,7 +117,71 @@ class ProductController extends Controller
 
     public function destroy($id)
     {
-        $product = Product::findOrFail($id);
+        $product = Product::with('variants')->findOrFail($id);
+
+        // =====================
+        // VALIDATE KHÔNG CHO XÓA SẢN PHẨM ĐÃ PHÁT SINH ĐƠN HÀNG
+        // - Nếu đơn hàng ở trạng thái "thành công" (delivered/paid) => CHẶN XÓA
+        // - Để an toàn dữ liệu, nếu sản phẩm đã xuất hiện trong bất kỳ đơn nào => CHẶN XÓA
+        // =====================
+
+        $variantIds = $product->variants->pluck('id');
+
+        // Một số bản DB của dự án có lưu trực tiếp product_id trong order_details (và product_variant_id có thể null)
+        $hasOrderDetailsProductId = Schema::hasColumn('order_details', 'product_id');
+
+        $hasAnyOrder = false;
+        $hasSuccessfulOrder = false;
+
+        // --- Check theo product_variant_id (nếu có variants) ---
+        if ($variantIds->isNotEmpty()) {
+            $hasAnyOrder = OrderDetail::whereIn('product_variant_id', $variantIds)->exists();
+
+            $hasSuccessfulOrder = OrderDetail::whereIn('product_variant_id', $variantIds)
+                ->whereHas('order', function ($q) {
+                    // "thành công" có thể là giao thành công hoặc đã thanh toán
+                    if (Schema::hasColumn('orders', 'delivery_status')) {
+                        $q->orWhere('delivery_status', 'delivered');
+                    }
+                    if (Schema::hasColumn('orders', 'payment_status')) {
+                        $q->orWhere('payment_status', 'paid');
+                    }
+                    // fallback cho cột status cũ
+                    if (Schema::hasColumn('orders', 'status')) {
+                        $q->orWhere('status', 'paid');
+                    }
+                })
+                ->exists();
+        }
+
+        // --- Fallback: Check theo product_id trong order_details (nếu DB có cột này) ---
+        if ($hasOrderDetailsProductId) {
+            $hasAnyOrder = $hasAnyOrder || OrderDetail::where('product_id', $product->id)->exists();
+
+            $hasSuccessfulOrder = $hasSuccessfulOrder || OrderDetail::where('product_id', $product->id)
+                ->whereHas('order', function ($q) {
+                    if (Schema::hasColumn('orders', 'delivery_status')) {
+                        $q->orWhere('delivery_status', 'delivered');
+                    }
+                    if (Schema::hasColumn('orders', 'payment_status')) {
+                        $q->orWhere('payment_status', 'paid');
+                    }
+                    if (Schema::hasColumn('orders', 'status')) {
+                        $q->orWhere('status', 'paid');
+                    }
+                })
+                ->exists();
+        }
+
+        if ($hasSuccessfulOrder) {
+            return back()->with('error', 'Không thể xóa sản phẩm vì sản phẩm đã có đơn hàng ở trạng thái THÀNH CÔNG. Vui lòng ẩn/ngừng bán thay vì xóa để tránh mất dữ liệu.');
+        }
+
+        if ($hasAnyOrder) {
+            return back()->with('error', 'Không thể xóa sản phẩm vì sản phẩm đã phát sinh trong đơn hàng. Vui lòng ẩn/ngừng bán thay vì xóa để tránh mất dữ liệu.');
+        }
+
+        // Xóa sản phẩm (không có phát sinh đơn)
         $product->variants()->delete();
         $product->delete();
         return back()->with('success', 'Đã xóa sản phẩm');
