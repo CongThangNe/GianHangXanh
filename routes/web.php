@@ -126,11 +126,16 @@ Route::middleware('auth')->group(function () {
 });
 
 // ADMIN
-Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
+// - Customer: /admin -> 404
+// - Staff: vào được /admin nhưng bị chặn /admin/users và không thấy Doanh thu
+// - Admin: full quyền
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin_access'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Quản lý tài khoản (mới: role admin/khách hàng/nhân viên)
-    Route::resource('users', AdminUserController::class)->only(['index', 'edit', 'update']);
+    Route::middleware('admin_only')->group(function () {
+        Route::resource('users', AdminUserController::class)->only(['index', 'edit', 'update']);
+    });
 
     Route::resource('products', ProductController::class);
     Route::resource('categories', CategoryController::class);
@@ -155,13 +160,13 @@ Route::get('/payment/create', [PaymentController::class, 'createPayment'])->name
 Route::get('/payment/return', [PaymentController::class, 'vnpayReturn'])->name('payment.return');
 
 // banners
-Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin_access'])->group(function () {
     Route::resource('banners', \App\Http\Controllers\Admin\BannerController::class);
 });
 // search nâng cao trong ctsp
 // Route::get('/product/{id}', [ProductController::class, 'show'])->name('product.show');
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin_access'])->group(function () {
     Route::resource('products', ProductController::class)->except(['show']);
 });
 
@@ -169,6 +174,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 // tin tức
 Route::prefix('admin')
     ->name('admin.')
+    ->middleware(['auth', 'admin_access'])
     ->group(function () {
         Route::resource('news', NewsController::class);
     });

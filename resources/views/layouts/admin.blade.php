@@ -174,8 +174,10 @@
             <li class="nav-item"><a class="nav-link" href="{{ route('admin.banners.index') }}">🖼️ Banner</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ route('admin.news.index') }}"> 📰 Tin tức</a></li>
 
-            <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"
-                    href="{{ route('admin.users.index') }}">👤 Quản lý tài khoản</a></li>
+            @if (auth()->user()->role === 'admin')
+                <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"
+                        href="{{ route('admin.users.index') }}">👤 Quản lý tài khoản</a></li>
+            @endif
             <li class="nav-item"><a class="nav-link" href="{{ url('/') }}">🏠 Về trang chủ</a></li>
         </ul>
     </nav>
