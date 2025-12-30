@@ -174,11 +174,11 @@ class ProductController extends Controller
         }
 
         if ($hasSuccessfulOrder) {
-            return back()->with('error', 'Không thể xóa sản phẩm vì sản phẩm đã có đơn hàng ở trạng thái THÀNH CÔNG. Vui lòng ẩn/ngừng bán thay vì xóa để tránh mất dữ liệu.');
+            return back()->with('error', 'Không thể xóa sản phẩm vì sản phẩm đã có đơn hàng ở trạng thái THÀNH CÔNG.');
         }
 
         if ($hasAnyOrder) {
-            return back()->with('error', 'Không thể xóa sản phẩm vì sản phẩm đã phát sinh trong đơn hàng. Vui lòng ẩn/ngừng bán thay vì xóa để tránh mất dữ liệu.');
+            return back()->with('error', 'Không thể xóa sản phẩm vì sản phẩm đã phát sinh trong đơn hàng. ');
         }
 
         // Xóa sản phẩm (không có phát sinh đơn)
