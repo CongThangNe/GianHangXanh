@@ -9,8 +9,7 @@ use App\Models\Order;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon; // Thêm thư viện xử lý thời gian
-
+use Carbon\Carbon; 
 class DashboardController extends Controller
 {
     public function index(Request $request)
@@ -23,7 +22,7 @@ class DashboardController extends Controller
             ? Carbon::parse($request->input('end_date'))->endOfDay() 
             : Carbon::now()->endOfDay();
 
-        $userCount  = User::whereBetween('created_at', [$startDate, $endDate])->count();
+        $userCount  = User::count();
         $orderCount = Order::whereBetween('created_at', [$startDate, $endDate])->count();
         
         $revenue = Order::where('payment_status', 'paid')
