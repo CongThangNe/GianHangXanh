@@ -141,8 +141,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin_access'])->gr
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Quản lý tài khoản (mới: role admin/khách hàng/nhân viên)
+    // Admin có thể xem, sửa vai trò và xóa tài khoản.
     Route::middleware('admin_only')->group(function () {
-        Route::resource('users', AdminUserController::class)->only(['index', 'edit', 'update']);
+        Route::resource('users', AdminUserController::class)->only(['index', 'edit', 'update', 'destroy']);
     });
 
     Route::resource('products', ProductController::class);

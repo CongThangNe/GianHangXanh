@@ -46,4 +46,29 @@ class UserController extends Controller
 
         return redirect()->route('admin.users.index')->with('success', 'Đã cập nhật vai trò cho tài khoản.');
     }
+
+    /**
+     * Xóa tài khoản người dùng.
+     * - Không cho xóa chính tài khoản đang đăng nhập
+     * - Không cho xóa tài khoản Admin (tránh mất quyền quản trị)
+     */
+    public function destroy(Request $request, User $user)
+    {
+        // Không cho xóa chính mình
+        if (auth()->id() === $user->id) {
+            return back()->with('error', 'Không thể xóa tài khoản đang đăng nhập.');
+        }
+
+        // Không cho xóa tài khoản admin
+        if (($user->role ?? null) === User::ROLE_ADMIN) {
+            return back()->with('error', 'Không thể xóa tài khoản Admin.');
+        }
+
+        try {
+            $user->delete();
+            return back()->with('success', 'Đã xóa tài khoản.');
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Xóa tài khoản thất bại. Vui lòng thử lại.');
+        }
+    }
 }
