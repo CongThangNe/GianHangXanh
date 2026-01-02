@@ -6,16 +6,17 @@ use Illuminate\Http\Request;
 use App\Models\Cart;
 use App\Models\DiscountCode;
 use App\Models\Order;
-use App\Models\ProductVariant;
 use App\Models\OrderDetail;
 use Illuminate\Support\Str;
-use App\Http\Controllers\PaymentController;
+use Illuminate\Support\Facades\DB;
 
 class CheckoutController extends Controller
 {
-    // Cho phép khách vãng lai (chưa đăng nhập) vẫn có thể checkout.
-    // Nếu user đã đăng nhập thì vẫn tận dụng $request->user() để cập nhật SĐT.
-
+    /**
+     * HIỂN THỊ CHECKOUT
+     * - Preview đơn hàng
+     * - Áp mã giảm giá từ session
+     */
     public function index()
     {
         $sessionId = session()->getId();
@@ -30,218 +31,180 @@ class CheckoutController extends Controller
         }
 
         $cartItems = $cart->items;
-        $subtotal = $cartItems->sum(fn($i) => $i->price * $i->quantity);
+        $subtotal  = $cartItems->sum(fn ($i) => $i->price * $i->quantity);
 
-        // Lấy mã giảm giá từ session (nếu đã áp dụng)
-        $discountCode = session('discount_code');
         $discountAmount = 0;
-        $displayDiscount = 0; // Thêm biến mới để hiển thị giá trị gốc
-        $discountInfo = null;
+        $discountInfo   = null;
+        $codeStr        = session('discount_code');
 
-        if ($discountCode) {
-            $code = DiscountCode::where('code', $discountCode)
-                ->where('starts_at', '<=', now())
-                ->where('expires_at', '>=', now())
+        if ($codeStr) {
+            $code = DiscountCode::where('code', $codeStr)
+                ->where('active', true)
                 ->where(function ($q) {
-                    $q->whereNull('max_uses')->orWhereRaw('used_count < max_uses');
+                    $q->where('max_uses', 0)
+                      ->orWhereColumn('used_count', '<', 'max_uses');
+                })
+                ->where(function ($q) {
+                    $q->whereNull('starts_at')
+                      ->orWhere('starts_at', '<=', now());
+                })
+                ->where(function ($q) {
+                    $q->whereNull('expires_at')
+                      ->orWhere('expires_at', '>=', now());
                 })
                 ->first();
 
             if ($code) {
                 if ($code->type === 'percent') {
-                    $discountAmount = $subtotal * ($code->discount_percent / 100);
-                    if ($code->max_discount_value) {
+                    $discountAmount = $subtotal * ($code->value / 100);
+
+                    if ($code->max_discount_value > 0) {
                         $discountAmount = min($discountAmount, $code->max_discount_value);
                     }
                 } else {
-                    $discountAmount = $code->discount_value;
+                    $discountAmount = $code->value;
                 }
-                // Giá trị hiển thị giữ nguyên giá trị gốc đã tính
-                $displayDiscount = $discountAmount;
 
-                // Giới hạn giá trị áp dụng thực tế không vượt quá subtotal
                 $discountAmount = min($discountAmount, $subtotal);
 
                 $discountInfo = [
                     'code'   => $code->code,
                     'type'   => $code->type,
                     'value'  => $code->type === 'percent'
-                        ? $code->discount_percent . '%'
-                        : number_format($displayDiscount, 0, ',', '.') . 'đ',
+                        ? $code->value . '%'
+                        : number_format($code->value, 0, ',', '.') . 'đ',
                     'amount' => $discountAmount,
-                    'display_amount' => $displayDiscount // Thêm để view dùng hiển thị
                 ];
             } else {
                 session()->forget('discount_code');
             }
         }
 
-        $total = $subtotal - $discountAmount;
+        $total = max(0, $subtotal - $discountAmount);
 
         return view('checkout.index', compact(
             'cartItems',
             'subtotal',
             'discountAmount',
             'discountInfo',
-            'discountCode',
             'total'
         ));
     }
 
+    /**
+     * XỬ LÝ ĐẶT HÀNG
+     * - Lock cart + discount
+     * - Trừ lượt dùng
+     * - Tạo order + order detail
+     */
     public function process(Request $request)
     {
-        $request->validate(
-            [
-                'province'         => 'required',
-                'district'         => 'required',
-                'ward'             => 'required',
-                'address_detail'   => 'required|min:5',
-                'customer_address' => 'required|string|min:10|max:500',
-                'payment_method'   => 'required|in:cod,zalopay,vnpay',
-                'customer_name'    => [
-                    'required',
-                    'string',
-                    'min:3',
-                    'max:100',
-                    'regex:/^[\p{L}\s]+$/u',
-                ],
-                'customer_phone'   => [
-                    'required',
-                    'digits_between:10,11',
-                    'starts_with:0,84'
-                ],
-                'customer_email'   => 'nullable|email|max:255',
-                'note'             => 'nullable|string|max:1000',
+        $request->validate([
+            'customer_name'    => 'required|string|min:3|max:100',
+            'customer_phone'   => 'required|digits_between:10,11',
+            'customer_address' => 'required|string|min:10',
+            'payment_method'   => 'required|in:cod,vnpay',
+            'note'             => 'nullable|string|max:1000',
+        ]);
 
-            ],
-            [
-                // Thông báo lỗi
-                'customer_name.required'     => 'Vui lòng nhập họ và tên.',
-                'customer_name.min'          => 'Họ và tên phải có ít nhất :min ký tự.',
-                'customer_name.regex'        => 'Họ và tên không được chứa số hoặc ký tự đặc biệt.',
+        return DB::transaction(function () use ($request) {
 
-                'customer_phone.required'    => 'Vui lòng nhập số điện thoại.',
-                'customer_phone.digits_between' => 'Số điện thoại phải là chữ số và có độ dài từ :min đến :max ký tự.',
-                'customer_phone.starts_with' => 'Số điện thoại phải bắt đầu bằng 0 hoặc 84.',
+            $sessionId = session()->getId();
 
-                'province.required' => 'Vui lòng chọn Tỉnh/Thành phố.',
-                'district.required' => 'Vui lòng chọn Quận/Huyện.',
-                'ward.required'     => 'Vui lòng chọn Phường/Xã.',
-                'address_detail.required' => 'Vui lòng nhập số nhà, tên đường.',
-                'address_detail.min' => 'Số nhà, tên đường phải có ít nhất :min ký tự.',
-                'customer_address.required' => 'Vui lòng nhập đầy đủ địa chỉ giao hàng.',
-                'customer_address.min' => 'Địa chỉ giao hàng phải có ít nhất :min ký tự.',
+            $cart = Cart::with('items')
+                ->where('session_id', $sessionId)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-                'customer_email.email' => 'Email không đúng định dạng.',
-            ]
-        );
-
-        if ($user = $request->user()) {
-            if (empty($user->phone) || $user->phone !== $request->customer_phone) {
-                $user->phone = $request->customer_phone;
-                $user->save();
+            if ($cart->items->isEmpty()) {
+                return redirect()->route('cart.index')->with('error', 'Giỏ hàng trống!');
             }
-        }
 
-        $sessionId = session()->getId();
-        $cart = Cart::with(['items.variant'])
-            ->where('session_id', $sessionId)
-            ->firstOrFail();
+            $subtotal = $cart->items->sum(fn ($i) => $i->price * $i->quantity);
+            $discountAmount = 0;
 
-        if ($cart->items->isEmpty()) {
-            return redirect('/cart')->with('error', 'Giỏ hàng trống!');
-        }
+            $discountCodeStr = session('discount_code');
+            $discountCode    = null;
 
-        $subtotal = $cart->items->sum(function ($item) {
-            return $item->price * $item->quantity;
-        });
+            if ($discountCodeStr) {
+                $discountCode = DiscountCode::where('code', $discountCodeStr)
+                    ->where('active', true)
+                    ->where(function ($q) {
+                        $q->where('max_uses', 0)
+                          ->orWhereColumn('used_count', '<', 'max_uses');
+                    })
+                    ->where(function ($q) {
+                        $q->whereNull('starts_at')
+                          ->orWhere('starts_at', '<=', now());
+                    })
+                    ->where(function ($q) {
+                        $q->whereNull('expires_at')
+                          ->orWhere('expires_at', '>=', now());
+                    })
+                    ->lockForUpdate()
+                    ->first();
 
-        $discountAmount = 0;
-        $displayDiscount = 0; // Thêm biến mới để hiển thị giá trị gốc
-        $discountCode = session('discount_code');
-        if ($discountCode) {
-            $code = DiscountCode::where('code', $discountCode)->first();
-            if ($code) {
-                if ($code->type === 'percent') {
-                    $discountAmount = $subtotal * ($code->discount_percent / 100);
-                    if ($code->max_discount_value) $discountAmount = min($discountAmount, $code->max_discount_value);
-                } else {
-                    $discountAmount = $code->discount_value;
+                if (!$discountCode) {
+                    session()->forget('discount_code');
                 }
-                // Giá trị hiển thị giữ nguyên giá trị gốc đã tính
-                $displayDiscount = $discountAmount;
-
-                // Giới hạn giá trị áp dụng thực tế không vượt quá subtotal
-                $discountAmount = min($discountAmount, $subtotal);
-                $code->increment('used_count');
             }
-        }
 
-        $total = max(0, $subtotal - $discountAmount);
+            if ($discountCode) {
+                if ($discountCode->type === 'percent') {
+                    $discountAmount = $subtotal * ($discountCode->value / 100);
 
-        // 4. TẠO ĐƠN HÀNG
-        $order = Order::create([
-            'order_code'       => 'DH' . now()->format('Ymd') . Str::upper(Str::random(4)),
-            'total'            => $total,
-            'payment_method'   => $request->payment_method,
-            'payment_status'   => 'unpaid',
-            'delivery_status'   => 'pending', // Mặc định là chờ xử lý
-            'customer_name'    => $request->customer_name,
-            'customer_phone'   => $request->customer_phone,
-            'customer_address' => $request->customer_address,
-            'note'             => $request->note,
-        ]);
+                    if ($discountCode->max_discount_value > 0) {
+                        $discountAmount = min($discountAmount, $discountCode->max_discount_value);
+                    }
+                } else {
+                    $discountAmount = $discountCode->value;
+                }
 
-        // 5. LƯU CHI TIẾT + TRỪ KHO (Giữ nguyên)
-        foreach ($cart->items as $item) {
-            OrderDetail::create([
-                'order_id'           => $order->id,
-                'product_id'         => $item->product_id,
-                'product_variant_id' => $item->product_variant_id,
-                'quantity'           => $item->quantity,
-                'price'              => $item->price,
+                $discountAmount = min($discountAmount, $subtotal);
+                $discountCode->increment('used_count');
+            }
+
+            $total = max(0, $subtotal - $discountAmount);
+
+            $order = Order::create([
+                'order_code'       => 'DH' . now()->format('Ymd') . Str::upper(Str::random(4)),
+                'total'            => $total,
+                'payment_method'   => $request->payment_method,
+                'payment_status'   => 'unpaid',
+                'delivery_status'  => 'pending',
+                'customer_name'    => $request->customer_name,
+                'customer_phone'   => $request->customer_phone,
+                'customer_address' => $request->customer_address,
+                'note'             => $request->note,
             ]);
 
-            // $variant = ProductVariant::find($item->product_variant_id);
-            // if ($variant) {
-            //     $variant->stock = max(0, $variant->stock - $item->quantity);
-            //     $variant->save();
-            // }
-        }
+            foreach ($cart->items as $item) {
+                OrderDetail::create([
+                    'order_id'           => $order->id,
+                    'product_id'         => $item->product_id,
+                    'product_variant_id' => $item->product_variant_id,
+                    'quantity'           => $item->quantity,
+                    'price'              => $item->price,
+                ]);
+            }
 
-        // 6. XÓA GIỎ HÀNG
-        // $cart->items()->delete();
-        // $cart->delete();
-        // session()->forget('discount_code');
-        if ($request->payment_method === 'cod') {
-            $cart->items()->delete();
-            $cart->delete();
-            session()->forget('discount_code');
-        }
+            if ($request->payment_method === 'cod') {
+                $cart->items()->delete();
+                $cart->delete();
+                session()->forget('discount_code');
 
-        // --- PHÂN LOẠI XỬ LÝ THEO CỔNG THANH TOÁN ---
+                return redirect()->route('home')
+                    ->with('success', "Đặt hàng thành công #{$order->order_code}");
+            }
 
-        // 1. Thanh toán COD
-        if ($request->payment_method === 'cod') {
-            return redirect()->route('home')
-                ->with('success', "Đơn hàng #{$order->order_code} đã được đặt thành công!");
-        }
+            if ($request->payment_method === 'vnpay') {
+                return redirect()->route('payment.create', [
+                    'order_id' => $order->id,
+                    'amount'   => $total,
+                ]);
+            }
 
-        // [SỬA MỚI 2]: Xử lý VNPAY
-        // Chuyển hướng sang PaymentController kèm theo số tiền và ID đơn hàng
-        if ($request->payment_method === 'vnpay') {
-            return redirect()->route('payment.create', [
-                'amount'   => $total,       // Truyền số tiền cần thanh toán
-                'order_id' => $order->id    // Truyền ID đơn hàng để VNPAY tham chiếu
-            ]);
-        }
-
-        // 3. Thanh toán ZaloPay 
-        return response()->json([
-            'success'    => true,
-            'order_id'   => $order->id,
-            'order_code' => $order->order_code,
-            'total'      => $total,
-        ]);
+            abort(400);
+        });
     }
 }
