@@ -10,6 +10,13 @@
         </div>
     @endif
 
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     <div class="card shadow-sm">
         <div class="card-body">
             <form class="row g-2 mb-3" method="GET" action="{{ route('admin.users.index') }}">
@@ -29,7 +36,7 @@
                             <th>Tên</th>
                             <th>Email</th>
                             <th style="width:180px">Vai trò</th>
-                            <th style="width:140px">Thao tác</th>
+                            <th style="width:220px">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -42,7 +49,17 @@
                                     <span class="badge bg-secondary">{{ $user->role_label }}</span>
                                 </td>
                                 <td>
-                                    <a class="btn btn-sm btn-outline-primary" href="{{ route('admin.users.edit', $user) }}">Sửa vai trò</a>
+                                    <div class="d-flex gap-2">
+                                        <a class="btn btn-sm btn-outline-primary" href="{{ route('admin.users.edit', $user) }}">Sửa vai trò</a>
+
+                                        <form method="POST"
+                                              action="{{ route('admin.users.destroy', $user) }}"
+                                              onsubmit="return confirm('Bạn chắc chắn muốn xóa tài khoản: {{ $user->name }} ({{ $user->email }}) ?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         @empty

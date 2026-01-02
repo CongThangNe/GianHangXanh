@@ -9,22 +9,23 @@ use App\Models\Order;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon; 
+use Carbon\Carbon;
+
 class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $startDate = $request->input('start_date') 
-            ? Carbon::parse($request->input('start_date'))->startOfDay() 
+        $startDate = $request->input('start_date')
+            ? Carbon::parse($request->input('start_date'))->startOfDay()
             : Carbon::now()->startOfMonth();
 
-        $endDate = $request->input('end_date') 
-            ? Carbon::parse($request->input('end_date'))->endOfDay() 
+        $endDate = $request->input('end_date')
+            ? Carbon::parse($request->input('end_date'))->endOfDay()
             : Carbon::now()->endOfDay();
 
         $userCount  = User::count();
         $orderCount = Order::whereBetween('created_at', [$startDate, $endDate])->count();
-        
+
         $revenue = Order::where('payment_status', 'paid')
             ->whereBetween('created_at', [$startDate, $endDate])
             ->sum('total');
@@ -40,7 +41,7 @@ class DashboardController extends Controller
         $users = (($request->user()->role ?? null) === 'staff')
             ? collect()
             : User::whereBetween('created_at', [$startDate, $endDate])->latest()->take(5)->get();
-        $orders = Order::whereBetween('created_at', [$startDate, $endDate])->latest()->take(5)->get();
+        $orders = Order::whereBetween('created_at', [$startDate, $endDate])->latest()->take(3)->get();
 
         $topSellingProducts = DB::table('order_details as od')
             ->join('orders as o', 'o.id', '=', 'od.order_id')
@@ -57,8 +58,26 @@ class DashboardController extends Controller
             )
             ->groupBy('p.id', 'p.name', 'p.price', 'p.image')
             ->orderByDesc('total_sold')
-            ->limit(10)
+            ->limit(5)
             ->get();
+
+        // Thống kê doanh thu theo biểu đồ
+        $monthlyData = Order::where('payment_status', 'paid')
+            ->select(
+                DB::raw('SUM(total) as revenue'),
+                DB::raw("DATE_FORMAT(created_at, '%m/%Y') as month_year"),
+                DB::raw('YEAR(created_at) as year'),
+                DB::raw('MONTH(created_at) as month')
+            )
+            ->where('created_at', '>=', now()->subMonths(11)->startOfMonth())
+            ->groupBy('year', 'month', 'month_year')
+            ->orderBy('year', 'asc')
+            ->orderBy('month', 'asc')
+            ->get();
+
+        // Chuẩn bị mảng labels (tháng) và data (tiền) để gửi sang View
+        $chartLabels = $monthlyData->pluck('month_year')->toArray();
+        $chartData = $monthlyData->pluck('revenue')->toArray();
 
         return view('admin.dashboard', compact(
             'userCount',
@@ -69,7 +88,9 @@ class DashboardController extends Controller
             'topSellingProducts',
             'orders',
             'startDate',
-            'endDate'
+            'endDate',
+            'chartLabels', 
+            'chartData'    
         ));
     }
 }
