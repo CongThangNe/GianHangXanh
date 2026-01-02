@@ -9,6 +9,12 @@ use App\Models\User;
 
 class AuthController extends Controller
 {
+    // GET /login
+    public function showLoginForm()
+    {
+        return view('auth.login');
+    }
+
     //GET login
     public function login(Request $request)
     {
@@ -20,8 +26,8 @@ class AuthController extends Controller
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
             $user = Auth::user();
-            //redirect theo role
-            if ($user->role === 'admin') {
+            // redirect theo role
+            if (in_array($user->role, [User::ROLE_ADMIN, User::ROLE_STAFF], true)) {
                 return redirect()->intended(route('admin.dashboard'));
             }
             return redirect()->intended(route('home'));

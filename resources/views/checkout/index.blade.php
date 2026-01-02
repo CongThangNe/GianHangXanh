@@ -6,8 +6,8 @@
 
         {{-- TIÊU ĐỀ --}}
         <!-- <h2 class="text-3xl md:text-4xl font-extrabold text-center text-green-700 mb-8 md:mb-12">
-                    Thanh Toán Đơn Hàng
-                </h2> -->
+                                                                            Thanh Toán Đơn Hàng
+                                                                        </h2> -->
 
         {{-- THÔNG BÁO LỖI --}}
         @if (session('error'))
@@ -37,7 +37,7 @@
                             <div class="mb-4">
                                 <label for="customer_name" class="block text-sm font-semibold text-gray-700 mb-2">Họ và tên
                                     <span class="text-red-500">*</span></label>
-                                <input type="text" id="customer_name" name="customer_name" 
+                                <input type="text" id="customer_name" name="customer_name"
                                     class="w-full border @error('customer_name') border-red-500 @else border-gray-300 @enderror rounded-lg px-4 py-2 focus:ring-green-500 focus:border-green-500 transition duration-150"
                                     value="{{ old('customer_name', $user->name ?? '') }}">
                                 @error('customer_name')
@@ -48,7 +48,7 @@
                             <div class="mb-4">
                                 <label for="customer_phone" class="block text-sm font-semibold text-gray-700 mb-2">Số điện
                                     thoại <span class="text-red-500">*</span></label>
-                                <input type="text" id="customer_phone" name="customer_phone" 
+                                <input type="text" id="customer_phone" name="customer_phone"
                                     class="w-full border @error('customer_phone') border-red-500 @else border-gray-300 @enderror rounded-lg px-4 py-2 focus:ring-green-500 focus:border-green-500 transition duration-150"
                                     value="{{ old('customer_phone', $user->phone ?? '') }}">
                                 @error('customer_phone')
@@ -59,9 +59,54 @@
                             <div class="mb-4">
                                 <label for="customer_address" class="block text-sm font-semibold text-gray-700 mb-2">Địa chỉ
                                     <span class="text-red-500">*</span></label>
-                                <input type="text" id="customer_address" name="customer_address" 
+                                {{-- <input type="text" id="customer_address" name="customer_address" 
                                     class="w-full border @error('customer_address') border-red-500 @else border-gray-300 @enderror rounded-lg px-4 py-2 focus:ring-green-500 focus:border-green-500 transition duration-150"
-                                    value="{{ old('customer_address', $user->address ?? '') }}">
+                                    value="{{ old('customer_address', $user->address ?? '') }}"> --}}
+                                {{-- 3 Cột chọn vị trí --}}
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                    <div>
+                                        <select id="province" name="province"
+                                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-green-500">
+                                            <option value="">Chọn Tỉnh/Thành</option>
+                                        </select>
+                                        @error('province')
+                                            <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    <div>
+                                        <select id="district" name="district"
+                                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-green-500"
+                                            disabled>
+                                            <option value="">Chọn Quận/Huyện</option>
+                                        </select>
+                                        @error('district')
+                                            <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    <div>
+                                        <select id="ward" name="ward"
+                                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-green-500"
+                                            disabled>
+                                            <option value="">Chọn Phường/Xã</option>
+                                        </select>
+                                        @error('ward')
+                                            <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                {{-- Ô nhập số nhà --}}
+                                <input type="text" id="address_detail" name="address_detail"
+                                    value="{{ old('address_detail') }}" placeholder="Số nhà, tên đường..."
+                                    class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-green-500 mb-2">
+                                @error('address_detail')
+                                    <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
+                                @enderror
+
+                                {{-- Input ẨN duy nhất để lưu địa chỉ tổng hợp --}}
+                                <input type="hidden" id="full_customer_address" name="customer_address"
+                                    value="{{ old('customer_address') }}">
+
                                 @error('customer_address')
                                     <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
                                 @enderror
@@ -191,7 +236,6 @@
                                         <span>Giảm giá ({{ $discountInfo['code'] }}):</span>
                                         <span>-{{ number_format($discountInfo['display_amount'], 0, ',', '.') }}đ</span>
                                     </div>
-                                
                                 @endif
                                 <div class="flex justify-between text-lg font-bold pt-2 border-t">
                                     <span class="text-gray-800">Tổng thanh toán</span>
@@ -216,9 +260,106 @@
     @push('scripts')
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                const paymentRadios = document.querySelectorAll('input[name="payment_method"]');
+                const provinceSelect = document.getElementById('province');
+                const districtSelect = document.getElementById('district');
+                const wardSelect = document.getElementById('ward');
+                const addressDetail = document.getElementById('address_detail');
+                const fullAddressInput = document.getElementById('full_customer_address');
+                // const paymentRadios = document.querySelectorAll('input[name="payment_method"]');
                 const qrContainer = document.getElementById('qr-container');
                 const submitButton = document.getElementById('submit-button');
+
+                const OLD_PROVINCE = "{{ old('province') }}";
+                const OLD_DISTRICT = "{{ old('district') }}";
+                const OLD_WARD = "{{ old('ward') }}";
+
+                function updateFullAddress() {
+                    const p = provinceSelect.options[provinceSelect.selectedIndex]?.text;
+                    const d = districtSelect.options[districtSelect.selectedIndex]?.text;
+                    const w = wardSelect.options[wardSelect.selectedIndex]?.text;
+                    const detail = addressDetail.value.trim();
+
+                    if (p && d && w && detail) {
+                        fullAddressInput.value = `${detail}, ${w}, ${d}, ${p}`;
+                    }
+                }
+
+                fetch('https://provinces.open-api.vn/api/p/')
+                    .then(res => res.json())
+                    .then(data => {
+                        provinceSelect.innerHTML = '<option value="">Chọn Tỉnh/Thành</option>';
+                        data.forEach(p => {
+                            const selected = (p.code == OLD_PROVINCE) ? 'selected' : '';
+                            provinceSelect.innerHTML +=
+                                `<option value="${p.code}" ${selected}>${p.name}</option>`;
+                        });
+
+                        if (OLD_PROVINCE) {
+                            provinceSelect.value = OLD_PROVINCE;
+                            provinceSelect.dispatchEvent(new Event('change'));
+                        }
+                    });
+
+
+                provinceSelect.addEventListener('change', function() {
+                    districtSelect.innerHTML = '<option value="">Chọn Quận/Huyện</option>';
+                    wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
+                    districtSelect.disabled = true;
+                    wardSelect.disabled = true;
+
+                    if (!this.value) return;
+
+                    fetch(`https://provinces.open-api.vn/api/p/${this.value}?depth=2`)
+                        .then(res => res.json())
+                        .then(data => {
+                            data.districts.forEach(d => {
+                                const selected = (d.code == OLD_DISTRICT) ? 'selected' : '';
+                                districtSelect.innerHTML +=
+                                    `<option value="${d.code}" ${selected}>${d.name}</option>`;
+                            });
+
+                            districtSelect.disabled = false;
+
+                            if (OLD_DISTRICT) {
+                                districtSelect.value = OLD_DISTRICT;
+                                districtSelect.dispatchEvent(new Event('change'));
+                            }
+                        });
+                });
+
+
+                districtSelect.addEventListener('change', function() {
+                    wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
+                    wardSelect.disabled = true;
+
+                    if (!this.value) return;
+
+                    fetch(`https://provinces.open-api.vn/api/d/${this.value}?depth=2`)
+                        .then(res => res.json())
+                        .then(data => {
+                            data.wards.forEach(w => {
+                                const selected = (w.code == OLD_WARD) ? 'selected' : '';
+                                wardSelect.innerHTML +=
+                                    `<option value="${w.code}" ${selected}>${w.name}</option>`;
+                            });
+
+                            wardSelect.disabled = false;
+
+                            if (OLD_WARD) {
+                                wardSelect.value = OLD_WARD;
+                            }
+
+
+                        });
+                });
+
+
+                [wardSelect, addressDetail].forEach(el => el.addEventListener('change', updateFullAddress));
+                addressDetail.addEventListener('input', updateFullAddress);
+
+                const paymentRadios = document.querySelectorAll('input[name="payment_method"]');
+                // const qrContainer = document.getElementById('qr-container');
+                // const submitButton = document.getElementById('submit-button');
 
                 function updatePayment() {
                     // Lấy giá trị đang chọn
@@ -261,6 +402,11 @@
                         statusDiv.innerHTML =
                             '<span class="text-green-600 font-bold">✅ Thanh toán thành công!</span>';
                     }, 3000);
+                });
+
+
+                document.getElementById('checkout-form').addEventListener('submit', function() {
+                    updateFullAddress();
                 });
             });
         </script>

@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 //AUTH CONTROLLER
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\ResetPasswordController;
 // CLIENT CONTROLLERS
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CartController;
@@ -65,6 +67,14 @@ Route::middleware('guest')->group(function () {
 
     Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
     Route::post('/register', [AuthController::class, 'register'])->name('register.post');
+
+    // QUÊN MẬT KHẨU (gửi link reset qua email)
+    Route::get('/forgot-password', [ForgotPasswordController::class, 'showForm'])->name('password.request');
+    Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink'])->name('password.email');
+
+    // ĐẶT LẠI MẬT KHẨU (từ link email)
+    Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showForm'])->name('password.reset');
+    Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
 });
 
 // Đăng xuất
@@ -89,9 +99,7 @@ Route::get('/check-zalopay-status/{order}', function (Order $order) {
     return response()->json(['paid' => ($order->payment_status ?? 'unpaid') === 'paid']);
 })->name('check.zalopay.status');
 
-// AUTH (login / register)
-Route::view('/login', 'auth.login')->name('login');
-Route::view('/register', 'auth.register')->name('register');
+// (ĐÃ CÓ ROUTE LOGIN/REGISTER BẰNG CONTROLLER Ở TRÊN)
 
 // Route tạm để xem giao diện danh sách đơn hàng
 
@@ -126,11 +134,16 @@ Route::middleware('auth')->group(function () {
 });
 
 // ADMIN
-Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
+// - Customer: /admin -> 404
+// - Staff: vào được /admin nhưng bị chặn /admin/users và không thấy Doanh thu
+// - Admin: full quyền
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin_access'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Quản lý tài khoản (mới: role admin/khách hàng/nhân viên)
-    Route::resource('users', AdminUserController::class)->only(['index', 'edit', 'update']);
+    Route::middleware('admin_only')->group(function () {
+        Route::resource('users', AdminUserController::class)->only(['index', 'edit', 'update']);
+    });
 
     Route::resource('products', ProductController::class);
     Route::resource('categories', CategoryController::class);
@@ -155,13 +168,13 @@ Route::get('/payment/create', [PaymentController::class, 'createPayment'])->name
 Route::get('/payment/return', [PaymentController::class, 'vnpayReturn'])->name('payment.return');
 
 // banners
-Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin_access'])->group(function () {
     Route::resource('banners', \App\Http\Controllers\Admin\BannerController::class);
 });
 // search nâng cao trong ctsp
 // Route::get('/product/{id}', [ProductController::class, 'show'])->name('product.show');
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin_access'])->group(function () {
     Route::resource('products', ProductController::class)->except(['show']);
 });
 
@@ -169,6 +182,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 // tin tức
 Route::prefix('admin')
     ->name('admin.')
+    ->middleware(['auth', 'admin_access'])
     ->group(function () {
         Route::resource('news', NewsController::class);
     });

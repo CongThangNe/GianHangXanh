@@ -35,35 +35,38 @@
             </div>
 
         <div class="row mb-4">
-            <div class="col-lg-3 col-6">
-                <div class="small-box text-bg-primary">
-                    <div class="inner">
-                        <h3>{{ number_format($userCount) }}</h3>
-                        <p>Người dùng</p>
+            {{-- Admin mới thấy Người dùng + Doanh thu --}}
+            @if (auth()->user()->role === 'admin')
+                <div class="col-lg-3 col-6">
+                    <div class="small-box text-bg-primary">
+                        <div class="inner">
+                            <h3>{{ number_format($userCount) }}</h3>
+                            <p>Người dùng</p>
+                        </div>
+                        <i class="small-box-icon bi bi-people-fill"></i>
+                        <a href="{{ route('admin.users.index') }}"
+                            class="small-box-footer link-light link-underline-opacity-0 link-underline-opacity-50-hover">
+                            Xem chi tiết <i class="bi bi-arrow-right-circle"></i>
+                        </a>
                     </div>
-                    <i class="small-box-icon bi bi-people-fill"></i>
-                    <a href="{{ route('admin.users.index') }}"
-                        class="small-box-footer link-light link-underline-opacity-0 link-underline-opacity-50-hover">
-                        Xem chi tiết <i class="bi bi-arrow-right-circle"></i>
-                    </a>
                 </div>
-            </div>
 
-            <div class="col-lg-3 col-6">
-                <div class="small-box text-bg-success">
-                    <div class="inner">
-                        <h3>{{ number_format($revenue, 0, ',', '.') }}<sup class="fs-6">₫</sup></h3>
-                        <p>Doanh thu (Đã thanh toán)</p>
+                <div class="col-lg-3 col-6">
+                    <div class="small-box text-bg-success">
+                        <div class="inner">
+                            <h3>{{ number_format($revenue, 0, ',', '.') }}<sup class="fs-6">₫</sup></h3>
+                            <p>Doanh thu (Đã thanh toán)</p>
+                        </div>
+                        <i class="small-box-icon bi bi-currency-dollar"></i>
+                        <a href="{{ route('admin.orders.index') }}"
+                            class="small-box-footer link-light link-underline-opacity-0 link-underline-opacity-50-hover">
+                            Xem báo cáo <i class="bi bi-arrow-right-circle"></i>
+                        </a>
                     </div>
-                    <i class="small-box-icon bi bi-currency-dollar"></i>
-                    <a href="{{ route('admin.orders.index') }}"
-                        class="small-box-footer link-light link-underline-opacity-0 link-underline-opacity-50-hover">
-                        Xem báo cáo <i class="bi bi-arrow-right-circle"></i>
-                    </a>
                 </div>
-            </div>
+            @endif
 
-            <div class="col-lg-3 col-6">
+            <div class="col-lg-{{ auth()->user()->role === 'admin' ? '3' : '6' }} col-6">
                 <div class="small-box text-bg-warning">
                     <div class="inner">
                         <h3>{{ number_format($orderCount) }}</h3>
@@ -77,7 +80,7 @@
                 </div>
             </div>
 
-            <div class="col-lg-3 col-6">
+            <div class="col-lg-{{ auth()->user()->role === 'admin' ? '3' : '6' }} col-6">
                 <div class="small-box text-bg-danger">
                     <div class="inner">
                         <h3>{{ number_format($stockCount) }}</h3>
@@ -152,6 +155,7 @@
                 </div>
             </div>
 
+            @if (auth()->user()->role === 'admin')
             <div class="col-lg-5">
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-white py-3">
@@ -184,6 +188,7 @@
                     </div>
                 </div>
             </div>
+            @endif
 
             <div class="col-lg-7">
                 <div class="col-lg-12 mt-4">

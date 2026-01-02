@@ -90,37 +90,51 @@ class CheckoutController extends Controller
 
     public function process(Request $request)
     {
-        $request->validate([
-            'payment_method'   => 'required|in:cod,zalopay,vnpay',
-            'customer_name'    => [
-                'required',
-                'string',
-                'min:3',
-                'max:100',
-                'regex:/^[\p{L}\s]+$/u',
+        $request->validate(
+            [
+                'province'         => 'required',
+                'district'         => 'required',
+                'ward'             => 'required',
+                'address_detail'   => 'required|min:5',
+                'customer_address' => 'required|string|min:10|max:500',
+                'payment_method'   => 'required|in:cod,zalopay,vnpay',
+                'customer_name'    => [
+                    'required',
+                    'string',
+                    'min:3',
+                    'max:100',
+                    'regex:/^[\p{L}\s]+$/u',
+                ],
+                'customer_phone'   => [
+                    'required',
+                    'digits_between:10,11',
+                    'starts_with:0,84'
+                ],
+                'customer_email'   => 'nullable|email|max:255',
+                'note'             => 'nullable|string|max:1000',
+
             ],
-            'customer_phone'   => [
-                'required',
-                'digits_between:10,11',
-                'starts_with:0,84' 
-            ],
-            'customer_address' => 'required|string|min:10|max:500',
-            'customer_email'   => 'nullable|email|max:255',
-            'note'             => 'nullable|string|max:1000',
+            [
+                // Thông báo lỗi
+                'customer_name.required'     => 'Vui lòng nhập họ và tên.',
+                'customer_name.min'          => 'Họ và tên phải có ít nhất :min ký tự.',
+                'customer_name.regex'        => 'Họ và tên không được chứa số hoặc ký tự đặc biệt.',
 
-        ], [
-            // Thông báo lỗi
-            'customer_name.required'     => 'Vui lòng nhập họ và tên.',
-            'customer_name.min'          => 'Họ và tên phải có ít nhất :min ký tự.',
-            'customer_name.regex'        => 'Họ và tên không được chứa số hoặc ký tự đặc biệt.',
+                'customer_phone.required'    => 'Vui lòng nhập số điện thoại.',
+                'customer_phone.digits_between' => 'Số điện thoại phải là chữ số và có độ dài từ :min đến :max ký tự.',
+                'customer_phone.starts_with' => 'Số điện thoại phải bắt đầu bằng 0 hoặc 84.',
 
-            'customer_phone.required'    => 'Vui lòng nhập số điện thoại.',
-            'customer_phone.digits_between' => 'Số điện thoại phải là chữ số và có độ dài từ :min đến :max ký tự.',
+                'province.required' => 'Vui lòng chọn Tỉnh/Thành phố.',
+                'district.required' => 'Vui lòng chọn Quận/Huyện.',
+                'ward.required'     => 'Vui lòng chọn Phường/Xã.',
+                'address_detail.required' => 'Vui lòng nhập số nhà, tên đường.',
+                'address_detail.min' => 'Số nhà, tên đường phải có ít nhất :min ký tự.',
+                'customer_address.required' => 'Vui lòng nhập đầy đủ địa chỉ giao hàng.',
+                'customer_address.min' => 'Địa chỉ giao hàng phải có ít nhất :min ký tự.',
 
-            'customer_address.required'  => 'Vui lòng nhập địa chỉ giao hàng.',
-            'customer_address.min'       => 'Địa chỉ phải có ít nhất :min ký tự.',
-            'customer_email.email'       => 'Email không đúng định dạng.',
-        ]);
+                'customer_email.email' => 'Email không đúng định dạng.',
+            ]
+        );
 
         if ($user = $request->user()) {
             if (empty($user->phone) || $user->phone !== $request->customer_phone) {
