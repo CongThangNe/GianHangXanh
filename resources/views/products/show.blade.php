@@ -95,7 +95,7 @@
         </div>
     </div>
 
-
+{{-- 
 <form method="GET" class="mb-10 p-6 border rounded-xl bg-gray-50">
     <h3 class="text-xl font-bold mb-4">🔍 Tìm kiếm nâng cao</h3>
 
@@ -132,7 +132,7 @@
     <button class="mt-4 px-6 py-2 bg-primary text-white rounded">
         Áp dụng lọc
     </button>
-</form>
+</form> --}}
 
 
     <!-- Related Products (Same Category) -->
