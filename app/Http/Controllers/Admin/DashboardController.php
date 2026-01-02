@@ -9,8 +9,7 @@ use App\Models\Order;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon; // Thêm thư viện xử lý thời gian
-
+use Carbon\Carbon; 
 class DashboardController extends Controller
 {
     public function index(Request $request)
@@ -23,16 +22,24 @@ class DashboardController extends Controller
             ? Carbon::parse($request->input('end_date'))->endOfDay() 
             : Carbon::now()->endOfDay();
 
-        $userCount  = User::whereBetween('created_at', [$startDate, $endDate])->count();
+        $userCount  = User::count();
         $orderCount = Order::whereBetween('created_at', [$startDate, $endDate])->count();
         
         $revenue = Order::where('payment_status', 'paid')
             ->whereBetween('created_at', [$startDate, $endDate])
             ->sum('total');
 
+        // Staff không được xem doanh thu
+        if (($request->user()->role ?? null) === 'staff') {
+            $revenue = 0;
+        }
+
         $stockCount = ProductVariant::sum('stock');
 
-        $users = User::whereBetween('created_at', [$startDate, $endDate])->latest()->take(5)->get();
+        // Staff cũng không xem danh sách tài khoản trên dashboard
+        $users = (($request->user()->role ?? null) === 'staff')
+            ? collect()
+            : User::whereBetween('created_at', [$startDate, $endDate])->latest()->take(5)->get();
         $orders = Order::whereBetween('created_at', [$startDate, $endDate])->latest()->take(5)->get();
 
         $topSellingProducts = DB::table('order_details as od')

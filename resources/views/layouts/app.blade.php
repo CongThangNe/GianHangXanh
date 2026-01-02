@@ -180,11 +180,21 @@
                                         </button>
                                     </form>
 
-                                    <!-- ⭐ THÊM ADMIN VÀO NGAY SAU ĐĂNG XUẤT -->
-                                    <a href="{{ route('admin.dashboard') }}"
-                                        class="block px-4 py-2 text-sm hover:bg-green-500">
-                                        Admin
-                                    </a>
+                                    @php
+                                        $role = Auth::user()->role ?? null;
+                                    @endphp
+
+                                    @if ($role === 'admin')
+                                        <a href="{{ route('admin.dashboard') }}"
+                                            class="block px-4 py-2 text-sm hover:bg-green-500">
+                                            Admin
+                                        </a>
+                                    @elseif ($role === 'staff')
+                                        <a href="{{ route('admin.dashboard') }}"
+                                            class="block px-4 py-2 text-sm hover:bg-green-500">
+                                            Quản lý
+                                        </a>
+                                    @endif
 
                                 </div>
                             </div>
@@ -278,6 +288,7 @@
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
+    @stack('scripts')
 </body>
 
 </html>
