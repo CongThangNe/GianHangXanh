@@ -65,9 +65,10 @@ return new class extends Migration
         Schema::create('carts', function (Blueprint $table) {
             $table->id();
             $table->string('session_id')->index();
-            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->unsignedBigInteger('user_id')->nullable();
             $table->timestamps();
         });
+
 
         // ============= CART ITEMS =============
         Schema::create('cart_items', function (Blueprint $table) {
@@ -75,7 +76,7 @@ return new class extends Migration
             $table->foreignId('cart_id')->constrained('carts')->cascadeOnDelete();
             $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
             $table->foreignId('product_variant_id')->nullable()
-                  ->constrained('product_variants')->nullOnDelete();
+                ->constrained('product_variants')->nullOnDelete();
             $table->integer('quantity')->default(1);
             $table->unsignedBigInteger('price'); // snapshot giá tại thời điểm thêm vào giỏ
             $table->timestamps();
