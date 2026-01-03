@@ -32,7 +32,7 @@
     </div>
 
     <div class="mb-3">
-        <label>Lượt dùng (0 = không giới hạn)</label>
+        <label>Số lượt có thể sử dụng</label>
         <input type="number" name="max_uses" class="form-control"
                value="{{ old('max_uses', $discountCode->max_uses) }}">
     </div>

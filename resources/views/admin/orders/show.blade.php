@@ -28,20 +28,20 @@
                     <div class="row mb-3">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold">Tên khách hàng</label>
-                            <input type="text" class="form-control" value="{{ $order->customer_name }}" readonly>
+                            <p><b> {{ $order->customer_name }} </b></p>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold">Số điện thoại</label>
-                            <input type="text" class="form-control" value="{{ $order->customer_phone }}" readonly>
+                            <p><b>{{ $order->customer_phone }} </b></p>
                         </div>
                         <div class="col-12 mb-3">
                             <label class="form-label fw-semibold">Địa chỉ giao hàng</label>
-                            <textarea class="form-control" rows="2" readonly>{{ $order->customer_address }}</textarea>
+                            <p><b>{{ $order->customer_address }} </b></p>
                         </div>
                         @if($order->note)
                             <div class="col-12 mb-3">
                                 <label class="form-label fw-semibold">Ghi chú đơn hàng</label>
-                                <textarea class="form-control" rows="2" readonly>{{ $order->note }}</textarea>
+                                <p><b>{{ $order->note }} </b></p>
                             </div>
                         @endif
                     </div>

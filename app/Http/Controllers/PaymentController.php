@@ -11,39 +11,43 @@ use App\Models\ProductVariant;
 
 class PaymentController extends Controller
 {
-    public function createPayment(Request $request)
-    {
-        $order = Order::findOrFail($request->order_id);
+   public function createPayment(Request $request)
+{
+  
+    $order = Order::findOrFail($request->order_id);
 
-        if ($order->payment_status === 'paid') {
-            abort(403, 'Đơn hàng đã thanh toán');
-        }
+    $vnp_Amount = (int) ($order->total * 100);
 
-        $inputData = [
-            "vnp_Version"   => "2.1.0",
-            "vnp_TmnCode"   => env('VNP_TMN_CODE'),
-            "vnp_Amount"   => $order->total_amount * 100,
-            "vnp_Command"  => "pay",
-            "vnp_CreateDate"=> date('YmdHis'),
-            "vnp_CurrCode" => "VND",
-            "vnp_IpAddr"   => $request->ip(),
-            "vnp_Locale"   => "vn",
-            "vnp_OrderInfo"=> "Thanh toán đơn #" . $order->order_code,
-            "vnp_OrderType"=> "other",
-            "vnp_ReturnUrl"=> env('VNP_RETURN_URL'),
-            "vnp_TxnRef"   => $order->id,
-        ];
+    $inputData = [
+        "vnp_Version" => "2.1.0",
+        "vnp_TmnCode" => config('vnpay.tmn_code'),
+        "vnp_Amount" => $vnp_Amount,
+        "vnp_Command" => "pay",
+        "vnp_CreateDate" => now()->format('YmdHis'),
+        "vnp_CurrCode" => "VND",
+        "vnp_IpAddr" => request()->ip(),
+        "vnp_Locale" => "vn",
+        "vnp_OrderInfo" => "Thanh toan don hang {$order->order_code}",
+        "vnp_OrderType" => "billpayment",
+        "vnp_ReturnUrl" => config('vnpay.return_url'),
+        "vnp_TxnRef" => $order->id,
+    ];
 
-        ksort($inputData);
-        $hashData = urldecode(http_build_query($inputData));
-        $query    = http_build_query($inputData);
+    ksort($inputData);
 
-        $secureHash = hash_hmac('sha512', $hashData, env('VNP_HASH_SECRET'));
-
-        return redirect(
-            env('VNP_URL') . "?" . $query . "&vnp_SecureHash=" . $secureHash
-        );
+    $hashData = '';
+    foreach ($inputData as $key => $value) {
+        $hashData .= $hashData ? '&' : '';
+        $hashData .= $key . '=' . $value;
     }
+
+    $vnpSecureHash = hash_hmac('sha512', $hashData, config('vnpay.hash_secret'));
+
+    $vnpUrl = config('vnpay.url') . '?' . http_build_query($inputData)
+        . '&vnp_SecureHash=' . $vnpSecureHash;
+
+    return redirect($vnpUrl);
+}
 
     public function vnpayReturn(Request $request)
     {

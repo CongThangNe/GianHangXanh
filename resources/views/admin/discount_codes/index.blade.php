@@ -34,7 +34,7 @@
                         : number_format($code['value']).'đ'
                     }}
                 </td>
-                <td>{{ $code['used'] }} / {{ $code['max_uses'] }}</td>
+                <td>{{ $code['used_count'] }} / {{ $code['max_uses'] }}</td>
                 <td>
                     {{ optional($code['starts_at'])->format('d/m/Y') ?? '—' }}
                     →

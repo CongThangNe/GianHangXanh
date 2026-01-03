@@ -6,8 +6,8 @@
 
         {{-- TIÊU ĐỀ --}}
         <!-- <h2 class="text-3xl md:text-4xl font-extrabold text-center text-green-700 mb-8 md:mb-12">
-                                                                            Thanh Toán Đơn Hàng
-                                                                        </h2> -->
+                                                                                Thanh Toán Đơn Hàng
+                                                                            </h2> -->
 
         {{-- THÔNG BÁO LỖI --}}
         @if (session('error'))
@@ -351,6 +351,7 @@
 
 
                         });
+
                 });
 
 
@@ -407,6 +408,36 @@
 
                 document.getElementById('checkout-form').addEventListener('submit', function() {
                     updateFullAddress();
+                });
+                document.getElementById('checkout-form').addEventListener('submit', function(e) {
+                    const province = document.getElementById('province').value;
+                    const district = document.getElementById('district').value;
+                    const ward = document.getElementById('ward').value;
+                    const detail = document.getElementById('address_detail').value.trim();
+
+                    if (!province) {
+                        alert('Vui lòng chọn Tỉnh / Thành phố');
+                        e.preventDefault();
+                        return;
+                    }
+
+                    if (!district) {
+                        alert('Vui lòng chọn Quận / Huyện');
+                        e.preventDefault();
+                        return;
+                    }
+
+                    if (!ward) {
+                        alert('Vui lòng chọn Phường / Xã');
+                        e.preventDefault();
+                        return;
+                    }
+
+                    if (!detail) {
+                        alert('Vui lòng nhập số nhà, tên đường');
+                        e.preventDefault();
+                        return;
+                    }
                 });
             });
         </script>
