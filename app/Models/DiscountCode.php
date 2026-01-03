@@ -8,35 +8,34 @@ use Illuminate\Support\Carbon;
 
 class DiscountCode extends Model
 {
-    use HasFactory;
-
-    protected $table = 'discount_codes';
-
     protected $fillable = [
         'code',
         'type',
-        'discount_percent',
-        'discount_value',
+        'value',
         'max_discount_value',
         'max_uses',
         'used_count',
         'starts_at',
-        'expires_at'
+        'expires_at',
+        'active',
     ];
 
     protected $casts = [
+        'active' => 'boolean',
         'starts_at' => 'datetime',
         'expires_at' => 'datetime',
     ];
 
-    // Tự động chuyển string -> Carbon khi đọc từ DB
-    public function getStartsAtAttribute($value)
+    public function isValid(): bool
     {
-        return $value ? Carbon::parse($value) : null;
-    }
+        if (!$this->active) return false;
 
-    public function getExpiresAtAttribute($value)
-    {
-        return $value ? Carbon::parse($value) : null;
+        if ($this->starts_at && now()->lt($this->starts_at)) return false;
+        if ($this->expires_at && now()->gt($this->expires_at)) return false;
+
+        if ($this->max_uses > 0 && $this->used_count >= $this->max_uses)
+            return false;
+
+        return true;
     }
 }

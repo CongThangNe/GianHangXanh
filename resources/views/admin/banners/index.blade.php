@@ -32,7 +32,7 @@
                         <td>{{ $banner->title }}</td>
                         <td>{{ $banner->link }}</td>
                         <td>{{ $banner->sort_order }}</td>
-                        <td>{{ $banner->status ? 'Active' : 'Inactive' }}</td>
+                        <td>{{ $banner->status ? 'Hoạt động' : 'Không hoạt động' }}</td>
                         <td>
                             <a href="{{ route('admin.banners.edit', $banner) }}" class="btn btn-sm btn-warning">Sửa</a>
                             <form action="{{ route('admin.banners.destroy', $banner) }}" method="POST"

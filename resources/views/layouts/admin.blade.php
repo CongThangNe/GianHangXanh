@@ -172,7 +172,7 @@
             <li class="nav-item"><a class="nav-link" href="{{ route('admin.discount-codes.index') }}">🎟️ Mã Giảm
                     Giá</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ route('admin.banners.index') }}">🖼️ Banner</a></li>
-            <li class="nav-item"><a class="nav-link" href="{{ route('admin.news.index') }}"> 📰 Tin tức</a></li>
+            {{-- <li class="nav-item"><a class="nav-link" href="{{ route('admin.news.index') }}"> 📰 Tin tức</a></li> --}}
 
             @if (auth()->user()->role === 'admin')
                 <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"
