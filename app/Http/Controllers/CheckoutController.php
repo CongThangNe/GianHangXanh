@@ -80,6 +80,7 @@ class CheckoutController extends Controller
 
     public function process(Request $request)
     {
+
         $request->validate(
             [
                 'customer_name'    => 'required|string|min:3|max:100',
@@ -101,10 +102,10 @@ class CheckoutController extends Controller
             ]
         );
 
-        return DB::transaction(function () use ($request) {
+        $sessionId = session()->getId();
 
-            $sessionId = session()->getId();
-
+        DB::beginTransaction();
+        try {
             $cart = Cart::with('items')
                 ->where('session_id', $sessionId)
                 ->lockForUpdate()
@@ -137,8 +138,6 @@ class CheckoutController extends Controller
                 }
 
                 $discountAmount = min($discountAmount, $subtotal);
-
-                $discountCode->increment('used_count');
             }
 
             $total = max(0, $subtotal - $discountAmount);
@@ -164,19 +163,28 @@ class CheckoutController extends Controller
                     'price'              => $item->price,
                 ]);
             }
-            if ($request->payment_method === 'vnpay') {
-                return redirect()->route('payment.create', [
-                    'order_id' => $order->id
-                ]);
-            }
 
+            // ===== VNPAY =====
+if ($request->payment_method === 'vnpay') {
 
-            $cart->items()->delete();
-            $cart->delete();
-            session()->forget('discount_code');
+    // 🔥 XÓA CART TRƯỚC
+    $cart->items()->delete();
+    $cart->delete();
+
+    session()->forget(['discount_code', 'pending_discount']);
+
+    DB::commit(); // commit order + xóa cart
+
+    return redirect()->route('payment.create', [
+        'order_id' => $order->id
+    ]);
+}
 
             return redirect()->route('home')
                 ->with('success', "Đặt hàng thành công #{$order->order_code}");
-        });
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 }

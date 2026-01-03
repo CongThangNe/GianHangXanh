@@ -58,7 +58,7 @@
                         <div class="col-md-4">
                             <span class="d-block">Phương thức thanh toán:</span>
                             <strong>
-                                {{ $order->payment_method === 'zalopay' ? 'ZaloPay' : 'Thanh toán khi nhận hàng (COD)' }}
+                                {{ $order->payment_method === 'vnpay' ? 'VNPAY' : 'Thanh toán khi nhận hàng (COD)' }}
                             </strong>
                         </div>
                     </div>
