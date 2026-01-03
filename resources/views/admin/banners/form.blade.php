@@ -4,10 +4,10 @@
     <input type="text" name="title" value="{{ old('title', $banner->title ?? '') }}" class="form-control">
 </div>
 
-<div class="mb-3">
+{{-- <div class="mb-3">
     <label>Đường dẫn</label>
     <input type="text" name="link" value="{{ old('link', $banner->link ?? '') }}" class="form-control">
-</div>
+</div> --}}
 
 <div class="mb-3">
     <label>Ảnh Banner</label>
