@@ -231,7 +231,7 @@
                                 <div class="flex justify-between text-base font-medium text-[#13612d] dark:text-green-400">
                                     <span>Giảm giá ({{ $discountInfo['code'] }}):</span>
                                     <span
-                                        id="discount-amount">-{{ number_format($discountInfo['display_amount'], 0, ',', '.') }}đ</span>
+                                        id="discount-amount">-{{ number_format($discountInfo['amount'], 0, ',', '.') }}đ</span>
                                 </div>
                             @endif
 

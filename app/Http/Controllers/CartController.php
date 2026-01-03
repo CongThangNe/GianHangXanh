@@ -24,42 +24,53 @@ class CartController extends Controller
         $cartItems = $cart?->items ?? collect();
         $subtotal  = $cartItems->sum(fn($i) => $i->price * $i->quantity);
 
-        // ===== DISCOUNT  =====
-       $discountAmount = 0;
-$discountInfo   = null;
-$codeStr        = session('discount_code');
+        // ===== DISCOUNT (CHỈ TÍNH – KHÔNG TRỪ LƯỢT) =====
+        $discountAmount = 0;
+        $discountInfo   = null;
+        $codeStr        = session('discount_code');
 
-if ($codeStr) {
-    $code = DiscountCode::where('code', $codeStr)->first();
+        if ($codeStr) {
+            $code = DiscountCode::where('code', $codeStr)
+                ->where('active', true)
+                ->where('max_uses', '>', 0)
+                ->whereColumn('used_count', '<', 'max_uses')
+                ->where(function ($q) {
+                    $q->whereNull('starts_at')->orWhere('starts_at', '<=', now());
+                })
+                ->where(function ($q) {
+                    $q->whereNull('expires_at')->orWhere('expires_at', '>=', now());
+                })
+                ->first();
 
-    if ($code) {
-        if ($code->type === 'percent') {
-            $discountAmount = $subtotal * ($code->value / 100);
-            if ($code->max_discount_value > 0) {
-                $discountAmount = min($discountAmount, $code->max_discount_value);
+
+            if ($code) {
+                if ($code->type === 'percent') {
+                    $discountAmount = $subtotal * ($code->value / 100);
+                    if ($code->max_discount_value > 0) {
+                        $discountAmount = min($discountAmount, $code->max_discount_value);
+                    }
+                } else {
+                    $discountAmount = $code->value;
+                }
+
+                $discountAmount = min($discountAmount, $subtotal);
+
+                $discountInfo = [
+                    'code'       => $code->code,
+                    'type'       => $code->type,
+                    'value'      => $code->type === 'percent'
+                        ? $code->value . '%'
+                        : number_format($code->value, 0, ',', '.') . 'đ',
+                    'amount'     => $discountAmount,
+                    'used_count' => $code->used_count,
+                    'max_uses'   => $code->max_uses,
+                ];
+            } else {
+                session()->forget('discount_code');
             }
-        } else {
-            $discountAmount = $code->value;
         }
 
-        $discountAmount = min($discountAmount, $subtotal);
-
-        $discountInfo = [
-            'code' => $code->code,
-            'type' => $code->type,
-            'value' => $code->type === 'percent'
-                ? $code->value . '%'
-                : number_format($code->value, 0, ',', '.') . 'đ',
-            'amount' => $discountAmount,
-            'display_amount' => $discountAmount,
-        ];
-    } else {
-        session()->forget('discount_code');
-    }
-}
-
-$total = max(0, $subtotal - $discountAmount);
-
+        $total = max(0, $subtotal - $discountAmount);
 
         return view('cart.index', compact(
             'cart',
@@ -94,7 +105,7 @@ $total = max(0, $subtotal - $discountAmount);
             ->first();
 
         if (!$code) {
-            return back()->with('error', 'Mã giảm giá không hợp lệ hoặc đã hết hạn!');
+            return back()->with('error', 'Mã giảm giá không hợp lệ hoặc đã hết lượt');
         }
 
         session(['discount_code' => $code->code]);
@@ -107,6 +118,7 @@ $total = max(0, $subtotal - $discountAmount);
         session()->forget('discount_code');
         return back()->with('success', 'Đã bỏ mã giảm giá');
     }
+
 
     // ================== ADD ==================
     public function add(Request $request)

@@ -12,11 +12,6 @@ use Illuminate\Support\Facades\DB;
 
 class CheckoutController extends Controller
 {
-    /**
-     * HIỂN THỊ CHECKOUT
-     * - Preview đơn hàng
-     * - Áp mã giảm giá từ session
-     */
     public function index()
     {
         $sessionId = session()->getId();
@@ -31,7 +26,7 @@ class CheckoutController extends Controller
         }
 
         $cartItems = $cart->items;
-        $subtotal  = $cartItems->sum(fn ($i) => $i->price * $i->quantity);
+        $subtotal  = $cartItems->sum(fn($i) => $i->price * $i->quantity);
 
         $discountAmount = 0;
         $discountInfo   = null;
@@ -42,22 +37,13 @@ class CheckoutController extends Controller
                 ->where('active', true)
                 ->where(function ($q) {
                     $q->where('max_uses', 0)
-                      ->orWhereColumn('used_count', '<', 'max_uses');
-                })
-                ->where(function ($q) {
-                    $q->whereNull('starts_at')
-                      ->orWhere('starts_at', '<=', now());
-                })
-                ->where(function ($q) {
-                    $q->whereNull('expires_at')
-                      ->orWhere('expires_at', '>=', now());
+                        ->orWhereColumn('used_count', '<', 'max_uses');
                 })
                 ->first();
 
             if ($code) {
                 if ($code->type === 'percent') {
                     $discountAmount = $subtotal * ($code->value / 100);
-
                     if ($code->max_discount_value > 0) {
                         $discountAmount = min($discountAmount, $code->max_discount_value);
                     }
@@ -68,12 +54,13 @@ class CheckoutController extends Controller
                 $discountAmount = min($discountAmount, $subtotal);
 
                 $discountInfo = [
-                    'code'   => $code->code,
-                    'type'   => $code->type,
-                    'value'  => $code->type === 'percent'
+                    'code'       => $code->code,
+                    'value'      => $code->type === 'percent'
                         ? $code->value . '%'
                         : number_format($code->value, 0, ',', '.') . 'đ',
-                    'amount' => $discountAmount,
+                    'amount'     => $discountAmount,
+                    'used_count' => $code->used_count,
+                    'max_uses'   => $code->max_uses,
                 ];
             } else {
                 session()->forget('discount_code');
@@ -91,21 +78,28 @@ class CheckoutController extends Controller
         ));
     }
 
-    /**
-     * XỬ LÝ ĐẶT HÀNG
-     * - Lock cart + discount
-     * - Trừ lượt dùng
-     * - Tạo order + order detail
-     */
     public function process(Request $request)
     {
-        $request->validate([
-            'customer_name'    => 'required|string|min:3|max:100',
-            'customer_phone'   => 'required|digits_between:10,11',
-            'customer_address' => 'required|string|min:10',
-            'payment_method'   => 'required|in:cod,vnpay',
-            'note'             => 'nullable|string|max:1000',
-        ]);
+        $request->validate(
+            [
+                'customer_name'    => 'required|string|min:3|max:100',
+                'customer_phone'   => 'required|digits_between:10,11',
+                'customer_address' => 'required|string|min:10',
+                'payment_method'   => 'required|in:cod,vnpay',
+                'note'             => 'nullable|string|max:1000',
+                'province'         => 'required',
+                'district'         => 'required',
+                'ward'             => 'required',
+            ],
+            [
+                'customer_name.required'    => 'Vui lòng nhập họ tên',
+                'customer_phone.required'   => 'Vui lòng nhập số điện thoại',
+                'customer_address.required' => 'Địa chỉ giao hàng không hợp lệ',
+                'province.required'         => 'Bạn chưa chọn Tỉnh / Thành phố',
+                'district.required'         => 'Bạn chưa chọn Quận / Huyện',
+                'ward.required'             => 'Bạn chưa chọn Phường / Xã',
+            ]
+        );
 
         return DB::transaction(function () use ($request) {
 
@@ -116,43 +110,25 @@ class CheckoutController extends Controller
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            if ($cart->items->isEmpty()) {
-                return redirect()->route('cart.index')->with('error', 'Giỏ hàng trống!');
-            }
+            $subtotal = $cart->items->sum(fn($i) => $i->price * $i->quantity);
 
-            $subtotal = $cart->items->sum(fn ($i) => $i->price * $i->quantity);
             $discountAmount = 0;
+            $discountCode   = null;
 
-            $discountCodeStr = session('discount_code');
-            $discountCode    = null;
-
-            if ($discountCodeStr) {
-                $discountCode = DiscountCode::where('code', $discountCodeStr)
+            if (session('discount_code')) {
+                $discountCode = DiscountCode::where('code', session('discount_code'))
                     ->where('active', true)
                     ->where(function ($q) {
                         $q->where('max_uses', 0)
-                          ->orWhereColumn('used_count', '<', 'max_uses');
-                    })
-                    ->where(function ($q) {
-                        $q->whereNull('starts_at')
-                          ->orWhere('starts_at', '<=', now());
-                    })
-                    ->where(function ($q) {
-                        $q->whereNull('expires_at')
-                          ->orWhere('expires_at', '>=', now());
+                            ->orWhereColumn('used_count', '<', 'max_uses');
                     })
                     ->lockForUpdate()
                     ->first();
-
-                if (!$discountCode) {
-                    session()->forget('discount_code');
-                }
             }
 
             if ($discountCode) {
                 if ($discountCode->type === 'percent') {
                     $discountAmount = $subtotal * ($discountCode->value / 100);
-
                     if ($discountCode->max_discount_value > 0) {
                         $discountAmount = min($discountAmount, $discountCode->max_discount_value);
                     }
@@ -161,6 +137,7 @@ class CheckoutController extends Controller
                 }
 
                 $discountAmount = min($discountAmount, $subtotal);
+
                 $discountCode->increment('used_count');
             }
 
@@ -187,24 +164,19 @@ class CheckoutController extends Controller
                     'price'              => $item->price,
                 ]);
             }
-
-            if ($request->payment_method === 'cod') {
-                $cart->items()->delete();
-                $cart->delete();
-                session()->forget('discount_code');
-
-                return redirect()->route('home')
-                    ->with('success', "Đặt hàng thành công #{$order->order_code}");
-            }
-
             if ($request->payment_method === 'vnpay') {
                 return redirect()->route('payment.create', [
-                    'order_id' => $order->id,
-                    'amount'   => $total,
+                    'order_id' => $order->id
                 ]);
             }
 
-            abort(400);
+
+            $cart->items()->delete();
+            $cart->delete();
+            session()->forget('discount_code');
+
+            return redirect()->route('home')
+                ->with('success', "Đặt hàng thành công #{$order->order_code}");
         });
     }
 }
