@@ -59,8 +59,7 @@
 
                         {{-- ✅ CHỈ 1 CART-ITEM, KHÔNG LỒNG 2 DIV --}}
                         <div class="cart-item flex flex-col gap-4 border-b border-gray-200/80 dark:border-gray-700/80 pb-4 md:grid md:grid-cols-6 md:items-center"
-                            data-item-id="{{ $item->id }}"
-                            data-unit-price="{{ (int) ($item->price ?? 0) }}"
+                            data-item-id="{{ $item->id }}" data-unit-price="{{ (int) ($item->price ?? 0) }}"
                             data-max-stock="{{ $maxAllowed }}">
 
                             {{-- Product --}}
@@ -76,13 +75,15 @@
                                         </a>
                                     @else
                                         <a href="{{ route('product.show', $product->id) }}">
-                                            <div class="h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-gray-200 flex items-center justify-center">
+                                            <div
+                                                class="h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-gray-200 flex items-center justify-center">
                                                 <span class="text-gray-500">No Image</span>
                                             </div>
                                         </a>
                                     @endif
                                 @else
-                                    <div class="h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-gray-200 flex items-center justify-center">
+                                    <div
+                                        class="h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-gray-200 flex items-center justify-center">
                                         <span class="text-gray-500">No Image</span>
                                     </div>
                                 @endif
@@ -130,9 +131,7 @@
 
                                     <input
                                         class="w-16 sm:w-20 py-1 border-none bg-transparent text-center text-base font-medium focus:outline-0 focus:ring-0"
-                                        type="number"
-                                        value="{{ $item->quantity }}"
-                                        min="1"
+                                        type="number" value="{{ $item->quantity }}" min="1"
                                         max="{{ $maxAllowed }}">
 
                                     <button type="button"
@@ -144,7 +143,7 @@
                             <div class="flex items-center justify-between md:col-span-1 md:justify-end">
                                 <span class="md:hidden text-sm text-gray-600 dark:text-gray-400">Giá</span>
                                 <p class="line-total text-right text-base font-medium text-[#4c9a66]">
-                                    {{ number_format($lineTotal, 0, ',', '.') }}₫
+                                    {{ number_format($lineTotal, 0, ',', '.') }}đ
                                 </p>
                             </div>
 
@@ -171,17 +170,21 @@
 
                 <!-- Right Column: Order Summary -->
                 <div class="lg:col-span-1">
-                    <div class="sticky top-24 rounded-xl border border-gray-200/80 dark:border-gray-700/80 bg-white dark:bg-gray-800 p-6 shadow-xl">
-                        <h2 class="text-lg font-bold text-[#0d1b12] dark:text-white mb-4 border-b pb-2">Tóm tắt đơn hàng</h2>
+                    <div
+                        class="sticky top-24 rounded-xl border border-gray-200/80 dark:border-gray-700/80 bg-white dark:bg-gray-800 p-6 shadow-xl">
+                        <h2 class="text-lg font-bold text-[#0d1b12] dark:text-white mb-4 border-b pb-2">Tóm tắt đơn hàng
+                        </h2>
 
                         <!-- Mã giảm giá -->
-                        <div class="mb-6 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900/50">
+                        <div
+                            class="mb-6 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900/50">
                             <p class="text-sm font-semibold text-[#0d1b12] dark:text-white mb-3 flex items-center gap-2">
                                 Mã giảm giá
                             </p>
 
                             @if (session('discount_code') && isset($discountInfo))
-                                <div class="p-4 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg">
+                                <div
+                                    class="p-4 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg">
                                     <div class="flex justify-between items-center">
                                         <div>
                                             <span class="font-bold text-green-700 dark:text-green-300">
@@ -193,7 +196,8 @@
                                         </div>
                                         <form action="{{ route('cart.removeDiscount') }}" method="POST" class="inline">
                                             @csrf
-                                            <button type="submit" class="text-xs text-red-600 hover:text-red-800 underline">
+                                            <button type="submit"
+                                                class="text-xs text-red-600 hover:text-red-800 underline">
                                                 Bỏ áp dụng
                                             </button>
                                         </form>
@@ -226,11 +230,13 @@
                             @if ($discountInfo)
                                 <div class="flex justify-between text-base font-medium text-[#13612d] dark:text-green-400">
                                     <span>Giảm giá ({{ $discountInfo['code'] }}):</span>
-                                    <span id="discount-amount">-{{ number_format($discountInfo['display_amount'], 0, ',', '.') }}đ</span>
+                                    <span
+                                        id="discount-amount">-{{ number_format($discountInfo['display_amount'], 0, ',', '.') }}đ</span>
                                 </div>
                             @endif
 
-                            <div class="flex justify-between text-lg font-bold text-[#0d1b12] dark:text-white border-t border-gray-200/80 dark:border-gray-700/80 pt-4">
+                            <div
+                                class="flex justify-between text-lg font-bold text-[#0d1b12] dark:text-white border-t border-gray-200/80 dark:border-gray-700/80 pt-4">
                                 <span>Thành tiền</span>
                                 <span id="total-final">{{ number_format($total, 0, ',', '.') }}đ</span>
                             </div>
@@ -249,6 +255,8 @@
 
         <!-- JS để cập nhật quantity mà không reload -->
         <script>
+            let isUpdating = false;
+
             function formatCurrency(number) {
                 return new Intl.NumberFormat('vi-VN', {
                     style: 'currency',
@@ -262,7 +270,8 @@
                 if (!toast) {
                     toast = document.createElement('div');
                     toast.id = 'custom-toast';
-                    toast.style.cssText = 'position:fixed;top:1rem;right:1rem;padding:1rem;border-radius:0.5rem;z-index:9999;transition:opacity 0.4s;';
+                    toast.style.cssText =
+                        'position:fixed;top:1rem;right:1rem;padding:1rem;border-radius:0.5rem;z-index:9999;transition:opacity 0.4s;';
                     document.body.appendChild(toast);
                 }
                 toast.className = isError ? 'bg-red-600 text-white' : 'bg-green-600 text-white';
@@ -272,13 +281,19 @@
             }
 
             const refreshSummary = (data) => {
-                const subtotalEl = document.getElementById('subtotal');
+                document.getElementById('subtotal').textContent =
+                    formatCurrency(data.subtotal);
+
                 const discountEl = document.getElementById('discount-amount');
-                const totalEl = document.getElementById('total-final');
-                if (subtotalEl) subtotalEl.textContent = formatCurrency(data.subtotal);
-                if (discountEl) discountEl.textContent = '-' + formatCurrency(data.discount_amount || 0);
-                if (totalEl) totalEl.textContent = formatCurrency(data.total);
+                if (discountEl) {
+                    discountEl.textContent = '-' + formatCurrency(data.discount_amount ?? 0);
+                }
+
+                document.getElementById('total-final').textContent =
+                    formatCurrency(data.total);
             };
+
+
 
             document.querySelectorAll('.cart-item').forEach(cartItem => {
                 const qtyInput = cartItem.querySelector('input[type="number"]');
@@ -299,34 +314,37 @@
                 }
 
                 const updateQuantity = (newQty) => {
+                    if (isUpdating) return;
+                    isUpdating = true;
+
                     const maxAllowed = getMaxAllowed();
                     newQty = parseInt(newQty) || 1;
 
-                    if (newQty < 1) {
-                        showToast('Số lượng không được nhỏ hơn 1', true);
-                        qtyInput.value = 1;
-                        return;
-                    }
+                    if (newQty < 1) newQty = 1;
                     if (newQty > maxAllowed) {
                         showToast(`Số lượng không được vượt quá tồn kho (${maxAllowed})`, true);
-                        qtyInput.value = maxAllowed;
-                        return;
+                        newQty = maxAllowed;
                     }
 
-                    qtyInput.value = newQty;
-                    lineTotalEl.textContent = formatCurrency(getUnitPrice() * newQty);
-
                     fetch("{{ route('cart.update') }}", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                        },
-                        body: JSON.stringify({ item_id: cartItem.dataset.itemId, quantity: newQty })
-                    })
-                    .then(r => r.json())
-                    .then(data => {
-                        if (data.success) {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                            },
+                            body: JSON.stringify({
+                                item_id: cartItem.dataset.itemId,
+                                quantity: newQty
+                            })
+                        })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (!data.success) {
+                                showToast(data.message || 'Lỗi cập nhật số lượng', true);
+                                return;
+                            }
+
+                            qtyInput.value = data.quantity;
                             lineTotalEl.textContent = formatCurrency(data.line_total);
                             refreshSummary(data);
 
@@ -335,19 +353,28 @@
                             }
 
                             showToast('Cập nhật giỏ hàng thành công!');
-                        } else {
-                            showToast(data.message || 'Lỗi cập nhật số lượng', true);
-                            const rollbackQty = data.current_quantity || 1;
-                            qtyInput.value = rollbackQty;
-                            lineTotalEl.textContent = formatCurrency(getUnitPrice() * rollbackQty);
-                        }
-                    })
-                    .catch(() => showToast('Không thể kết nối server, vui lòng thử lại sau', true));
+                        })
+                        .catch(() => {
+                            showToast('Không thể kết nối server, vui lòng thử lại sau', true);
+                        })
+                        .finally(() => {
+                            isUpdating = false;
+                        });
                 };
 
-                decreaseBtn.addEventListener('click', () => updateQuantity(parseInt(qtyInput.value) - 1));
-                increaseBtn.addEventListener('click', () => updateQuantity(parseInt(qtyInput.value) + 1));
-                qtyInput.addEventListener('change', () => updateQuantity(qtyInput.value));
+
+                decreaseBtn.addEventListener('click', () =>
+                    updateQuantity(parseInt(qtyInput.value) - 1)
+                );
+
+                increaseBtn.addEventListener('click', () =>
+                    updateQuantity(parseInt(qtyInput.value) + 1)
+                );
+
+                qtyInput.addEventListener('change', () =>
+                    updateQuantity(qtyInput.value)
+                );
+
 
                 // Đổi biến thể ngay trong giỏ
                 if (variantSelect) {
@@ -355,40 +382,43 @@
                         const newVariantId = e.target.value;
 
                         fetch("{{ route('cart.updateVariant') }}", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                            },
-                            body: JSON.stringify({ item_id: cartItem.dataset.itemId, variant_id: newVariantId })
-                        })
-                        .then(r => r.json())
-                        .then(data => {
-                            if (!data.success) {
-                                showToast(data.message || 'Không thể đổi biến thể', true);
-                                return;
-                            }
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                                },
+                                body: JSON.stringify({
+                                    item_id: cartItem.dataset.itemId,
+                                    variant_id: newVariantId
+                                })
+                            })
+                            .then(r => r.json())
+                            .then(data => {
+                                if (!data.success) {
+                                    showToast(data.message || 'Không thể đổi biến thể', true);
+                                    return;
+                                }
 
-                            if (String(data.item_id) !== String(cartItem.dataset.itemId)) {
-                                window.location.reload();
-                                return;
-                            }
+                                if (String(data.item_id) !== String(cartItem.dataset.itemId)) {
+                                    window.location.reload();
+                                    return;
+                                }
 
-                            cartItem.dataset.unitPrice = data.unit_price;
+                                cartItem.dataset.unitPrice = data.unit_price;
 
-                            if (data.max_allowed !== undefined) {
-                                setMaxAllowed(data.max_allowed);
-                            } else if (data.max_stock !== undefined) {
-                                setMaxAllowed(data.max_stock);
-                            }
+                                if (data.max_allowed !== undefined) {
+                                    setMaxAllowed(data.max_allowed);
+                                } else if (data.max_stock !== undefined) {
+                                    setMaxAllowed(data.max_stock);
+                                }
 
-                            qtyInput.value = data.quantity;
+                                qtyInput.value = data.quantity;
 
-                            lineTotalEl.textContent = formatCurrency(data.line_total);
-                            refreshSummary(data);
-                            showToast('Đổi biến thể thành công!');
-                        })
-                        .catch(() => showToast('Không thể kết nối server, vui lòng thử lại sau', true));
+                                lineTotalEl.textContent = formatCurrency(data.line_total);
+                                refreshSummary(data);
+                                showToast('Đổi biến thể thành công!');
+                            })
+                            .catch(() => showToast('Không thể kết nối server, vui lòng thử lại sau', true));
                     });
                 }
             });
