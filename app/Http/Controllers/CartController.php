@@ -53,8 +53,6 @@ class CartController extends Controller
                     $discountAmount = $code->value;
                 }
 
-                $discountAmount = min($discountAmount, $subtotal);
-
                 $discountInfo = [
                     'code'       => $code->code,
                     'type'       => $code->type,
@@ -258,7 +256,6 @@ class CartController extends Controller
                             $discountAmount = $code->value;
                         }
 
-                        $discountAmount = min($discountAmount, $subtotal);
                     } else {
                         session()->forget('discount_code');
                     }
