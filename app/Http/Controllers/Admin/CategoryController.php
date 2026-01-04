@@ -57,60 +57,14 @@ class CategoryController extends Controller
         // - Tránh mất dữ liệu vì order_details liên kết với product/variant
         // =====================
 
+        // 1) Nếu danh mục đã có sản phẩm => chặn xóa (tránh mất dữ liệu, ảnh hưởng FK, lịch sử)
         $productIds = Product::where('category_id', $category->id)->pluck('id');
-        $hasOrderDetailsProductId = Schema::hasColumn('order_details', 'product_id');
-
-        $hasAnyOrder = false;
-        $hasSuccessfulOrder = false;
 
         if ($productIds->isNotEmpty()) {
-            // Check theo product_id trong order_details (nếu DB có)
-            if ($hasOrderDetailsProductId) {
-                $hasAnyOrder = OrderDetail::whereIn('product_id', $productIds)->exists();
-
-                $hasSuccessfulOrder = OrderDetail::whereIn('product_id', $productIds)
-                    ->whereHas('order', function ($q) {
-                        if (Schema::hasColumn('orders', 'delivery_status')) {
-                            $q->orWhere('delivery_status', 'delivered');
-                        }
-                        if (Schema::hasColumn('orders', 'payment_status')) {
-                            $q->orWhere('payment_status', 'paid');
-                        }
-                        if (Schema::hasColumn('orders', 'status')) {
-                            $q->orWhere('status', 'paid');
-                        }
-                    })
-                    ->exists();
-            }
-
-            // Check theo product_variant_id (fallback)
-            $variantIds = ProductVariant::whereIn('product_id', $productIds)->pluck('id');
-            if ($variantIds->isNotEmpty()) {
-                $hasAnyOrder = $hasAnyOrder || OrderDetail::whereIn('product_variant_id', $variantIds)->exists();
-
-                $hasSuccessfulOrder = $hasSuccessfulOrder || OrderDetail::whereIn('product_variant_id', $variantIds)
-                    ->whereHas('order', function ($q) {
-                        if (Schema::hasColumn('orders', 'delivery_status')) {
-                            $q->orWhere('delivery_status', 'delivered');
-                        }
-                        if (Schema::hasColumn('orders', 'payment_status')) {
-                            $q->orWhere('payment_status', 'paid');
-                        }
-                        if (Schema::hasColumn('orders', 'status')) {
-                            $q->orWhere('status', 'paid');
-                        }
-                    })
-                    ->exists();
-            }
+            return back()->with('error', 'Không thể xóa danh mục vì danh mục đang chứa sản phẩm.');
         }
 
-        if ($hasSuccessfulOrder) {
-            return back()->with('error', 'Không thể xóa danh mục vì có sản phẩm trong danh mục đã có đơn hàng ở trạng thái THÀNH CÔNG. Vui lòng ẩn/ngừng bán sản phẩm thay vì xóa danh mục.');
-        }
-
-        if ($hasAnyOrder) {
-            return back()->with('error', 'Không thể xóa danh mục vì có sản phẩm trong danh mục đã phát sinh trong đơn hàng. Vui lòng ẩn/ngừng bán sản phẩm thay vì xóa danh mục.');
-        }
+        // (Danh mục rỗng => cho phép xóa)
 
         $category->delete();
         return redirect()->route('admin.categories.index')->with('success','Đã xóa danh mục');
