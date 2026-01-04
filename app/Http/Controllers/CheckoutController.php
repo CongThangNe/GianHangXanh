@@ -163,22 +163,20 @@ class CheckoutController extends Controller
                     'price'              => $item->price,
                 ]);
             }
+            //xóa cart 
+            $cart->items()->delete();
+            $cart->delete();
+            session()->forget(['discount_code', 'pending_discount']);
 
+            DB::commit();
             // ===== VNPAY =====
-if ($request->payment_method === 'vnpay') {
+            if ($request->payment_method === 'vnpay') {
 
-    // 🔥 XÓA CART TRƯỚC
-    $cart->items()->delete();
-    $cart->delete();
-
-    session()->forget(['discount_code', 'pending_discount']);
-
-    DB::commit(); // commit order + xóa cart
-
-    return redirect()->route('payment.create', [
-        'order_id' => $order->id
-    ]);
-}
+                return redirect()->route('payment.create', [
+                    'order_id' => $order->id
+                ]);
+            }
+            
 
             return redirect()->route('home')
                 ->with('success', "Đặt hàng thành công #{$order->order_code}");
