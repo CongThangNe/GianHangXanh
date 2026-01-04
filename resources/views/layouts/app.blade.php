@@ -170,7 +170,6 @@
                                         Đơn hàng
                                     </a>
 
-
                                     <form action="{{ route('logout') }}" method="POST">
                                         @csrf
                                         <button type="submit"
@@ -204,6 +203,8 @@
 
             <!-- Content -->
             <div class="max-w-7xl w-full mx-auto px-4 py-6">
+                
+
                 @yield('content')
             </div>
 
@@ -220,7 +221,6 @@
                 <!-- Cột Logo -->
                 <img src="{{ asset('storage/uploads/logos/logo.png') }}" alt="Gian Hàng Xanh"
                     class="h-40 w-auto object-contain">
-
 
                 <!-- Cột 1 -->
                 <div class="text-xs">
@@ -281,8 +281,6 @@
 
         </div>
     </footer>
-
-
 
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
