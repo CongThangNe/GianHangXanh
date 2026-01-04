@@ -3,23 +3,7 @@
 
 @section('content')
 
-    {{-- @include('layouts.banner') --}}
-
-    <!-- Banner -->
-    <div id="banner-slideshow" class="mb-4 rounded-3" style="height: 250px; position: relative; overflow: hidden;">
-
-        <div class="slide"
-            style="height:100%; background: url('{{ asset('storage/banners/banner1.jpg') }}') center/cover no-repeat; background-size: cover;">
-        </div>
-
-        <!-- Nội dung cố định -->
-        <div
-            class="d-flex flex-column justify-content-center align-items-center h-100 text-center px-3 position-absolute top-0 start-0 w-100">
-            <h1 class="fw-bold" style="color: green; font-size: 1.8rem;">Chào mừng đến Gian Hàng Xanh 🌱</h1>
-            <p style="color: green; font-size: 1rem;">Thực phẩm sạch - An toàn - Vì một tương lai xanh</p>
-            <a href="#products" class="btn btn-success btn-sm mt-2">Khám phá ngay</a>
-        </div>
-    </div>
+    @include('layouts.home-banner')
 
     <div class="mb-4" id="products">
         <div class="col-12">
