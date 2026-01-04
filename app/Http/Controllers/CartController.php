@@ -108,13 +108,13 @@ class CartController extends Controller
 
         session(['discount_code' => $code->code]);
 
-        return back()->with('success', 'Áp dụng mã giảm giá thành công');
+        return back()->with('success');
     }
 
     public function removeDiscount()
     {
         session()->forget('discount_code');
-        return back()->with('success', 'Đã bỏ mã giảm giá');
+        return back()->with('success');
     }
 
 
@@ -172,7 +172,7 @@ class CartController extends Controller
             return back()->with('error', $e->getMessage());
         }
 
-        return redirect()->route('cart.index')->with('success', 'Đã thêm vào giỏ hàng');
+        return redirect()->route('cart.index')->with('success',);
     }
     public function update(Request $request)
     {
@@ -309,7 +309,7 @@ class CartController extends Controller
             $item->delete();
         });
 
-        return back()->with('success', 'Đã xóa sản phẩm');
+        return back()->with('success',);
     }
 
     // ================== CLEAR ==================
