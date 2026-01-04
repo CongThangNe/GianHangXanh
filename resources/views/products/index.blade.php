@@ -2,6 +2,7 @@
 @section('title', isset($keyword) && $keyword ? 'Kết quả tìm kiếm: ' . $keyword : 'Trang chủ')
 
 @section('content')
+
     {{-- @include('layouts.banner') --}}
 
     <!-- Banner -->
@@ -28,6 +29,7 @@
             <div class="w-full flex justify-center">
                 <!-- CHỈ bọc nút + slider trong 1 khung relative -->
                 <div class="relative w-full">
+
 
                     <!-- Nút trái -->
                     <button type="button" id="top10Prev" aria-label="Cuộn trái"
@@ -91,10 +93,12 @@
         </div>
     </div>
 
+
     <!-- Shop by Category Section -->
     <section class="py-5 px-4">
         <div class="container mx-auto">
             <h2 class=" mb-5  text-center mb-4">Danh mục sản phẩm </h2>
+
 
             <div class="w-full flex justify-center">
                 <div class="flex gap-4 py-2 flex-wrap justify-center">
