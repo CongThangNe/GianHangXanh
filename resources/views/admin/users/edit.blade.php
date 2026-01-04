@@ -21,13 +21,16 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('admin.users.update', $user) }}" class="row g-3">
+            <form id="roleForm" method="POST" action="{{ route('admin.users.update', $user) }}" class="row g-3">
                 @csrf
                 @method('PUT')
 
+                {{-- Server-side require confirmation when role is changed --}}
+                <input type="hidden" name="confirm_role_change" id="confirmRoleChange" value="0">
+
                 <div class="col-md-6">
                     <label class="form-label form-required">Vai trò</label>
-                    <select class="form-select" name="role" required>
+                    <select id="roleSelect" class="form-select" name="role" required>
                         @foreach($roles as $key => $label)
                             <option value="{{ $key }}" @selected(old('role', $user->role) === $key)>{{ $label }}</option>
                         @endforeach
@@ -42,4 +45,50 @@
         </div>
     </div>
 </div>
+
+<script>
+    (function () {
+        const form = document.getElementById('roleForm');
+        const select = document.getElementById('roleSelect');
+        const confirmInput = document.getElementById('confirmRoleChange');
+
+        // Blade values
+        const currentRole = @json($user->role);
+        const isSelf = @json(auth()->id() === $user->id);
+        const ROLE_ADMIN = 'admin';
+        const roles = @json($roles);
+
+        if (!form || !select) return;
+
+        form.addEventListener('submit', function (e) {
+            const nextRole = select.value;
+
+            // Reset
+            if (confirmInput) confirmInput.value = '0';
+
+            // Không đổi role => không cần confirm
+            if (nextRole === currentRole) return;
+
+            const fromLabel = roles?.[currentRole] ?? currentRole;
+            const toLabel = roles?.[nextRole] ?? nextRole;
+
+            const isDowngradeFromAdmin = (currentRole === ROLE_ADMIN && nextRole !== ROLE_ADMIN);
+            const msg = isDowngradeFromAdmin
+                ? (isSelf
+                    ? `Bạn đang tự HẠ quyền Admin của chính mình (từ "${fromLabel}" → "${toLabel}"). Sau khi lưu, bạn có thể mất quyền truy cập trang quản trị và sẽ bị đăng xuất. Bạn chắc chắn muốn tiếp tục?`
+                    : `Bạn đang HẠ quyền Admin của tài khoản này (từ "${fromLabel}" → "${toLabel}"). Tài khoản sẽ mất quyền truy cập tính năng quản trị. Bạn chắc chắn muốn tiếp tục?`)
+                : (isSelf
+                    ? `Bạn đang thay đổi vai trò của chính mình (từ "${fromLabel}" → "${toLabel}"). Bạn chắc chắn muốn tiếp tục?`
+                    : `Bạn đang thay đổi vai trò tài khoản này (từ "${fromLabel}" → "${toLabel}"). Bạn chắc chắn muốn tiếp tục?`);
+
+            if (!confirm(msg)) {
+                e.preventDefault();
+                return;
+            }
+
+            // Mark confirmed for backend validation
+            if (confirmInput) confirmInput.value = '1';
+        });
+    })();
+</script>
 @endsection
