@@ -45,11 +45,14 @@ class HomeController extends Controller
         // ==========================
         $products = Product::latest()->take(10)->get();
 
+        // DANH SÁCH TẤT CẢ SẢN PHẨM (hiển thị dạng grid 3x3, phân trang)
+        $allProducts = Product::latest()->paginate(9)->withQueryString();
+
         // NOTE:
         // "Sản phẩm liên quan theo danh mục" sẽ hiển thị trong trang chi tiết sản phẩm.
         // Trang chủ chỉ hiển thị Top 10 + danh mục + banner.
 
-        return view('products.index', compact('categories', 'products', 'keyword', 'banners'));
+        return view('products.index', compact('categories', 'products', 'allProducts', 'keyword', 'banners'));
     }
 
     /**
