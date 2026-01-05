@@ -7,6 +7,7 @@
     @include('layouts.home-banner')
 @endif
 
+@if(request()->routeIs('home') && (!isset($keyword) || !$keyword))
 <div class="mb-4" id="products">
     <div class="col-12">
         <h4 class="mb-3">Sản phẩm nổi bật</h4>
@@ -41,23 +42,29 @@
 
                 <!-- Slider -->
                 <div id="top10Slider"
-                    class="flex overflow-x-auto gap-6 py-4 px-12 scroll-smooth
+                    class="flex overflow-x-auto gap-4 md:gap-5 py-3 px-10 scroll-smooth
                            [-ms-scrollbar-style:none] [scrollbar-width:none]
                            [&::-webkit-scrollbar]:hidden">
 
                     @forelse($products as $p)
-                        <div class="flex flex-col gap-4 rounded-xl bg-surface-light dark:bg-surface-dark
-                                    shadow-sm min-w-64 border border-border-light dark:border-border-dark
-                                    overflow-hidden">
+                        <div class="flex-shrink-0 w-[240px] sm:w-[260px] md:w-[280px] lg:w-[320px]">
+                            <div class="w-full flex flex-col gap-4 rounded-xl bg-surface-light dark:bg-surface-dark
+                                        shadow-sm border border-border-light dark:border-border-dark
+                                        overflow-hidden">
 
-                            <div class="w-full bg-center bg-no-repeat aspect-square bg-cover"
-                                style="background-image: url('{{ $p->image_url ?? 'https://via.placeholder.com/300x200?text=No+Image' }}');">
+                            <div class="aspect-square bg-white dark:bg-black/20 flex items-center justify-center p-3">
+                                <img
+                                    src="{{ $p->image_url ?? 'https://via.placeholder.com/300x300?text=No+Image' }}"
+                                    alt="{{ $p->name }}"
+                                    class="w-full h-full object-contain"
+                                    loading="lazy"
+                                >
                             </div>
 
-                            <div class="flex flex-col flex-1 justify-between p-4 pt-0 gap-4">
+                            <div class="flex flex-col flex-1 justify-between p-4 pt-2 gap-3">
                                 <div>
-                                    <p class="text-base font-medium">{{ $p->name }}</p>
-                                    <p class="text-sm text-subtle-light dark:text-subtle-dark">
+                                    <p class="text-base font-medium line-clamp-2">{{ $p->name }}</p>
+                                    <p class="text-sm text-subtle-light dark:text-subtle-dark font-bold">
                                         {{ number_format($p->price, 0, ',', '.') }}₫
                                     </p>
                                 </div>
@@ -69,6 +76,7 @@
                                     Xem chi tiết
                                 </a>
                             </div>
+                            </div>
                         </div>
                     @empty
                         <p>Chưa có sản phẩm nào.</p>
@@ -79,41 +87,46 @@
         </div>
     </div>
 </div>
+@endif
 
 @if(request()->routeIs('home') && (!isset($keyword) || !$keyword) && isset($allProducts))
 <div class="mb-10">
     <div class="col-12">
         <h4 class="mb-3">Tất cả sản phẩm</h4>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 justify-items-center">
             @forelse($allProducts as $p)
-                <div class="flex flex-col gap-4 rounded-xl bg-surface-light dark:bg-surface-dark
-                            shadow-sm border border-border-light dark:border-border-dark
-                            overflow-hidden">
+                <div class="w-full max-w-full sm:max-w-[320px] flex flex-col gap-4 rounded-xl bg-surface-light dark:bg-surface-dark
+                            shadow-sm border border-border-light dark:border-border-dark overflow-hidden">
 
-                    <div class="w-full bg-center bg-no-repeat aspect-square bg-cover"
-                        style="background-image: url('{{ $p->image_url ?? 'https://via.placeholder.com/300x200?text=No+Image' }}');">
+                    <div class="aspect-square bg-white dark:bg-black/20 flex items-center justify-center p-3">
+                        <img
+                            src="{{ $p->image_url ?? 'https://via.placeholder.com/300x300?text=No+Image' }}"
+                            alt="{{ $p->name }}"
+                            class="w-full h-full object-contain"
+                            loading="lazy"
+                        >
                     </div>
 
-                    <div class="flex flex-col flex-1 justify-between p-4 pt-0 gap-4">
+                    <div class="flex flex-col flex-1 justify-between p-4 pt-2 gap-3">
                         <div>
-                            <p class="text-base font-medium">{{ $p->name }}</p>
-                            <p class="text-sm text-subtle-light dark:text-subtle-dark">
+                            <p class="text-base font-medium line-clamp-2">{{ $p->name }}</p>
+                            <p class="text-sm text-subtle-light dark:text-subtle-dark font-bold">
                                 {{ number_format($p->price, 0, ',', '.') }}₫
                             </p>
                         </div>
 
                         <a href="{{ route('product.show', $p->id) }}"
-                            class="flex items-center justify-center rounded-lg h-10 px-4
-                                   bg-primary/20 dark:bg-primary/30 text-sm font-bold hover:bg-primary/30
-                                   dark:hover:bg-primary/40">
+                           class="flex items-center justify-center rounded-lg h-10 px-4
+                                  bg-primary/20 dark:bg-primary/30 text-sm font-bold hover:bg-primary/30
+                                  dark:hover:bg-primary/40 transition">
                             Xem chi tiết
                         </a>
                     </div>
 
                 </div>
             @empty
-                <p>Chưa có sản phẩm nào.</p>
+                <p class="text-gray-500 dark:text-gray-400">Chưa có sản phẩm nào.</p>
             @endforelse
         </div>
 
@@ -123,7 +136,6 @@
     </div>
 </div>
 @endif
-
 <!-- Shop by Category Section -->
 <section class="py-5 px-4" id="categories">
     <div class="container mx-auto">
