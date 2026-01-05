@@ -73,7 +73,7 @@
                 <!-- Add to Cart Button -->
                 <button id="add-to-cart-btn" class="w-full sm:w-auto flex items-center justify-center gap-2 h-12 px-6 bg-primary text-white rounded-md text-base font-bold hover:opacity-90 transition-opacity" disabled>
                     <span class="material-symbols-outlined">add_shopping_cart</span>
-                    Add to Cart
+                    Thêm vào giỏ hàng
                 </button>
             </div>
 
@@ -85,7 +85,7 @@
         <div class="flex flex-col gap-4 max-w-3xl mx-auto">
             <details class="group" open="">
                 <summary class="flex justify-between items-center cursor-pointer list-none py-4 border-b border-border-light dark:border-border-dark">
-                    <span class="text-xl font-bold">Description</span>
+                    <span class="text-xl font-bold">Mô tả</span>
                     <span class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180">expand_more</span>
                 </summary>
                 <div class="text-text-muted-light dark:text-text-muted-dark pt-4 leading-relaxed">

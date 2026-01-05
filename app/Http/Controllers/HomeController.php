@@ -61,12 +61,19 @@ class HomeController extends Controller
     public function category($id)
     {
         $categories = Category::all();
+        $category = Category::findOrFail($id);
+
         $products = Product::with('variants')
             ->where('category_id', $id)
-            ->paginate(12);
+            ->latest()
+            ->paginate(9)
+            ->withQueryString();
 
-        return view('products.index', compact('categories', 'products'));
+        $keyword = null;
+
+        return view('search.search', compact('categories', 'products', 'category', 'keyword'));
     }
+
 
     /**
      * Trang chi tiết sản phẩm + sản phẩm liên quan cùng danh mục
@@ -109,10 +116,28 @@ class HomeController extends Controller
     public function allProducts(Request $request)
     {
         $categories = Category::all();
-        $products = Product::latest()->paginate(12);
-        $keyword = null;
 
-        // dùng chung view search để hiển thị danh sách sản phẩm
-        return view('search.search', compact('categories', 'products', 'keyword'));
+        $keyword = null;
+        $category = null;
+
+        // Hỗ trợ lọc theo danh mục qua query string:
+        // /products?category_id=1 hoặc /products?category=1
+        $catId = $request->input('category_id') ?? $request->input('category');
+
+        $query = Product::with('variants');
+
+        if (!empty($catId)) {
+            $category = Category::findOrFail($catId);
+            $query->where('category_id', $category->id);
+        }
+
+        $products = $query->latest()
+            ->paginate(9)
+            ->withQueryString();
+
+        // dùng chung view search để hiển thị danh sách sản phẩm (dạng grid)
+        return view('search.search', compact('categories', 'products', 'keyword', 'category'));
     }
+
+
 }
