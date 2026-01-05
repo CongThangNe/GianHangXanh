@@ -93,51 +93,49 @@ class HomeController extends Controller
 
     public function show(Request $request, $id)
 {
-    // 1️⃣ Lấy sản phẩm
+    // 1) Sản phẩm đang xem
     $product = Product::with([
         'category',
         'variants',
-        'attributeValues.attribute'
+        'attributeValues.attribute',
     ])->findOrFail($id);
 
-    // 2️⃣ Lấy toàn bộ attributes + values (CHO SEARCH NÂNG CAO)
+    // 2) Attributes + values (phục vụ lọc nâng cao nếu bạn dùng)
     $attributes = Attribute::with('values')->get();
 
-    // 3️⃣ Trả về view (QUAN TRỌNG)
+    // 3) Sản phẩm liên quan cùng danh mục (trừ chính nó)
+    $relatedProducts = collect();
+    if ($product->category_id) {
+        $relatedProducts = Product::query()
+            ->where('category_id', $product->category_id)
+            ->where('id', '!=', $product->id)
+            ->latest()
+            ->take(8)
+            ->get();
+    }
+
     return view('products.show', compact(
         'product',
-        'attributes'
+        'attributes',
+        'relatedProducts'
     ));
 }
 
-    /**
+/**
      * Xem tất cả sản phẩm (route: /products)
      */
     public function allProducts(Request $request)
     {
         $categories = Category::all();
 
-        $keyword = null;
-        $category = null;
-
-        // Hỗ trợ lọc theo danh mục qua query string:
-        // /products?category_id=1 hoặc /products?category=1
-        $catId = $request->input('category_id') ?? $request->input('category');
-
-        $query = Product::with('variants');
-
-        if (!empty($catId)) {
-            $category = Category::findOrFail($catId);
-            $query->where('category_id', $category->id);
-        }
-
-        $products = $query->latest()
+        $products = Product::latest()
             ->paginate(9)
             ->withQueryString();
 
-        // dùng chung view search để hiển thị danh sách sản phẩm (dạng grid)
-        return view('search.search', compact('categories', 'products', 'keyword', 'category'));
-    }
+        $keyword = null;
 
+        // dùng chung view search để hiển thị danh sách sản phẩm (dạng grid)
+        return view('search.search', compact('categories', 'products', 'keyword'));
+    }
 
 }
