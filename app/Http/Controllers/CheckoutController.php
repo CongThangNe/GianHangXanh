@@ -89,7 +89,6 @@ class CheckoutController extends Controller
                 'payment_method'   => 'required|in:cod,vnpay',
                 'note'             => 'nullable|string|max:1000',
                 'province'         => 'required',
-                'district'         => 'required',
                 'ward'             => 'required',
             ],
             [
@@ -97,7 +96,6 @@ class CheckoutController extends Controller
                 'customer_phone.required'   => 'Vui lòng nhập số điện thoại',
                 'customer_address.required' => 'Địa chỉ giao hàng không hợp lệ',
                 'province.required'         => 'Bạn chưa chọn Tỉnh / Thành phố',
-                'district.required'         => 'Bạn chưa chọn Quận / Huyện',
                 'ward.required'             => 'Bạn chưa chọn Phường / Xã',
             ]
         );
