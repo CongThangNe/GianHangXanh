@@ -1,30 +1,40 @@
 @extends('layouts.app')
-@section('title', isset($keyword) && $keyword ? 'Kết quả tìm kiếm: ' . $keyword : 'Sản phẩm nổi bật')
+@section('title', (isset($keyword) && $keyword)
+    ? ('Kết quả tìm kiếm: ' . $keyword)
+    : (isset($category) ? ('Danh mục: ' . $category->name) : 'Tất cả sản phẩm'))
 
 @section('content')
-
 <div class="max-w-7xl mx-auto py-6 px-4">
 
-    @if(isset($keyword) && $keyword)
-    <h2 class="text-2xl font-bold mb-4">Kết quả tìm kiếm cho: "{{ $keyword }}"</h2>
-    @else
-    <h2 class="text-2xl font-bold mb-4">Sản phẩm nổi bật</h2>
-    @endif
+    <div class="flex items-end justify-between gap-4 mb-4">
+        @if(isset($keyword) && $keyword)
+            <h2 class="text-2xl font-bold">Kết quả tìm kiếm cho: "{{ $keyword }}"</h2>
+        @elseif(isset($category))
+            <h2 class="text-2xl font-bold">Danh mục: {{ $category->name }}</h2>
+        @else
+            <h2 class="text-2xl font-bold">Tất cả sản phẩm</h2>
+        @endif
 
-    <div class="w-full flex justify-center">
-        <div class="flex overflow-x-auto gap-6 py-4 px-2
-                    [-ms-scrollbar-style:none] [scrollbar-width:none]
-                    [&::-webkit-scrollbar]:hidden">
+        <a href="{{ route('home') }}" class="text-sm font-semibold hover:underline">
+            ← Về trang chủ
+        </a>
+    </div>
 
-            @forelse($products as $p)
-            <div class="flex flex-col gap-4 rounded-xl bg-surface-light dark:bg-surface-dark
-                        shadow-sm min-w-[250px] border border-border-light dark:border-border-dark overflow-hidden">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 justify-items-center">
+        @forelse($products as $p)
+            <div class="w-full max-w-full sm:max-w-[320px] flex flex-col gap-4 rounded-xl bg-surface-light dark:bg-surface-dark
+                        shadow-sm border border-border-light dark:border-border-dark overflow-hidden">
 
-                <div class="w-full bg-center bg-no-repeat aspect-square bg-cover"
-                    style="background-image: url('{{ $p->image ? asset('storage/' . $p->image) : asset('https://via.placeholder.com/300x300?text=No+Image') }}');">
+                <div class="aspect-square bg-white dark:bg-black/20 flex items-center justify-center p-3">
+                    <img
+                        src="{{ $p->image_url }}"
+                        alt="{{ $p->name }}"
+                        class="w-full h-full object-contain"
+                        loading="lazy"
+                    >
                 </div>
 
-                <div class="flex flex-col flex-1 justify-between p-4 pt-2 gap-2">
+                <div class="flex flex-col flex-1 justify-between p-4 pt-2 gap-3">
                     <div>
                         <p class="text-base font-medium line-clamp-2">{{ $p->name }}</p>
                         <p class="text-sm text-subtle-light dark:text-subtle-dark font-bold">
@@ -33,7 +43,7 @@
                     </div>
 
                     <a href="{{ route('product.show', $p->id) }}"
-                        class="flex items-center justify-center rounded-lg h-10 px-4
+                       class="flex items-center justify-center rounded-lg h-10 px-4
                               bg-primary/20 dark:bg-primary/30 text-sm font-bold hover:bg-primary/30
                               dark:hover:bg-primary/40 transition">
                         Xem chi tiết
@@ -41,18 +51,14 @@
                 </div>
 
             </div>
-            @empty
+        @empty
             <p class="text-gray-500 dark:text-gray-400">Chưa có sản phẩm nào.</p>
-            @endforelse
-
-        </div>
+        @endforelse
     </div>
 
-    <!-- Pagination -->
     <div class="mt-6">
         {{ $products->links('vendor.pagination.tailwind') }}
     </div>
 
 </div>
-
 @endsection

@@ -52,6 +52,12 @@
                     name="password"
                     class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-green-500 focus:border-green-500"
                     placeholder="Nhập mật khẩu">
+
+                <div class="text-right mt-2">
+                    <a href="{{ route('password.request') }}" class="text-sm text-green-600 font-semibold hover:underline">
+                        Quên mật khẩu?
+                    </a>
+                </div>
             </div>
 
             <!-- Button -->

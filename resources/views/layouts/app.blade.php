@@ -18,6 +18,9 @@
     <!-- Material Symbols -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
 
+    <!-- Simple Chatbot (home page) -->
+    <link rel="stylesheet" href="{{ asset('css/chatbot.css') }}">
+
     <!-- Tailwind Config -->
     <script id="tailwind-config">
         tailwind.config = {
@@ -110,7 +113,13 @@
                             <a class="text-sm font-medium hover:text-primary" href="{{ route('intro') }}">
                                 Giới thiệu
                             </a>
-                            {{-- ❌ ĐÃ XOÁ ADMIN KHỎI MENU NGANG --}}
+                            <a class="text-sm font-medium hover:text-primary" href="{{ route('support.index') }}">
+                                Liên hệ & Hỗ trợ
+                            </a>
+                            {{-- <a class="text-sm font-medium hover:text-primary" href="{{ route('news.index') }}">
+                                Tin tức
+                            </a> --}}
+
                         </nav>
                     </div>
 
@@ -164,7 +173,6 @@
                                         Đơn hàng
                                     </a>
 
-
                                     <form action="{{ route('logout') }}" method="POST">
                                         @csrf
                                         <button type="submit"
@@ -173,11 +181,21 @@
                                         </button>
                                     </form>
 
-                                    <!-- ⭐ THÊM ADMIN VÀO NGAY SAU ĐĂNG XUẤT -->
-                                    <a href="{{ route('admin.dashboard') }}"
-                                        class="block px-4 py-2 text-sm hover:bg-green-500">
-                                        Admin
-                                    </a>
+                                    @php
+                                        $role = Auth::user()->role ?? null;
+                                    @endphp
+
+                                    @if ($role === 'admin')
+                                        <a href="{{ route('admin.dashboard') }}"
+                                            class="block px-4 py-2 text-sm hover:bg-green-500">
+                                            Admin
+                                        </a>
+                                    @elseif ($role === 'staff')
+                                        <a href="{{ route('admin.dashboard') }}"
+                                            class="block px-4 py-2 text-sm hover:bg-green-500">
+                                            Quản lý
+                                        </a>
+                                    @endif
 
                                 </div>
                             </div>
@@ -188,6 +206,8 @@
 
             <!-- Content -->
             <div class="max-w-7xl w-full mx-auto px-4 py-6">
+                
+
                 @yield('content')
             </div>
 
@@ -204,7 +224,6 @@
                 <!-- Cột Logo -->
                 <img src="{{ asset('storage/uploads/logos/logo.png') }}" alt="Gian Hàng Xanh"
                     class="h-40 w-auto object-contain">
-
 
                 <!-- Cột 1 -->
                 <div class="text-xs">
@@ -266,11 +285,18 @@
         </div>
     </footer>
 
-
+    @if (Route::currentRouteName() === 'home')
+        @include('components.chatbot')
+    @endif
 
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
+    @if (Route::currentRouteName() === 'home')
+        <script defer src="{{ asset('js/chatbot.js') }}"></script>
+    @endif
+
+    @stack('scripts')
 </body>
 
 </html>

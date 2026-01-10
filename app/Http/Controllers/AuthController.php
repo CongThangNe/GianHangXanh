@@ -9,6 +9,12 @@ use App\Models\User;
 
 class AuthController extends Controller
 {
+    // GET /login
+    public function showLoginForm()
+    {
+        return view('auth.login');
+    }
+
     //GET login
     public function login(Request $request)
     {
@@ -20,11 +26,11 @@ class AuthController extends Controller
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
             $user = Auth::user();
-            //redirect theo role
-            if ($user->role === 'admin') {
-                return redirect()->route('admin.dashboard');
+            // redirect theo role
+            if (in_array($user->role, [User::ROLE_ADMIN, User::ROLE_STAFF], true)) {
+                return redirect()->intended(route('admin.dashboard'));
             }
-            return redirect()->route('home');
+            return redirect()->intended(route('home'));
         }
         return back()->withErrors([
             'email' => 'Email hoặc mật khẩu không chính xác.',
@@ -46,7 +52,7 @@ class AuthController extends Controller
              'name'     => $request->name,
             'email'    => $request->email,
             'password' => Hash::make($request->password),
-            'role'     => 'user', // mặc định user
+            'role'     => User::ROLE_CUSTOMER, // mặc định: khách hàng
         ]);
         return redirect()->route('login')->with('success','Đăng ký thành công');
     }

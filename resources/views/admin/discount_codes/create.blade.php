@@ -2,109 +2,134 @@
 @section('title', 'Thêm mã giảm giá')
 
 @section('content')
-<div class="container py-4">
-    <h3 class="mb-4">Thêm mã giảm giá mới</h3>
+<div class="container-fluid p-4">
+    <h3 class="mb-4">Thêm mã giảm giá</h3>
 
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul class="mb-0">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
-    <form method="POST" action="{{ route('admin.discount-codes.store') }}">
+    <form action="{{ route('admin.discount-codes.store') }}" method="POST" class="card p-4">
         @csrf
 
-        {{-- Mã code --}}
+        {{-- Code --}}
         <div class="mb-3">
-            <label class="form-label fw-bold">Mã code *</label>
-            <input name="code" type="text" class="form-control" required value="{{ old('code') }}">
-            @error('code') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+            <label class="form-label">Mã giảm giá</label>
+            <input type="text"
+                   name="code"
+                   class="form-control"
+                   value="{{ old('code') }}"
+                   required>
         </div>
 
-        {{-- Loại giảm giá --}}
+        {{-- Type --}}
         <div class="mb-3">
-            <label class="form-label fw-bold">Loại giảm giá *</label>
-            <div>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="type" id="typePercent"
-                        value="percent" {{ old('type', 'percent') === 'percent' ? 'checked' : '' }}>
-                    <label class="form-check-label" for="typePercent">Giảm theo %</label>
+            <label class="form-label">Loại giảm</label>
+            <div class="d-flex gap-3">
+                <div class="form-check">
+                    <input class="form-check-input"
+                           type="radio"
+                           name="type"
+                           id="typePercent"
+                           value="percent"
+                           {{ old('type', 'percent') === 'percent' ? 'checked' : '' }}>
+                    <label class="form-check-label" for="typePercent">%</label>
                 </div>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="type" id="typeValue"
-                        value="value" {{ old('type') === 'value' ? 'checked' : '' }}>
-                    <label class="form-check-label" for="typeValue">Giảm trực tiếp (VNĐ)</label>
+
+                <div class="form-check">
+                    <input class="form-check-input"
+                           type="radio"
+                           name="type"
+                           id="typeValue"
+                           value="value"
+                           {{ old('type') === 'value' ? 'checked' : '' }}>
+                    <label class="form-check-label" for="typeValue">VNĐ</label>
                 </div>
             </div>
-            @error('type') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
         </div>
 
-        {{-- Giá trị giảm --}}
+        {{-- Value --}}
         <div class="mb-3">
-            <label class="form-label fw-bold">Giá trị giảm *</label>
-            <input name="value" type="number" step="0.01" class="form-control" required value="{{ old('value') }}">
-            <small class="text-muted">Nếu là %, nhập trong khoảng 1–100. Nếu là VNĐ, nhập số tiền trực tiếp.</small>
-            @error('value') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+            <label class="form-label">Giá trị giảm</label>
+            <input type="number"
+                   name="value"
+                   class="form-control"
+                   value="{{ old('value') }}"
+                   required>
         </div>
 
-        {{-- Giá trị giảm tối đa khi chọn % --}}
-        <div class="mb-3" id="maxDiscountBox" style="{{ old('type', 'percent') === 'percent' ? '' : 'display:none;' }}">
-            <label class="form-label fw-bold">Giá trị giảm tối đa (VNĐ)</label>
-            <input name="max_discount_value" type="number" step="0.01" min="0" class="form-control"
-                value="{{ old('max_discount_value', 0) }}">
-            <small class="text-muted">Áp dụng cho mã giảm theo % — để trống nếu không giới hạn.</small>
-            @error('max_discount_value') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+        {{-- Max discount (only %) --}}
+        <div class="mb-3" id="maxDiscountBox">
+            <label class="form-label">Giảm tối đa (chỉ áp dụng cho %)</label>
+            <input type="number"
+                   name="max_discount_value"
+                   class="form-control"
+                   value="{{ old('max_discount_value') }}">
         </div>
 
-        {{-- Ngày bắt đầu --}}
+        {{-- Max uses --}}
         <div class="mb-3">
-            <label class="form-label fw-bold">Ngày bắt đầu *</label>
-            <input name="starts_at" type="date" class="form-control" value="{{ old('starts_at') }}">
-            @error('starts_at') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+            <label class="form-label">
+                Số lượt có thể sử dụng 
+            </label>
+            <input type="number"
+                   name="max_uses"
+                   class="form-control"
+                   value="{{ old('max_uses', 0) }}"
+                   min="0">
         </div>
 
-        {{-- Ngày hết hạn --}}
+        {{-- Dates --}}
+        <div class="row mb-3">
+            <div class="col">
+                <label class="form-label">Bắt đầu</label>
+                <input type="datetime-local"
+                       name="starts_at"
+                       class="form-control"
+                       value="{{ old('starts_at') }}">
+            </div>
+            <div class="col">
+                <label class="form-label">Hết hạn</label>
+                <input type="datetime-local"
+                       name="expires_at"
+                       class="form-control"
+                       value="{{ old('expires_at') }}">
+            </div>
+        </div>
+
+        {{-- Active --}}
         <div class="mb-3">
-            <label class="form-label fw-bold">Ngày hết hạn</label>
-            <input name="expires_at" type="date" class="form-control" value="{{ old('expires_at') }}">
-            @error('expires_at') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+            <div class="form-check">
+                <input class="form-check-input"
+                       type="checkbox"
+                       name="active"
+                       value="1"
+                       {{ old('active', true) ? 'checked' : '' }}>
+                <label class="form-check-label">Kích hoạt</label>
+            </div>
         </div>
 
-        {{-- Số lần sử dụng tối đa --}}
-        <div class="mb-3">
-            <label class="form-label fw-bold">Số lần sử dụng tối đa</label>
-            <input name="max_uses" type="number" min="0" class="form-control" value="{{ old('max_uses', 0) }}">
-            <small class="text-muted">Để trống hoặc nhập 0 nếu không giới hạn.</small>
-            @error('max_uses') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+        {{-- Submit --}}
+        <div class="d-flex gap-2">
+            <button class="btn btn-success">Lưu</button>
+            <a href="{{ route('admin.discount-codes.index') }}"
+               class="btn btn-secondary">
+                Quay lại
+            </a>
         </div>
-
-        {{-- Nút hành động --}}
-        <button class="btn btn-primary">Tạo mã</button>
-        <a href="{{ route('admin.discount-codes.index') }}" class="btn btn-secondary">Quay lại</a>
     </form>
 </div>
 
-{{-- Script toggle hiển thị giá trị giảm tối đa --}}
+{{-- JS toggle --}}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const typePercent = document.getElementById('typePercent');
-    const typeValue = document.getElementById('typeValue');
-    const maxBox = document.getElementById('maxDiscountBox');
+document.addEventListener('DOMContentLoaded', function () {
+    const percent = document.getElementById('typePercent');
+    const value = document.getElementById('typeValue');
+    const box = document.getElementById('maxDiscountBox');
 
-    function toggleMaxBox() {
-        if (typePercent.checked) {
-            maxBox.style.display = '';
-        } else {
-            maxBox.style.display = 'none';
-        }
+    function toggle() {
+        box.style.display = percent.checked ? 'block' : 'none';
     }
 
-    typePercent.addEventListener('change', toggleMaxBox);
-    typeValue.addEventListener('change', toggleMaxBox);
+    percent.addEventListener('change', toggle);
+    value.addEventListener('change', toggle);
+    toggle();
 });
 </script>
 @endsection

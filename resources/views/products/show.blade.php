@@ -10,7 +10,7 @@
             <!-- Main Image -->
             <div class="w-full h-[400px] lg:h-[500px] rounded-xl overflow-hidden border border-border-light dark:border-border-dark">
                 <img id="main-image"
-                    src="{{ $product->image ? asset('storage/' . $product->image) : 'https://via.placeholder.com/600x450?text=No+Image' }}"
+                    src="{{ $product->image_url ?? 'https://via.placeholder.com/600x450?text=No+Image' }}"
                     alt="{{ $product->name }}"
                     class="w-full h-full object-cover transition-transform duration-300 hover:scale-105">
             </div>
@@ -95,21 +95,82 @@
         </div>
     </div>
 
-    <!-- Related Products -->
+{{-- 
+<form method="GET" class="mb-10 p-6 border rounded-xl bg-gray-50">
+    <h3 class="text-xl font-bold mb-4">🔍 Tìm kiếm nâng cao</h3>
+
+    <!-- Giá -->
+    <div class="grid grid-cols-2 gap-4 mb-4">
+        <input type="number" name="price_min"
+               value="{{ request('price_min') }}"
+               placeholder="Giá từ"
+               class="border rounded px-3 py-2">
+
+        <input type="number" name="price_max"
+               value="{{ request('price_max') }}"
+               placeholder="Giá đến"
+               class="border rounded px-3 py-2">
+    </div>
+
+    <!-- Attributes -->
+    @foreach($attributes as $attribute)
+        <div class="mb-3">
+            <label class="font-semibold">{{ $attribute->name }}</label>
+            <select name="attributes[{{ $attribute->id }}]"
+                    class="w-full border rounded px-3 py-2">
+                <option value="">-- Chọn {{ $attribute->name }} --</option>
+                @foreach($attribute->values as $value)
+                    <option value="{{ $value->id }}"
+                        {{ request("attributes.$attribute->id") == $value->id ? 'selected' : '' }}>
+                        {{ $value->value }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+    @endforeach
+
+    <button class="mt-4 px-6 py-2 bg-primary text-white rounded">
+        Áp dụng lọc
+    </button>
+</form> --}}
+
+
+    <!-- Related Products (Same Category) -->
     @if(isset($relatedProducts) && $relatedProducts->count() > 0)
     <div class="w-full mt-16 border-t border-border-light dark:border-border-dark pt-12">
         <div class="flex flex-col gap-4 max-w-6xl mx-auto">
-            <h2 class="text-2xl font-bold">Sản phẩm liên quan</h2>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-6 mt-4">
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold">
+                    Sản phẩm liên quan theo danh mục
+                    @if($product->category)
+                        <span class="text-base font-semibold text-text-muted-light dark:text-text-muted-dark">({{ $product->category->name }})</span>
+                    @endif
+                </h2>
+                @if($product->category)
+                    <a href="{{ route('category.show', $product->category->id) }}" class="text-primary font-semibold hover:underline">
+                        Xem thêm
+                    </a>
+                @endif
+            </div>
+
+            <!-- Horizontal scroll list (easy to browse) -->
+            <div class="flex overflow-x-auto gap-4 md:gap-5 py-4 px-1">
                 @foreach($relatedProducts as $related)
-                <a href="{{ route('products.show', $related->id) }}" class="block border border-border-light dark:border-border-dark rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
-                    <div class="w-full h-48">
-                        <img src="{{ $related->image ? asset('storage/' . $related->image) : 'https://via.placeholder.com/300x300?text=No+Image' }}"
-                            alt="{{ $related->name }}" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105">
+                <a href="{{ route('product.show', $related->id) }}"
+                   class="flex-shrink-0 w-[240px] sm:w-[260px] md:w-[280px] lg:w-[300px] border border-border-light dark:border-border-dark rounded-xl overflow-hidden hover:shadow-lg transition-shadow bg-surface-light dark:bg-surface-dark">
+                    <div class="aspect-square bg-white dark:bg-gray-900 flex items-center justify-center p-2">
+                        <img
+                            src="{{ $related->image_url ?? 'https://via.placeholder.com/300x300?text=No+Image' }}"
+                            alt="{{ $related->name }}"
+                            class="w-full h-full object-contain"
+                            loading="lazy">
                     </div>
-                    <div class="p-3">
-                        <h3 class="text-sm font-semibold">{{ $related->name }}</h3>
-                        <p class="text-primary font-bold">{{ number_format($related->price, 0, ',', '.') }}₫</p>
+                    <div class="p-4">
+                        <h3 class="text-sm font-semibold line-clamp-2">{{ $related->name }}</h3>
+                        <p class="text-primary font-bold mt-1">{{ number_format($related->price, 0, ',', '.') }}₫</p>
+                        <div class="mt-3 flex items-center justify-center rounded-lg h-10 px-4 bg-primary/20 dark:bg-primary/30 text-sm font-bold hover:bg-primary/30 dark:hover:bg-primary/40">
+                            Xem chi tiết
+                        </div>
                     </div>
                 </a>
                 @endforeach

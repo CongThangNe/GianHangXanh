@@ -39,13 +39,23 @@
                     'shipping'  => ['Đang vận chuyển', 'bg-indigo-100 text-indigo-800'],
                     'delivered' => ['Đã giao thành công', 'bg-green-100 text-green-800'],
                     'cancelled' => ['Đã hủy', 'bg-red-100 text-red-800'],
-                    'paid'      => ['Đã thanh toán', 'bg-green-100 text-green-800'],
-                ][$order->status] ?? ['Không xác định', 'bg-gray-100 text-gray-800'];
+                ][$order->delivery_status] ?? ['Đã hủy', 'bg-red-100 text-gray-800'];
             @endphp
 
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold {{ $statusDisplay[1] }}">
-                {{ $statusDisplay[0] }}
-            </span>
+            <div class="flex items-center gap-2">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold {{ $statusDisplay[1] }}">
+                    {{ $statusDisplay[0] }}
+                </span>
+                @php
+                    $pay = [
+                        'unpaid' => ['Chưa thanh toán', 'bg-gray-100 text-gray-800'],
+                        'paid'   => ['Đã thanh toán',  'bg-green-100 text-green-800'],
+                    ][$order->payment_status] ?? ['Đã hủy', 'bg-red-100 text-gray-800'];
+                @endphp
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold {{ $pay[1] }}">
+                    {{ $pay[0] }}
+                </span>
+            </div>
         </div>
 
         {{-- Thông tin khách & giao hàng --}}
@@ -175,7 +185,7 @@
            class="inline-flex items-center px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200">
             ← Quay lại danh sách đơn
         </a>
-        @if($order->status === 'pending')
+        @if($order->delivery_status === 'pending')
         <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 max-w-md">
             <p class="text-sm text-yellow-800 font-medium mb-3">
                 Bạn có thể hủy đơn hàng này vì chưa được xác nhận.

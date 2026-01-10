@@ -4,218 +4,132 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Order;
-use App\Models\Cart;            
-use App\Models\ProductVariant;  
-use App\Models\OrderDetail;
+use App\Models\Cart;
+use Illuminate\Support\Facades\DB;
 
 class PaymentController extends Controller
 {
-    // Chuyển logic từ vnpay_create_payment.php
-    public function createPayment(Request $request)
-    {
-        $vnp_TmnCode = env('VNP_TMN_CODE');
-        $vnp_HashSecret = env('VNP_HASH_SECRET');
-        $vnp_Url = env('VNP_URL');
-        $vnp_Returnurl = env('VNP_RETURN_URL');
+public function createPayment(Request $request)
+{
+    $request->validate([
+        'order_id' => 'required|exists:orders,id'
+    ]);
 
-        // Lấy thông tin từ request (hoặc fix cứng cho test)
-        $vnp_TxnRef = $request->input('order_id'); // Mã đơn hàng
-        $vnp_Amount = $vnp_Amount = $request->input('amount'); // Số tiền (mặc định 10.000 VND)
-        $vnp_Locale = 'vn';
-        $vnp_IpAddr = $request->ip();
+    $order = Order::where('id', $request->order_id)
+        ->where('payment_status', 'unpaid')
+        ->firstOrFail();
 
-        // Cấu hình tham số gửi sang VNPAY
-        $inputData = array(
-            "vnp_Version" => "2.1.0",
-            "vnp_TmnCode" => $vnp_TmnCode,
-            "vnp_Amount" => $vnp_Amount * 100, // VNPAY yêu cầu nhân 100
-            "vnp_Command" => "pay",
-            "vnp_CreateDate" => date('YmdHis'),
-            "vnp_CurrCode" => "VND",
-            "vnp_IpAddr" => $vnp_IpAddr,
-            "vnp_Locale" => $vnp_Locale,
-            "vnp_OrderInfo" => "Thanh toan don hang: " . $vnp_TxnRef,
-            "vnp_OrderType" => "other",
-            "vnp_ReturnUrl" => $vnp_Returnurl,
-            "vnp_TxnRef" => $vnp_TxnRef,
-        );
+    $vnp_TmnCode    = env('VNP_TMN_CODE');
+    $vnp_HashSecret = env('VNP_HASH_SECRET');
+    $vnp_Url        = env('VNP_URL');
+    $vnp_ReturnUrl  = env('VNP_RETURN_URL');
 
-        // ĐỂ HIỆN MÃ QR NGAY LẬP TỨC:
-        // Set bankCode là VNPAYQR thì khi sang cổng thanh toán sẽ mở sẵn QR
-        // $inputData['vnp_BankCode'] = 'VNPAYQR';
-
-        ksort($inputData);
-        $query = "";
-        $i = 0;
-        $hashdata = "";
-        foreach ($inputData as $key => $value) {
-            if ($i == 1) {
-                $hashdata .= '&' . urlencode($key) . "=" . urlencode($value);
-            } else {
-                $hashdata .= urlencode($key) . "=" . urlencode($value);
-                $i = 1;
-            }
-            $query .= urlencode($key) . "=" . urlencode($value) . '&';
-        }
-
-        $vnp_Url = $vnp_Url . "?" . $query;
-        if (isset($vnp_HashSecret)) {
-            $vnpSecureHash = hash_hmac('sha512', $hashdata, $vnp_HashSecret); //
-            $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
-        }
-
-        // Chuyển hướng người dùng sang VNPAY
-        return redirect($vnp_Url);
+    $vnp_Amount = (int) ($order->total * 100);
+    if ($vnp_Amount <= 0) {
+        abort(400, 'Số tiền không hợp lệ');
     }
 
-    // Chuyển logic từ vnpay_return.php
-    public function vnpayReturn(Request $request)
-    {
-        $vnp_HashSecret = env('VNP_HASH_SECRET');
-        $inputData = array();
+    $inputData = [
+        'vnp_Version'    => '2.1.0',
+        'vnp_TmnCode'    => $vnp_TmnCode,
+        'vnp_Amount'     => $vnp_Amount,
+        'vnp_Command'    => 'pay',
+        'vnp_CreateDate' => now()->format('YmdHis'),
+        'vnp_CurrCode'   => 'VND',
+        'vnp_IpAddr'     => $request->ip(),
+        'vnp_Locale'     => 'vn',
+        'vnp_OrderInfo'  => 'Thanh toan don ' . $order->order_code,
+        'vnp_OrderType'  => 'other',
+        'vnp_ReturnUrl'  => $vnp_ReturnUrl,
+        'vnp_TxnRef'     => $order->order_code,
+    ];
 
-        foreach ($request->all() as $key => $value) {
-            if (substr($key, 0, 4) == "vnp_") {
-                $inputData[$key] = $value;
-            }
-        }
+    ksort($inputData);
 
-        $vnp_SecureHash = $inputData['vnp_SecureHash'];
-        unset($inputData['vnp_SecureHash']);
-        ksort($inputData);
-        $i = 0;
-        $hashData = "";
-        foreach ($inputData as $key => $value) {
-            if ($i == 1) {
-                $hashData = $hashData . '&' . urlencode($key) . "=" . urlencode($value);
-            } else {
-                $hashData = $hashData . urlencode($key) . "=" . urlencode($value);
-                $i = 1;
-            }
-        }
+    // ✅ HASH DATA – URLENCODE
+    $hashData = [];
+    foreach ($inputData as $key => $value) {
+        $hashData[] = $key . '=' . urlencode($value);
+    }
+    $hashData = implode('&', $hashData);
 
-        $secureHash = hash_hmac('sha512', $hashData, $vnp_HashSecret);
+    $vnp_SecureHash = hash_hmac('sha512', $hashData, $vnp_HashSecret);
 
-        if ($secureHash == $vnp_SecureHash) {
-            $orderId = $request->vnp_TxnRef;
-            // Tìm đơn hàng kèm chi tiết để xử lý hoàn kho nếu cần
-            $order = Order::with('details')->find($orderId);
+    // ✅ QUERY STRING PHẢI GIỐNG HASH DATA
+    $query = [];
+    foreach ($inputData as $key => $value) {
+        $query[] = $key . '=' . urlencode($value);
+    }
+    $queryString = implode('&', $query);
 
-            if (!$order) {
-                return "Đơn hàng không tồn tại!";
-            }
+    $redirectUrl = $vnp_Url
+        . '?' . $queryString
+        . '&vnp_SecureHashType=HmacSHA512'
+        . '&vnp_SecureHash=' . $vnp_SecureHash;
 
-            // === TRƯỜNG HỢP 1: THANH TOÁN THÀNH CÔNG ===
-            if ($request->vnp_ResponseCode == '00') {
-                
-                // $order->status = 'processing'; // Hoặc 'paid'
-                $order->status = 'pending'; // chờ xác nhận
-                $order->save();
+    return redirect()->away($redirectUrl);
+}
 
-                // [QUAN TRỌNG] Xóa giỏ hàng sau khi thanh toán thành công
-                $sessionId = session()->getId();
-                $cart = Cart::where('session_id', $sessionId)->first();
-                if ($cart) {
-                    $cart->items()->delete();
-                    $cart->delete();
-                }
-                session()->forget('discount_code');
 
-                return view('checkout.success', [
-                    'order_code' => $order->order_code,
-                    'amount' => $request->vnp_Amount / 100,
-                    'bank' => $request->vnp_BankCode,
-                    'time' => $request->vnp_PayDate
-                ]);
 
-            } else {
-                // === TRƯỜNG HỢP 2: THANH TOÁN THẤT BẠI / HỦY ===
-                
-                // 1. Hoàn lại số lượng tồn kho (Vì lúc tạo đơn ở CheckoutController đã trừ rồi)
-                foreach ($order->details as $detail) {
-                    $variant = ProductVariant::find($detail->product_variant_id);
-                    if ($variant) {
-                        $variant->stock += $detail->quantity;
-                        $variant->save();
-                    }
-                }
+   public function vnpayReturn(Request $request)
+{
+    $inputData = $request->all();
+    $vnp_SecureHash = $inputData['vnp_SecureHash'] ?? '';
 
-                // 2. Xóa đơn hàng ảo (hoặc chuyển trạng thái hủy)
-                // Nếu bạn muốn đơn hàng biến mất khỏi danh sách: dùng $order->delete();
-                // Nếu muốn lưu vết là đã hủy: dùng $order->status = 'canceled';
-                
-                $order->delete(); // Xóa hẳn đơn hàng để không hiện trong "Đơn hàng của tôi"
+    unset($inputData['vnp_SecureHash'], $inputData['vnp_SecureHashType']);
+    ksort($inputData);
 
-                // 3. Quay về trang giỏ hàng (Giỏ hàng vẫn còn nguyên do chưa xóa ở CheckoutController)
-                return redirect()->route('checkout.index')
-                ->with('error', 'Bạn đã hủy thanh toán hoặc giao dịch thất bại. Vui lòng thử lại.');
-            }
-        } else {
-            return "Chữ ký không hợp lệ!";
-        }
+    $hashData = [];
+    foreach ($inputData as $key => $value) {
+        $hashData[] = $key . '=' . urlencode($value);
+    }
+    $hashData = implode('&', $hashData);
+
+    $checkHash = hash_hmac('sha512', $hashData, env('VNP_HASH_SECRET'));
+
+    if ($checkHash !== $vnp_SecureHash) {
+        return redirect()->route('home')->with('error', 'Sai chữ ký VNPay');
     }
 
-    public function zaloPayApp(Request $request)
-    {
-        $endpoint = env('ZALOPAY_ENDPOINT');
-        $app_id   = env('ZALOPAY_APP_ID');
-        $key1     = env('ZALOPAY_KEY1');
+    $order = Order::where('order_code', $request->vnp_TxnRef)->first();
 
-        // Mã đơn (bắt buộc format yymmdd_xxxxx)
-        $transID = time();
-        $app_trans_id = date("ymd") . "_" . $transID;
-
-        // Tổng tiền cần thanh toán (bạn thay bằng tổng giỏ hàng)
-        $amount = 10000;
-
-        // Embed data (dùng để nhận dữ liệu thêm)
-        $embed_data = json_encode([]);
-
-        // Danh sách sản phẩm khi cần gửi sang ZaloPay
-        $item = json_encode([]);
-
-        $order = [
-            "app_id"        => $app_id,
-            "app_trans_id"  => $app_trans_id,
-            "app_user"      => "user@example.com",
-            "amount"        => $amount,
-            "description"   => "Thanh toán qua ZaloPay App #" . $transID,
-            "bank_code"     => "zalopayapp",   //  Quan trọng: loại thanh toán ZaloPay App
-            "embed_data"    => $embed_data,
-            "item"          => $item,
-            "callback_url"  => route('payment.zalopay.return'),
-        ];
-
-        // Tạo MAC
-        $data = $order["app_id"] . "|" . $order["app_trans_id"] . "|" . $order["app_user"] . "|" . $order["amount"] . "|" . $order["app_trans_id"] . "|" . $order["embed_data"] . "|" . $order["item"];
-        $order["mac"] = hash_hmac("sha256", $data, $key1);
-
-        // Gửi request sang ZaloPay
-        $ch = curl_init($endpoint);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($order));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ["Content-Type: application/json"]);
-
-        $result = curl_exec($ch);
-        curl_close($ch);
-
-        $response = json_decode($result, true);
-
-        if (!empty($response['order_url'])) {
-            // Redirect sang app ZaloPay
-            return redirect($response['order_url']);
-        }
-
-        return "Có lỗi khi kết nối ZaloPay!";
+    if (!$order) {
+        return redirect()->route('home')->with('error', 'Không tìm thấy đơn hàng');
     }
 
-    public function zaloReturn(Request $request)
-    {
-        if ($request->input('status') == 1) {
-            return "Thanh toán ZaloPay App THÀNH CÔNG!";
-        } else {
-            return "Thanh toán thất bại hoặc bị hủy!";
-        }
+    // ✅ THANH TOÁN THÀNH CÔNG
+    if ($request->vnp_ResponseCode === '00') {
+            DB::transaction(function () use ($order) {
+        $order->update([
+            'payment_status'  => 'paid',
+            'delivery_status' => 'pending',
+        ]);
+        // 🔥 XÓA CART
+        if ($order->session_id) {
+            $cart = Cart::where('session_id', $order->session_id)->first();
+            if ($cart) {
+                $cart->items()->delete();
+                $cart->delete();
+            }
+        } session()->forget(['discount_code', 'pending_discount']);
+    });
+
+        return redirect()
+            ->route('home')
+            ->with('success', "Thanh toán thành công {$order->order_code}");
     }
+
+    // ❌ HỦY / FAIL / BACK
+    $order->update([
+        'payment_status'  => 'canceled',
+        'delivery_status' => 'canceled',
+    ]);
+
+    return redirect()
+        ->route('checkout.index')
+        ->with('error', 'Bạn đã hủy thanh toán, đơn hàng đã bị hủy');
+}
+
+
 }

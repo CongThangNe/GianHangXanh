@@ -28,20 +28,20 @@
                     <div class="row mb-3">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold">Tên khách hàng</label>
-                            <input type="text" class="form-control" value="{{ $order->customer_name }}" readonly>
+                            <p><b> {{ $order->customer_name }} </b></p>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold">Số điện thoại</label>
-                            <input type="text" class="form-control" value="{{ $order->customer_phone }}" readonly>
+                            <p><b>{{ $order->customer_phone }} </b></p>
                         </div>
                         <div class="col-12 mb-3">
                             <label class="form-label fw-semibold">Địa chỉ giao hàng</label>
-                            <textarea class="form-control" rows="2" readonly>{{ $order->customer_address }}</textarea>
+                            <p><b>{{ $order->customer_address }} </b></p>
                         </div>
                         @if($order->note)
                             <div class="col-12 mb-3">
                                 <label class="form-label fw-semibold">Ghi chú đơn hàng</label>
-                                <textarea class="form-control" rows="2" readonly>{{ $order->note }}</textarea>
+                                <p><b>{{ $order->note }} </b></p>
                             </div>
                         @endif
                     </div>
@@ -58,7 +58,7 @@
                         <div class="col-md-4">
                             <span class="d-block">Phương thức thanh toán:</span>
                             <strong>
-                                {{ $order->payment_method === 'zalopay' ? 'ZaloPay' : 'Thanh toán khi nhận hàng (COD)' }}
+                                {{ $order->payment_method === 'vnpay' ? 'VNPAY' : 'Thanh toán khi nhận hàng (COD)' }}
                             </strong>
                         </div>
                     </div>
@@ -142,7 +142,8 @@
                                             {{ number_format($subtotal) }}₫
                                         </th>
                                     </tr>
-                                @endif
+                                </tfoot>
+                            @endif
                         </table>
                     </div>
                 </div>
@@ -173,7 +174,6 @@
                         <span class="fs-5 fw-bold">Thành tiền:</span>
                         <span class="fs-4 fw-bold">{{ number_format($order->total) }}₫</span>
                     </div>
-
                 </div>
             </div>
 
@@ -182,49 +182,84 @@
                     Trạng thái đơn hàng
                 </div>
                 <div class="card-body">
-                    <div class="mb-3 d-flex justify-content-between align-items-center">
-                        <span>Trạng thái hiện tại:</span>
-                        <span class="badge bg-primary">
-                            {{
-                                [
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Giao hàng:</span>
+                            @php
+                                $deliveryLabel = [
                                     'pending'   => 'Chờ xử lý',
-                                    'paid'      => 'Đã thanh toán',
                                     'confirmed' => 'Đã xác nhận',
                                     'preparing' => 'Đang chuẩn bị',
                                     'shipping'  => 'Đang giao hàng',
                                     'delivered' => 'Đã giao thành công',
                                     'cancelled' => 'Đã hủy'
-                                ][$order->status] ?? 'Không xác định'
-                            }}
-                        </span>
+                                ][$order->delivery_status] ?? 'Không xác định';
+                            @endphp
+                            <span class="badge bg-primary">{{ $deliveryLabel }}</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Thanh toán:</span>
+                            @php
+                                $paymentLabel = [
+                                    'unpaid' => 'Chưa thanh toán',
+                                    'paid'   => 'Đã thanh toán',
+                                ][$order->payment_status] ?? 'Không xác định';
+                            @endphp
+                            <span class="badge {{ $order->payment_status === 'paid' ? 'bg-success' : 'bg-secondary' }}">
+                                {{ $paymentLabel }}
+                            </span>
+                        </div>
                     </div>
 
                     @php
-                        // Khi đơn đã hủy thì khóa lại, không cho đổi trạng thái / bấm nút nữa
-                        $statusLocked = $order->status === 'cancelled';
+                        // Khi đơn đã giao xong hoặc đã hủy thì KHÓA (không cho đổi cả giao hàng + thanh toán)
+                        $statusLocked = in_array($order->delivery_status, ['delivered', 'cancelled'], true);
                     @endphp
 
-                    <form action="{{ route('admin.orders.updateStatus', $order) }}" method="POST" class="d-flex gap-2 align-items-center">
+                    <form action="{{ route('admin.orders.updateStatus', $order) }}"
+                          method="POST"
+                          class="d-flex flex-wrap gap-2 align-items-center">
                         @csrf
                         @method('PATCH')
 
-                        <select name="status"
-                                class="form-select form-select-sm w-auto {{ $statusLocked ? 'pe-none opacity-75' : '' }}"
-                                {{ $statusLocked ? 'disabled' : '' }}>
-                            @foreach([
-                                'pending'   => 'Chờ xử lý',
-                                'paid'      => 'Đã thanh toán',
-                                'confirmed' => 'Đã xác nhận',
-                                'preparing' => 'Đang chuẩn bị',
-                                'shipping'  => 'Đang giao hàng',
-                                'delivered' => 'Đã giao thành công',
-                                'cancelled' => 'Đã hủy'
-                            ] as $value => $label)
-                                <option value="{{ $value }}" @selected($order->status === $value)>
-                                    {{ $label }}
-                                </option>
-                            @endforeach
-                        </select>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-muted small mb-0">Giao hàng</span>
+                            <select name="delivery_status"
+                                    id="delivery_status"
+                                    class="form-select form-select-sm w-auto"
+                                    {{ $statusLocked ? 'disabled' : '' }}>
+                                @foreach([
+                                    'pending'   => 'Chờ xử lý',
+                                    'confirmed' => 'Đã xác nhận',
+                                    'preparing' => 'Đang chuẩn bị',
+                                    'shipping'  => 'Đang giao hàng',
+                                    'delivered' => 'Đã giao thành công',
+                                    'cancelled' => 'Đã hủy'
+                                ] as $value => $label)
+                                    <option value="{{ $value }}" @selected($order->delivery_status === $value)>
+                                        {{ $label }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-muted small mb-0">Thanh toán</span>
+                            <select name="payment_status"
+                                    id="payment_status"
+                                    class="form-select form-select-sm w-auto"
+                                    {{ $statusLocked ? 'disabled' : '' }}>
+                                @foreach([
+                                    'unpaid' => 'Chưa thanh toán',
+                                    'paid'   => 'Đã thanh toán',
+                                ] as $value => $label)
+                                    <option value="{{ $value }}" @selected($order->payment_status === $value)>
+                                        {{ $label }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
 
                         <button type="submit"
                                 class="btn btn-sm btn-primary"
@@ -232,6 +267,7 @@
                             Cập nhật
                         </button>
                     </form>
+
                 </div>
             </div>
         </div>
@@ -240,8 +276,44 @@
 </div>
 
 <style>
-    .bg-secondary-subtle {
-        background-color: #f1f3f5;
-    }
+    .bg-secondary-subtle { background-color: #f1f3f5; }
+    /* Giữ layout cân: chỉ làm mờ nhẹ khi disabled, không thêm class gây lệch */
+    select.form-select:disabled { opacity: .85; }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const delivery = document.getElementById('delivery_status');
+    const payment  = document.getElementById('payment_status');
+    if (!delivery || !payment) return;
+
+    // Nếu payment bị disable thì sẽ KHÔNG gửi lên server -> cần 1 hidden input để giữ giá trị.
+    let hiddenPayment = document.getElementById('payment_status_hidden');
+    if (!hiddenPayment) {
+        hiddenPayment = document.createElement('input');
+        hiddenPayment.type = 'hidden';
+        hiddenPayment.name = 'payment_status';
+        hiddenPayment.id = 'payment_status_hidden';
+        payment.closest('form')?.appendChild(hiddenPayment);
+    }
+
+    function syncLock() {
+        const isDelivered = (delivery.value === 'delivered');
+        const isCancelled = (delivery.value === 'cancelled');
+        const locked = (isDelivered || isCancelled);
+
+        // Khi chọn "Đã giao thành công" -> tự set thanh toán = paid.
+        if (isDelivered) {
+            payment.value = 'paid';
+        }
+
+        // Disable dropdown để tránh sửa sai, nhưng vẫn gửi giá trị qua hidden input.
+        payment.disabled = locked;
+        hiddenPayment.value = payment.value;
+    }
+
+    delivery.addEventListener('change', syncLock);
+    syncLock();
+});
+</script>
 @endsection

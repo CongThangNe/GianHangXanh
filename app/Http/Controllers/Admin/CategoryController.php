@@ -5,6 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Category;
+use App\Models\Product;
+use App\Models\ProductVariant;
+use App\Models\OrderDetail;
+use Illuminate\Support\Facades\Schema;
 
 class CategoryController extends Controller
 {
@@ -45,7 +49,24 @@ class CategoryController extends Controller
     // 🟢 HÀM XÓA
     public function destroy($id)
     {
-        Category::findOrFail($id)->delete();
+        $category = Category::findOrFail($id);
+
+        // =====================
+        // VALIDATE KHÔNG CHO XÓA DANH MỤC
+        // - Nếu danh mục có sản phẩm đã phát sinh trong đơn hàng (đặc biệt đơn thành công) => CHẶN XÓA
+        // - Tránh mất dữ liệu vì order_details liên kết với product/variant
+        // =====================
+
+        // 1) Nếu danh mục đã có sản phẩm => chặn xóa (tránh mất dữ liệu, ảnh hưởng FK, lịch sử)
+        $productIds = Product::where('category_id', $category->id)->pluck('id');
+
+        if ($productIds->isNotEmpty()) {
+            return back()->with('error', 'Không thể xóa danh mục vì danh mục đang chứa sản phẩm.');
+        }
+
+        // (Danh mục rỗng => cho phép xóa)
+
+        $category->delete();
         return redirect()->route('admin.categories.index')->with('success','Đã xóa danh mục');
     }
 }

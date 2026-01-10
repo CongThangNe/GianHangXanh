@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\OrderDetail;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\OrderStatusUpdated;
+
 
 class OrderController extends Controller
 {
@@ -23,7 +26,7 @@ class OrderController extends Controller
             ->orderByDesc('created_at');
 
         if ($status = $request->get('status')) {
-            $query->where('status', $status);
+            $query->where('delivery_status', $status);
         }
 
         $orders = $query->paginate(15);
@@ -63,17 +66,33 @@ class OrderController extends Controller
      */
     public function updateStatus(Request $request, Order $order)
     {
-        // Nếu đơn đã giao thành công hoặc đã hủy thì không cho sửa nữa
-        if (in_array($order->status, ['delivered', 'cancelled'], true)) {
+        if (in_array($order->delivery_status, ['delivered', 'cancelled'], true)) {
             return back()->with('error', 'Đơn hàng đã hoàn tất, không thể thay đổi trạng thái nữa!');
         }
 
         $validated = $request->validate([
-            'status' => 'required|string|in:pending,paid,confirmed,preparing,shipping,delivered,cancelled',
+            'delivery_status' => 'required|string|in:pending,confirmed,preparing,shipping,delivered,cancelled',
+            'payment_status'  => 'nullable|string|in:unpaid,paid',
         ]);
 
-        $order->status = $request->input('status');
+        $oldStatus = $order->delivery_status; // LƯU TRẠNG THÁI CŨ
+
+        $newDelivery = $validated['delivery_status'];
+        $order->delivery_status = $newDelivery;
+
+        if ($newDelivery === 'delivered') {
+            $order->payment_status = 'paid';
+        } elseif ($request->filled('payment_status')) {
+            $order->payment_status = $validated['payment_status'];
+        }
+
         $order->save();
+
+        // ⭐ GỬI EMAIL SAU KHI LƯU
+        if (!empty($order->customer_email)) {
+            Mail::to($order->customer_email)
+                ->send(new OrderStatusUpdated($order, $oldStatus));
+        }
 
         return back()->with('success', 'Cập nhật trạng thái đơn hàng thành công!');
     }
@@ -112,7 +131,7 @@ class OrderController extends Controller
 
         // Filter theo trạng thái (all | pending | confirmed | preparing | shipping | delivered | cancelled)
         if ($statusFilter !== 'all') {
-            $query->where('status', $statusFilter);
+            $query->where('delivery_status', $statusFilter);
         }
 
         $orders = $query->paginate(10);
@@ -151,7 +170,7 @@ class OrderController extends Controller
         return view('oders.show', compact('order', 'subtotal', 'discountAmount'));
     }
 
-/**
+    /**
      * Tính tổng tiền của một đơn hàng dựa trên bảng order_details.
      * Đây là phần "tính tổng tiền đơn" cho Huy, dùng nội bộ trong controller.
      */

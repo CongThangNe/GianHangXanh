@@ -9,10 +9,13 @@ class Order extends Model
         'order_code',
         'total',
         'payment_method',
+        'payment_status',
+        'delivery_status',
         'status',
         'customer_name',
         'customer_phone',
         'customer_address',
+         'customer_email', 
         'note',
     ];
 

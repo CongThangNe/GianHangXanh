@@ -15,19 +15,34 @@ class DatabaseSeeder extends Seeder
         // USERS
         // ============================
         DB::table('users')->insert([
+            // Tài khoản ADMIN riêng (full quyền)
             [
                 'name' => 'Admin',
                 'email' => 'admin@test.com',
                 'password' => Hash::make('admin123'),
-                'is_admin' => 1,
+                'role' => 'admin',
                 'created_at' => now(),
+                'updated_at' => now(),
             ],
+
+            // Tài khoản STAFF (vào được /admin nhưng KHÔNG được xem Doanh thu & KHÔNG được vào /admin/users)
+            [
+                'name' => 'Staff',
+                'email' => 'staff@test.com',
+                'password' => Hash::make('staff123'),
+                'role' => 'staff',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+
+            // Tài khoản CUSTOMER (không vào được /admin - trả 404)
             [
                 'name' => 'Customer',
                 'email' => 'customer@test.com',
                 'password' => Hash::make('123456'),
-                'is_admin' => 0,
+                'role' => 'customer',
                 'created_at' => now(),
+                'updated_at' => now(),
             ],
         ]);
 
