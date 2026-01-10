@@ -34,5 +34,9 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    'admin_location_api' => [
+    'base_url' => env('VITE_ADMIN_API_BASE'),
+],
+
 
 ];
