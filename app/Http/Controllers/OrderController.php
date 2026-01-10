@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\OrderDetail;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\OrderStatusUpdated;
+
 
 class OrderController extends Controller
 {
@@ -63,7 +66,6 @@ class OrderController extends Controller
      */
     public function updateStatus(Request $request, Order $order)
     {
-        // Nếu đơn đã giao thành công hoặc đã hủy thì không cho sửa nữa
         if (in_array($order->delivery_status, ['delivered', 'cancelled'], true)) {
             return back()->with('error', 'Đơn hàng đã hoàn tất, không thể thay đổi trạng thái nữa!');
         }
@@ -73,18 +75,24 @@ class OrderController extends Controller
             'payment_status'  => 'nullable|string|in:unpaid,paid',
         ]);
 
-        $newDelivery = $request->input('delivery_status');
+        $oldStatus = $order->delivery_status; // LƯU TRẠNG THÁI CŨ
 
+        $newDelivery = $validated['delivery_status'];
         $order->delivery_status = $newDelivery;
 
-        // Quy ước: khi đơn đã giao thành công -> tự động chuyển sang "Đã thanh toán"
-        // và sau khi lưu thì trạng thái sẽ bị khóa (đã xử lý ở đầu hàm cho các lần sửa tiếp theo).
         if ($newDelivery === 'delivered') {
             $order->payment_status = 'paid';
         } elseif ($request->filled('payment_status')) {
-            $order->payment_status = $request->input('payment_status');
+            $order->payment_status = $validated['payment_status'];
         }
+
         $order->save();
+
+        // ⭐ GỬI EMAIL SAU KHI LƯU
+        if (!empty($order->customer_email)) {
+            Mail::to($order->customer_email)
+                ->send(new OrderStatusUpdated($order, $oldStatus));
+        }
 
         return back()->with('success', 'Cập nhật trạng thái đơn hàng thành công!');
     }
@@ -162,7 +170,7 @@ class OrderController extends Controller
         return view('oders.show', compact('order', 'subtotal', 'discountAmount'));
     }
 
-/**
+    /**
      * Tính tổng tiền của một đơn hàng dựa trên bảng order_details.
      * Đây là phần "tính tổng tiền đơn" cho Huy, dùng nội bộ trong controller.
      */

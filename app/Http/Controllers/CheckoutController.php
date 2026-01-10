@@ -90,6 +90,8 @@ class CheckoutController extends Controller
                 'note'             => 'nullable|string|max:1000',
                 'province'         => 'required',
                 'ward'             => 'required',
+                    'customer_email' => 'nullable|email|max:255',
+                
             ],
             [
                 'customer_name.required'    => 'Vui lòng nhập họ tên',
@@ -97,6 +99,7 @@ class CheckoutController extends Controller
                 'customer_address.required' => 'Địa chỉ giao hàng không hợp lệ',
                 'province.required'         => 'Bạn chưa chọn Tỉnh / Thành phố',
                 'ward.required'             => 'Bạn chưa chọn Phường / Xã',
+                    'customer_email' => 'Bạn chưa nhập email',
             ]
         );
 
@@ -149,6 +152,7 @@ class CheckoutController extends Controller
                 'customer_name'    => $request->customer_name,
                 'customer_phone'   => $request->customer_phone,
                 'customer_address' => $request->customer_address,
+                    'customer_email'   => $request->customer_email, 
                 'note'             => $request->note,
             ]);
 
