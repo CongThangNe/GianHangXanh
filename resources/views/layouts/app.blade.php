@@ -18,6 +18,9 @@
     <!-- Material Symbols -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
 
+    <!-- Simple Chatbot (home page) -->
+    <link rel="stylesheet" href="{{ asset('css/chatbot.css') }}">
+
     <!-- Tailwind Config -->
     <script id="tailwind-config">
         tailwind.config = {
@@ -282,8 +285,16 @@
         </div>
     </footer>
 
+    @if (Route::currentRouteName() === 'home')
+        @include('components.chatbot')
+    @endif
+
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    @if (Route::currentRouteName() === 'home')
+        <script defer src="{{ asset('js/chatbot.js') }}"></script>
+    @endif
 
     @stack('scripts')
 </body>
