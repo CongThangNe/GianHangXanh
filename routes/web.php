@@ -18,7 +18,7 @@ use App\Http\Controllers\OrderGuestController;
 
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProductController;
-use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\Admin\ProductVariantController;
@@ -161,12 +161,18 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin_access'])->gr
     Route::resource('discount-codes', DiscountCodeController::class);
 });
 // Trang thanh toán online (khách vãng lai vẫn có thể thanh toán)
-Route::get('/payment/zalopay', [PaymentController::class, 'zaloPayApp'])->name('payment.zalopay');
-Route::get('/payment/zalopay/return', [PaymentController::class, 'zaloReturn'])->name('payment.zalopay.return');
-
 // VNPAY
-Route::get('/payment/create', [PaymentController::class, 'createPayment'])->name('payment.create');
-Route::get('/payment/return', [PaymentController::class, 'vnpayReturn'])->name('payment.return');
+// VNPAY
+// VNPAY
+Route::get('/payment/create', [PaymentController::class, 'createPayment'])
+    ->name('payment.create');
+
+Route::get('/payment/return', [PaymentController::class, 'vnpayReturn'])
+    ->name('payment.return');
+
+Route::get('/payment/ipn', [PaymentController::class, 'vnpayIpn'])
+    ->name('payment.ipn');
+
 
 // banners
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin_access'])->group(function () {

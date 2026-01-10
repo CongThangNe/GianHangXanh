@@ -154,12 +154,16 @@
             </div>
 
             <!-- Horizontal scroll list (easy to browse) -->
-            <div class="flex overflow-x-auto gap-6 py-4 px-1">
+            <div class="flex overflow-x-auto gap-4 md:gap-5 py-4 px-1">
                 @foreach($relatedProducts as $related)
                 <a href="{{ route('product.show', $related->id) }}"
-                   class="block min-w-64 border border-border-light dark:border-border-dark rounded-xl overflow-hidden hover:shadow-lg transition-shadow bg-surface-light dark:bg-surface-dark">
-                    <div class="w-full aspect-square bg-center bg-no-repeat bg-cover"
-                         style="background-image: url('{{ $related->image_url ?? 'https://via.placeholder.com/300x300?text=No+Image' }}');">
+                   class="flex-shrink-0 w-[240px] sm:w-[260px] md:w-[280px] lg:w-[300px] border border-border-light dark:border-border-dark rounded-xl overflow-hidden hover:shadow-lg transition-shadow bg-surface-light dark:bg-surface-dark">
+                    <div class="aspect-square bg-white dark:bg-gray-900 flex items-center justify-center p-2">
+                        <img
+                            src="{{ $related->image_url ?? 'https://via.placeholder.com/300x300?text=No+Image' }}"
+                            alt="{{ $related->name }}"
+                            class="w-full h-full object-contain"
+                            loading="lazy">
                     </div>
                     <div class="p-4">
                         <h3 class="text-sm font-semibold line-clamp-2">{{ $related->name }}</h3>

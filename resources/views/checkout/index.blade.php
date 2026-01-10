@@ -6,8 +6,8 @@
 
         {{-- TIÊU ĐỀ --}}
         <!-- <h2 class="text-3xl md:text-4xl font-extrabold text-center text-green-700 mb-8 md:mb-12">
-                                                                            Thanh Toán Đơn Hàng
-                                                                        </h2> -->
+                                                                                                        Thanh Toán Đơn Hàng
+                                                                                                    </h2> -->
 
         {{-- THÔNG BÁO LỖI --}}
         @if (session('error'))
@@ -59,46 +59,37 @@
                             <div class="mb-4">
                                 <label for="customer_address" class="block text-sm font-semibold text-gray-700 mb-2">Địa chỉ
                                     <span class="text-red-500">*</span></label>
-                                {{-- <input type="text" id="customer_address" name="customer_address" 
-                                    class="w-full border @error('customer_address') border-red-500 @else border-gray-300 @enderror rounded-lg px-4 py-2 focus:ring-green-500 focus:border-green-500 transition duration-150"
-                                    value="{{ old('customer_address', $user->address ?? '') }}"> --}}
-                                {{-- 3 Cột chọn vị trí --}}
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                     <div>
                                         <select id="province" name="province"
                                             class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-green-500">
-                                            <option value="">Chọn Tỉnh/Thành</option>
+                                            <option value="">Chọn Tỉnh / Thành phố</option>
                                         </select>
                                         @error('province')
-                                            <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
+                                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                         @enderror
                                     </div>
-                                    <div>
-                                        <select id="district" name="district"
-                                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-green-500"
-                                            disabled>
-                                            <option value="">Chọn Quận/Huyện</option>
-                                        </select>
-                                        @error('district')
-                                            <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
-                                        @enderror
-                                    </div>
+
                                     <div>
                                         <select id="ward" name="ward"
                                             class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-green-500"
                                             disabled>
-                                            <option value="">Chọn Phường/Xã</option>
+                                            <option value="">Chọn Phường / Xã</option>
                                         </select>
                                         @error('ward')
-                                            <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
+                                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                         @enderror
                                     </div>
                                 </div>
 
-                                {{-- Ô nhập số nhà --}}
+                                <input type="text" id="address_detail" name="address_detail"
+                                    placeholder="Số nhà, tên đường..."
+                                    class="w-full border border-gray-300 rounded-lg px-4 py-2 mb-2">
+
+                                {{-- Ô nhập số nhà
                                 <input type="text" id="address_detail" name="address_detail"
                                     value="{{ old('address_detail') }}" placeholder="Số nhà, tên đường..."
-                                    class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-green-500 mb-2">
+                                    class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-green-500 mb-2"> --}}
                                 @error('address_detail')
                                     <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
                                 @enderror
@@ -113,15 +104,13 @@
                             </div>
 
                             <div class="mb-4">
-                                <label for="customer_email" class="block text-sm font-semibold text-gray-700 mb-2">Email
-                                    (nếu có)</label>
-                                <input type="email" id="customer_email" name="customer_email"
-                                    class="w-full border @error('customer_email') border-red-500 @else border-gray-300 @enderror rounded-lg px-4 py-2 focus:ring-green-500 focus:border-green-500 transition duration-150"
-                                    value="{{ old('customer_email', $user->email ?? '') }}">
-                                @error('customer_email')
-                                    <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
-                                @enderror
+                                <label class="block font-medium">
+                                    Email <span class="text-gray-500"></span>
+                                </label>
+                                <input type="email" name="customer_email" value="{{ old('customer_email') }}"
+                                    class="w-full border rounded px-3 py-2" placeholder="example@gmail.com">
                             </div>
+
 
                             <div class="mb-4">
                                 <label for="notes" class="block text-sm font-semibold text-gray-700 mb-2">Ghi chú đơn
@@ -259,104 +248,65 @@
 
     @push('scripts')
         <script>
+            const API_BASE = "{{ config('services.admin_location_api.base_url') }}";
             document.addEventListener('DOMContentLoaded', function() {
                 const provinceSelect = document.getElementById('province');
-                const districtSelect = document.getElementById('district');
                 const wardSelect = document.getElementById('ward');
                 const addressDetail = document.getElementById('address_detail');
                 const fullAddressInput = document.getElementById('full_customer_address');
-                // const paymentRadios = document.querySelectorAll('input[name="payment_method"]');
-                const qrContainer = document.getElementById('qr-container');
-                const submitButton = document.getElementById('submit-button');
 
                 const OLD_PROVINCE = "{{ old('province') }}";
-                const OLD_DISTRICT = "{{ old('district') }}";
                 const OLD_WARD = "{{ old('ward') }}";
 
                 function updateFullAddress() {
-                    const p = provinceSelect.options[provinceSelect.selectedIndex]?.text;
-                    const d = districtSelect.options[districtSelect.selectedIndex]?.text;
-                    const w = wardSelect.options[wardSelect.selectedIndex]?.text;
+                    const provinceText = provinceSelect.options[provinceSelect.selectedIndex]?.text;
+                    const wardText = wardSelect.options[wardSelect.selectedIndex]?.text;
                     const detail = addressDetail.value.trim();
 
-                    if (p && d && w && detail) {
-                        fullAddressInput.value = `${detail}, ${w}, ${d}, ${p}`;
+                    if (provinceText && wardText && detail) {
+                        fullAddressInput.value = `${detail}, ${wardText}, ${provinceText}`;
                     }
                 }
-
-                fetch('https://provinces.open-api.vn/api/p/')
+                fetch(`${API_BASE}/new-provinces?limit=100`)
                     .then(res => res.json())
-                    .then(data => {
-                        provinceSelect.innerHTML = '<option value="">Chọn Tỉnh/Thành</option>';
-                        data.forEach(p => {
-                            const selected = (p.code == OLD_PROVINCE) ? 'selected' : '';
-                            provinceSelect.innerHTML +=
-                                `<option value="${p.code}" ${selected}>${p.name}</option>`;
+                    .then(res => {
+                        if (!res.success) return;
+
+                        provinceSelect.innerHTML = '<option value="">Chọn Tỉnh / Thành phố</option>';
+                        res.data.forEach(p => {
+                            provinceSelect.innerHTML += `
+                    <option value="${p.code}" ${p.code === OLD_PROVINCE ? 'selected' : ''}>
+                        ${p.name}
+                    </option>`;
                         });
 
-                        if (OLD_PROVINCE) {
-                            provinceSelect.value = OLD_PROVINCE;
-                            provinceSelect.dispatchEvent(new Event('change'));
-                        }
+                        if (OLD_PROVINCE) provinceSelect.dispatchEvent(new Event('change'));
                     });
-
-
                 provinceSelect.addEventListener('change', function() {
-                    districtSelect.innerHTML = '<option value="">Chọn Quận/Huyện</option>';
-                    wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
-                    districtSelect.disabled = true;
+                    wardSelect.innerHTML = '<option value="">Chọn Phường / Xã</option>';
                     wardSelect.disabled = true;
 
                     if (!this.value) return;
 
-                    fetch(`https://provinces.open-api.vn/api/p/${this.value}?depth=2`)
+                    fetch(`${API_BASE}/new-provinces/${this.value}/wards?limit=100`)
                         .then(res => res.json())
-                        .then(data => {
-                            data.districts.forEach(d => {
-                                const selected = (d.code == OLD_DISTRICT) ? 'selected' : '';
-                                districtSelect.innerHTML +=
-                                    `<option value="${d.code}" ${selected}>${d.name}</option>`;
-                            });
+                        .then(res => {
+                            if (!res.success) return;
 
-                            districtSelect.disabled = false;
-
-                            if (OLD_DISTRICT) {
-                                districtSelect.value = OLD_DISTRICT;
-                                districtSelect.dispatchEvent(new Event('change'));
-                            }
-                        });
-                });
-
-
-                districtSelect.addEventListener('change', function() {
-                    wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
-                    wardSelect.disabled = true;
-
-                    if (!this.value) return;
-
-                    fetch(`https://provinces.open-api.vn/api/d/${this.value}?depth=2`)
-                        .then(res => res.json())
-                        .then(data => {
-                            data.wards.forEach(w => {
-                                const selected = (w.code == OLD_WARD) ? 'selected' : '';
-                                wardSelect.innerHTML +=
-                                    `<option value="${w.code}" ${selected}>${w.name}</option>`;
+                            res.data.forEach(w => {
+                                wardSelect.innerHTML += `
+                        <option value="${w.code}" ${w.code === OLD_WARD ? 'selected' : ''}>
+                            ${w.name}
+                        </option>`;
                             });
 
                             wardSelect.disabled = false;
-
-                            if (OLD_WARD) {
-                                wardSelect.value = OLD_WARD;
-                            }
-
-
                         });
                 });
 
+                provinceSelect.addEventListener('change', updateFullAddress);
 
-                [wardSelect, addressDetail].forEach(el => el.addEventListener('change', updateFullAddress));
                 addressDetail.addEventListener('input', updateFullAddress);
-
                 const paymentRadios = document.querySelectorAll('input[name="payment_method"]');
                 // const qrContainer = document.getElementById('qr-container');
                 // const submitButton = document.getElementById('submit-button');
@@ -408,6 +358,24 @@
                 document.getElementById('checkout-form').addEventListener('submit', function() {
                     updateFullAddress();
                 });
+                document.getElementById('checkout-form').addEventListener('submit', function(e) {
+                    if (!provinceSelect.value) {
+                        alert('Vui lòng chọn Tỉnh / Thành phố');
+                        e.preventDefault();
+                        return;
+                    }
+                    if (!wardSelect.value) {
+                        alert('Vui lòng chọn Phường / Xã');
+                        e.preventDefault();
+                        return;
+                    }
+                    if (!addressDetail.value.trim()) {
+                        alert('Vui lòng nhập số nhà, tên đường');
+                        e.preventDefault();
+                        return;
+                    }
+                });
+
             });
         </script>
     @endpush

@@ -66,7 +66,7 @@
         {{-- Max uses --}}
         <div class="mb-3">
             <label class="form-label">
-                Số lượt sử dụng (0 = không giới hạn)
+                Số lượt có thể sử dụng 
             </label>
             <input type="number"
                    name="max_uses"
