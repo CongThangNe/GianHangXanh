@@ -6,8 +6,8 @@
 
         {{-- TIÊU ĐỀ --}}
         <!-- <h2 class="text-3xl md:text-4xl font-extrabold text-center text-green-700 mb-8 md:mb-12">
-                                                                                                    Thanh Toán Đơn Hàng
-                                                                                                </h2> -->
+                                                                                                        Thanh Toán Đơn Hàng
+                                                                                                    </h2> -->
 
         {{-- THÔNG BÁO LỖI --}}
         @if (session('error'))
@@ -104,15 +104,13 @@
                             </div>
 
                             <div class="mb-4">
-                                <label for="customer_email" class="block text-sm font-semibold text-gray-700 mb-2">Email
-                                    (nếu có)</label>
-                                <input type="email" id="customer_email" name="customer_email"
-                                    class="w-full border @error('customer_email') border-red-500 @else border-gray-300 @enderror rounded-lg px-4 py-2 focus:ring-green-500 focus:border-green-500 transition duration-150"
-                                    value="{{ old('customer_email', $user->email ?? '') }}">
-                                @error('customer_email')
-                                    <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
-                                @enderror
+                                <label class="block font-medium">
+                                    Email <span class="text-gray-500"></span>
+                                </label>
+                                <input type="email" name="customer_email" value="{{ old('customer_email') }}"
+                                    class="w-full border rounded px-3 py-2" placeholder="example@gmail.com">
                             </div>
+
 
                             <div class="mb-4">
                                 <label for="notes" class="block text-sm font-semibold text-gray-700 mb-2">Ghi chú đơn
@@ -250,7 +248,7 @@
 
     @push('scripts')
         <script>
-             const API_BASE = "{{ config('services.admin_location_api.base_url') }}";
+            const API_BASE = "{{ config('services.admin_location_api.base_url') }}";
             document.addEventListener('DOMContentLoaded', function() {
                 const provinceSelect = document.getElementById('province');
                 const wardSelect = document.getElementById('ward');
@@ -306,7 +304,7 @@
                         });
                 });
 
-             provinceSelect.addEventListener('change', updateFullAddress);
+                provinceSelect.addEventListener('change', updateFullAddress);
 
                 addressDetail.addEventListener('input', updateFullAddress);
                 const paymentRadios = document.querySelectorAll('input[name="payment_method"]');
