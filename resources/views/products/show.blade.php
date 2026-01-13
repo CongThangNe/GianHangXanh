@@ -15,7 +15,11 @@
                     class="w-full h-full object-cover transition-transform duration-300 hover:scale-105">
             </div>
         </div>
-
+        @php
+        $hasVariants = $product->variants && $product->variants->count() > 0;
+        $minPrice = $hasVariants ? $product->variants->min('price') : $product->price;
+        $maxPrice = $hasVariants ? $product->variants->max('price') : $product->price;
+        @endphp
         <!-- Right Column: Product Information -->
         <div class="flex flex-col gap-6">
             <!-- Title, Price -->
@@ -23,7 +27,16 @@
                 <h1 class="text-3xl md:text-4xl font-black tracking-[-0.033em]">{{ $product->name }}</h1>
                 <p class="text-text-muted-light dark:text-text-muted-dark text-lg">Chúc quý khách 1 ngày thật vui vẻ</p>
                 <div class="flex items-center gap-4 pt-2">
-                    <p class="text-3xl font-bold text-primary">{{ number_format($product->price, 0, ',', '.') }}₫</p>
+                    <p id="product-price" class="text-3xl font-bold text-primary">
+                        @if($minPrice == $maxPrice)
+                        {{ number_format($minPrice, 0, ',', '.') }}₫
+                        @else
+                        {{ number_format($minPrice, 0, ',', '.') }}₫
+                        -
+                        {{ number_format($maxPrice, 0, ',', '.') }}₫
+                        @endif
+                    </p>
+
                 </div>
             </div>
 
@@ -95,7 +108,7 @@
         </div>
     </div>
 
-{{-- 
+    {{--
 <form method="GET" class="mb-10 p-6 border rounded-xl bg-gray-50">
     <h3 class="text-xl font-bold mb-4">🔍 Tìm kiếm nâng cao</h3>
 
@@ -103,81 +116,81 @@
     <div class="grid grid-cols-2 gap-4 mb-4">
         <input type="number" name="price_min"
                value="{{ request('price_min') }}"
-               placeholder="Giá từ"
-               class="border rounded px-3 py-2">
+    placeholder="Giá từ"
+    class="border rounded px-3 py-2">
 
-        <input type="number" name="price_max"
-               value="{{ request('price_max') }}"
-               placeholder="Giá đến"
-               class="border rounded px-3 py-2">
-    </div>
+    <input type="number" name="price_max"
+        value="{{ request('price_max') }}"
+        placeholder="Giá đến"
+        class="border rounded px-3 py-2">
+</div>
 
-    <!-- Attributes -->
-    @foreach($attributes as $attribute)
-        <div class="mb-3">
-            <label class="font-semibold">{{ $attribute->name }}</label>
-            <select name="attributes[{{ $attribute->id }}]"
-                    class="w-full border rounded px-3 py-2">
-                <option value="">-- Chọn {{ $attribute->name }} --</option>
-                @foreach($attribute->values as $value)
-                    <option value="{{ $value->id }}"
-                        {{ request("attributes.$attribute->id") == $value->id ? 'selected' : '' }}>
-                        {{ $value->value }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-    @endforeach
+<!-- Attributes -->
+@foreach($attributes as $attribute)
+<div class="mb-3">
+    <label class="font-semibold">{{ $attribute->name }}</label>
+    <select name="attributes[{{ $attribute->id }}]"
+        class="w-full border rounded px-3 py-2">
+        <option value="">-- Chọn {{ $attribute->name }} --</option>
+        @foreach($attribute->values as $value)
+        <option value="{{ $value->id }}"
+            {{ request("attributes.$attribute->id") == $value->id ? 'selected' : '' }}>
+            {{ $value->value }}
+        </option>
+        @endforeach
+    </select>
+</div>
+@endforeach
 
-    <button class="mt-4 px-6 py-2 bg-primary text-white rounded">
-        Áp dụng lọc
-    </button>
+<button class="mt-4 px-6 py-2 bg-primary text-white rounded">
+    Áp dụng lọc
+</button>
 </form> --}}
 
 
-    <!-- Related Products (Same Category) -->
-    @if(isset($relatedProducts) && $relatedProducts->count() > 0)
-    <div class="w-full mt-16 border-t border-border-light dark:border-border-dark pt-12">
-        <div class="flex flex-col gap-4 max-w-6xl mx-auto">
-            <div class="flex items-center justify-between">
-                <h2 class="text-2xl font-bold">
-                    Sản phẩm liên quan theo danh mục
-                    @if($product->category)
-                        <span class="text-base font-semibold text-text-muted-light dark:text-text-muted-dark">({{ $product->category->name }})</span>
-                    @endif
-                </h2>
+<!-- Related Products (Same Category) -->
+@if(isset($relatedProducts) && $relatedProducts->count() > 0)
+<div class="w-full mt-16 border-t border-border-light dark:border-border-dark pt-12">
+    <div class="flex flex-col gap-4 max-w-6xl mx-auto">
+        <div class="flex items-center justify-between">
+            <h2 class="text-2xl font-bold">
+                Sản phẩm liên quan theo danh mục
                 @if($product->category)
-                    <a href="{{ route('category.show', $product->category->id) }}" class="text-primary font-semibold hover:underline">
-                        Xem thêm
-                    </a>
+                <span class="text-base font-semibold text-text-muted-light dark:text-text-muted-dark">({{ $product->category->name }})</span>
                 @endif
-            </div>
+            </h2>
+            @if($product->category)
+            <a href="{{ route('category.show', $product->category->id) }}" class="text-primary font-semibold hover:underline">
+                Xem thêm
+            </a>
+            @endif
+        </div>
 
-            <!-- Horizontal scroll list (easy to browse) -->
-            <div class="flex overflow-x-auto gap-4 md:gap-5 py-4 px-1">
-                @foreach($relatedProducts as $related)
-                <a href="{{ route('product.show', $related->id) }}"
-                   class="flex-shrink-0 w-[240px] sm:w-[260px] md:w-[280px] lg:w-[300px] border border-border-light dark:border-border-dark rounded-xl overflow-hidden hover:shadow-lg transition-shadow bg-surface-light dark:bg-surface-dark">
-                    <div class="aspect-square bg-white dark:bg-gray-900 flex items-center justify-center p-2">
-                        <img
-                            src="{{ $related->image_url ?? 'https://via.placeholder.com/300x300?text=No+Image' }}"
-                            alt="{{ $related->name }}"
-                            class="w-full h-full object-contain"
-                            loading="lazy">
+        <!-- Horizontal scroll list (easy to browse) -->
+        <div class="flex overflow-x-auto gap-4 md:gap-5 py-4 px-1">
+            @foreach($relatedProducts as $related)
+            <a href="{{ route('product.show', $related->id) }}"
+                class="flex-shrink-0 w-[240px] sm:w-[260px] md:w-[280px] lg:w-[300px] border border-border-light dark:border-border-dark rounded-xl overflow-hidden hover:shadow-lg transition-shadow bg-surface-light dark:bg-surface-dark">
+                <div class="aspect-square bg-white dark:bg-gray-900 flex items-center justify-center p-2">
+                    <img
+                        src="{{ $related->image_url ?? 'https://via.placeholder.com/300x300?text=No+Image' }}"
+                        alt="{{ $related->name }}"
+                        class="w-full h-full object-contain"
+                        loading="lazy">
+                </div>
+                <div class="p-4">
+                    <h3 class="text-sm font-semibold line-clamp-2">{{ $related->name }}</h3>
+                    <p class="text-primary font-bold mt-1">{{ number_format($related->price, 0, ',', '.') }}₫</p>
+                    <div class="mt-3 flex items-center justify-center rounded-lg h-10 px-4 bg-primary/20 dark:bg-primary/30 text-sm font-bold hover:bg-primary/30 dark:hover:bg-primary/40">
+                        Xem chi tiết
                     </div>
-                    <div class="p-4">
-                        <h3 class="text-sm font-semibold line-clamp-2">{{ $related->name }}</h3>
-                        <p class="text-primary font-bold mt-1">{{ number_format($related->price, 0, ',', '.') }}₫</p>
-                        <div class="mt-3 flex items-center justify-center rounded-lg h-10 px-4 bg-primary/20 dark:bg-primary/30 text-sm font-bold hover:bg-primary/30 dark:hover:bg-primary/40">
-                            Xem chi tiết
-                        </div>
-                    </div>
-                </a>
-                @endforeach
-            </div>
+                </div>
+            </a>
+            @endforeach
         </div>
     </div>
-    @endif
+</div>
+@endif
 </div>
 
 <!-- SCRIPT -->
@@ -220,11 +233,49 @@
         }
     }
 
+    const priceEl = document.getElementById('product-price');
+    const variantBox = document.getElementById('variant-options');
+
+    let lastCheckedRadio = null;
+
+    // lưu giá khoảng ban đầu
+    const defaultPriceText = priceEl.textContent;
+
     variantRadios.forEach(radio => {
+        radio.addEventListener('click', function(e) {
+            e.stopPropagation(); // ⭐ CHẶN click bubble lên document
+
+            if (lastCheckedRadio === this) {
+                // click lại chính nó → bỏ chọn
+                this.checked = false;
+                lastCheckedRadio = null;
+
+                updateStock(null);
+                priceEl.textContent = defaultPriceText;
+            } else {
+                lastCheckedRadio = this;
+            }
+        });
+
         radio.addEventListener('change', function() {
             updateStock(this);
+
+            const price = parseInt(this.dataset.price);
+            priceEl.textContent = price.toLocaleString('vi-VN') + '₫';
         });
     });
+
+    // click ra ngoài vùng biến thể → reset
+    document.addEventListener('click', function(e) {
+        if (!variantBox.contains(e.target)) {
+            variantRadios.forEach(r => r.checked = false);
+            lastCheckedRadio = null;
+
+            updateStock(null);
+            priceEl.textContent = defaultPriceText;
+        }
+    });
+
 
     // Giảm số lượng
     decreaseBtn.addEventListener('click', () => {
