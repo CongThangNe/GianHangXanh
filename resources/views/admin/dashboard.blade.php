@@ -8,7 +8,7 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
                     <h4 class="fw-bold mb-0">Dashboard</h4>
-                    <p class="text-muted mb-0">Tổng quan hệ thống bán hàng</p>
+                    <p class="text-muted mb-0">Thống kê doanh thu bán hàng</p>
                 </div>
 
                 <form action="{{ route('admin.dashboard') }}" method="GET" class="d-flex gap-2 align-items-end">
