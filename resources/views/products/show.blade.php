@@ -21,7 +21,7 @@
         $maxPrice = $hasVariants ? $product->variants->max('price') : $product->price;
         @endphp
         <!-- Right Column: Product Information -->
-        <div class="flex flex-col gap-6">
+        <div id="purchase-section" class="flex flex-col gap-6">
             <!-- Title, Price -->
             <div class="flex flex-col gap-3">
                 <h1 class="text-3xl md:text-4xl font-black tracking-[-0.033em]">{{ $product->name }}</h1>
@@ -266,8 +266,11 @@
     });
 
     // click ra ngoài vùng biến thể → reset
+    const purchaseSection = document.getElementById('purchase-section');
+
     document.addEventListener('click', function(e) {
-        if (!variantBox.contains(e.target)) {
+        // chỉ reset khi click ra ngoài toàn bộ khu mua hàng
+        if (!purchaseSection.contains(e.target)) {
             variantRadios.forEach(r => r.checked = false);
             lastCheckedRadio = null;
 
