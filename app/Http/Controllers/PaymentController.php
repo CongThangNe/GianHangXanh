@@ -115,9 +115,15 @@ public function createPayment(Request $request)
         } session()->forget(['discount_code', 'pending_discount']);
     });
 
-        return redirect()
-            ->route('home')
-            ->with('success', "Thanh toán thành công {$order->order_code}");
+        // return redirect()
+        //     ->route('home')
+        //     ->with('success', "Thanh toán thành công {$order->order_code}");
+        return view('checkout.success', [
+        'order_code' => $order->order_code,
+        'amount'     => $request->vnp_Amount / 100,
+        'bank'       => $request->vnp_BankCode,
+        'time'       => $request->vnp_PayDate,
+    ]);
     }
 
     // ❌ HỦY / FAIL / BACK
